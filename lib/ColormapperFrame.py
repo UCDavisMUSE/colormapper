@@ -20,7 +20,7 @@ class ColormapperFrame(wx.Frame):
         
     def createMainInterfaceWindow(self):
         # Create sub panels
-        inputImagePanel = BlockWindow(self, label = "Input Image", size = (400, 300))
+        inputImagePanel = BlockWindow(self, label = "Input Image: " + self.imageFilename, size = (400, 300))
         outputImagePanel = BlockWindow(self, label = "Output Image", size = (400, 300))
         controlPanel = BlockWindow(self, label = "Controls", size = (800, 200))                       
         # Arrange the input and output images side-by-side
