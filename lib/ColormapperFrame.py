@@ -1,4 +1,5 @@
 import wx
+from BlockWindow import BlockWindow
 
 
 # This is the class for the main window of the Colormapper App        
@@ -9,9 +10,9 @@ class ColormapperFrame(wx.Frame):
 
         # High-level application data
         self.imageFilename = ""
-		self.filename = ""
+        self.filename = ""
 
-		# Attributes 
+        # Attributes 
         statusBar = self.createStatusBar()
         menuBar = self.createMenuBar()
         
