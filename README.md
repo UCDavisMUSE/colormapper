@@ -14,4 +14,4 @@ zharmany@gmail.com
 ## Issues & Feature Requests
 
 - Localize menu items and keyboard shortcuts for Windows.
-- 
+- Determine format for saving color conversion settings.
