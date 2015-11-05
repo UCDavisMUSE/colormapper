@@ -15,7 +15,25 @@ class ColormapperFrame(wx.Frame):
         # Attributes 
         statusBar = self.createStatusBar()
         menuBar = self.createMenuBar()
+        self.createMainInterfaceWindow()
         
+        
+    def createMainInterfaceWindow(self):
+        # Create sub panels
+        inputImagePanel = BlockWindow(self, label = "Input Image", size = (400, 300))
+        outputImagePanel = BlockWindow(self, label = "Output Image", size = (400, 300))
+        controlPanel = BlockWindow(self, label = "Controls", size = (800, 200))                       
+        # Arrange the input and output images side-by-side
+        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
+        horizontalSizer.Add(inputImagePanel, 1, flag=wx.EXPAND)
+        horizontalSizer.Add(outputImagePanel, 1, flag=wx.EXPAND)
+        # Arrange the controls below the images
+        verticalSizer = wx.BoxSizer(wx.VERTICAL)
+        verticalSizer.Add(horizontalSizer, 1, flag=wx.EXPAND)
+        verticalSizer.Add(controlPanel, flag=wx.EXPAND)
+        # Set the sizer to be the main verticalSizer
+        self.SetSizer(verticalSizer)
+
     
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
