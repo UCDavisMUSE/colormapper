@@ -1,4 +1,5 @@
 import wx
+from lib.ColormapperFrame import *
 
 
 # This is the class for the main Colormapper App
@@ -8,13 +9,6 @@ class ColormapperApp(wx.App):
         frame.Show()
         self.SetTopWindow(frame)
         return True
-
-
-# This is the class for the main window of the Colormapper App        
-class ColormapperFrame(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self, None, -1, "Colormapper", size = (800, 600))
-        self.SetMinSize((800,600))
 
 
 # Start the main loop of the Colormapper App        
