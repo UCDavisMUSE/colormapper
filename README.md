@@ -10,3 +10,8 @@ This program is written in Python 2.7 using wxPython 3.0.2.0.
 
 Zachary T. Harmany, PhD
 zharmany@gmail.com
+
+## Issues & Feature Requests
+
+- Localize menu items and keyboard shortcuts for Windows.
+- 
