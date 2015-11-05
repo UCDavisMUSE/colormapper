@@ -20,15 +20,15 @@ class ColormapperFrame(wx.Frame):
     
     def menuData(self):
         return (("&File",
-                        ("&Open",   "Open image for conversion",    self.OnOpen),
-                        ("&Save",   "Save colormapper file",        self.OnSave),
+                        ("&Open\tCtrl-O",   "Open image for conversion",    self.OnOpen),
+                        ("&Save\tCtrl-S",   "Save colormapper file",        self.OnSave),
                         ("&Export", "Export converted image",       self.OnExport),
-                        ("&Quit",   "Quit",                         self.OnCloseWindow)),
+                        ("&Quit\tCtrl-Q",   "Quit",                         self.OnCloseWindow)),
                         
                 ("&Edit",
-                        ("&Copy",   "Copy converted image to clipboard",    self.OnCopy),
+                        ("&Copy\tCtrl-C",   "Copy converted image to clipboard",    self.OnCopy),
                         ("C&ut",    "Cut converted image to clipboard",     self.OnCut),
-                        ("&Paste",  "Paste original image from clipboard",  self.OnPaste),
+                        ("&Paste\tCtrl-V",  "Paste original image from clipboard",  self.OnPaste),
                         ("",        "",                     ""),
                         ("&Options...", "Display Options",                  self.OnOptions)))        
           
