@@ -7,9 +7,13 @@ class ColormapperFrame(wx.Frame):
         wx.Frame.__init__(self, None, -1, "Colormapper", size = (800, 600))
         self.SetMinSize((800,600))
 
+        # High-level application data
+        self.imageFilename = ""
+		self.filename = ""
+
 		# Attributes 
         statusBar = self.createStatusBar()
-        menuuBar = self.createMenuBar()
+        menuBar = self.createMenuBar()
         
     
     def createStatusBar(self):
