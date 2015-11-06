@@ -76,7 +76,7 @@ class ImageViewerPanel(wx.Panel):
 
         
     def OnRightUp(self, event):
-        if self.HasCapture()
+        if self.HasCapture():
             if self.viewMode == 0:
                 pass
             elif self.viewMode == 1:
