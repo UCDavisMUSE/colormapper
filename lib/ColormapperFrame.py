@@ -43,9 +43,11 @@ class ColormapperFrame(wx.Frame):
     
     def menuData(self):
         return (("&File",
-                        ("&Open\tCtrl-O",   "Open image for conversion",    self.OnOpen),
+                        ("&Open...\tCtrl-O",   "Open colormapper file",    self.OnOpen),
                         ("&Save\tCtrl-S",   "Save colormapper file",        self.OnSave),
-                        ("&Export", "Export converted image",       self.OnExport),
+                        ("Save &As...\tShift-Ctrl-S", "Save colormapper file as", self.OnSaveAs),
+                        ("&Import...", "Import image for conversion", self.OnImport),
+                        ("&Export...", "Export converted image",       self.OnExport),
                         ("&Quit\tCtrl-Q",   "Quit",                         self.OnCloseWindow)),
                         
                 ("&Edit",
@@ -81,6 +83,8 @@ class ColormapperFrame(wx.Frame):
     # Group empty event handlers together
     def OnOpen(self, event): pass
     def OnSave(self, event): pass
+    def OnSaveAs(self, event): pass
+    def OnImport(self, event): pass
     def OnExport(self, event): pass
     def OnCopy(self, event): pass
     def OnCut(self, event): pass
