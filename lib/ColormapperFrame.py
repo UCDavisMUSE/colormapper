@@ -30,17 +30,17 @@ class ColormapperFrame(wx.Frame):
         
     def createMainInterfaceWindow(self):
         # Create sub panels
-        inputImagePanel = BlockWindow(self, label = "Input Image: " + self.imageFilename, size = (400, 300))
-        outputImagePanel = BlockWindow(self, label = "Output Image", size = (400, 300))
-        controlPanel = BlockWindow(self, label = "Controls", size = (800, 200))                       
+        self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (400, 300))
+        self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (400, 300))
+        self.controlPanel = BlockWindow(self, label = "Controls", size = (800, 200))                       
         # Arrange the input and output images side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-        horizontalSizer.Add(inputImagePanel, 1, flag=wx.EXPAND)
-        horizontalSizer.Add(outputImagePanel, 1, flag=wx.EXPAND)
+        horizontalSizer.Add(self.inputImagePanel, 1, flag=wx.EXPAND)
+        horizontalSizer.Add(self.outputImagePanel, 1, flag=wx.EXPAND)
         # Arrange the controls below the images
         verticalSizer = wx.BoxSizer(wx.VERTICAL)
         verticalSizer.Add(horizontalSizer, 1, flag=wx.EXPAND)
-        verticalSizer.Add(controlPanel, flag=wx.EXPAND)
+        verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
         self.SetSizer(verticalSizer)
 
