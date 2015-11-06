@@ -1,13 +1,14 @@
 import wx
 import os
 from BlockWindow import BlockWindow
-
+from ImageViewerPanel import ImageViewerPanel
 
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
     # Internal class data
     defaultImageType = '.png'
     imageWildcard = "PNG (*.png)|*.png|JPEG (*.jpg,*.jpeg)|*.jpg;*.jpeg|All Files (*.*)|*.*"
+    # More on imagetypes: http://www.wxpython.org/docs/api/wx.Image-class.html#__init__
     colormapperWildcard = "Colormapper files (*.colormapper)|*.colormapper|All Files (*.*)|*.*"
         
 
