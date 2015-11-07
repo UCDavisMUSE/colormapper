@@ -7,7 +7,7 @@ from ImageViewerPanel import ImageViewerPanel
 class ColormapperFrame(wx.Frame):
     # Internal class data
     defaultImageType = '.png'
-    imageWildcard = "PNG (*.png)|*.png|JPEG (*.jpg,*.jpeg)|*.jpg;*.jpeg|All Files (*.*)|*.*"
+    imageWildcard = "PNG (*.png)|*.png|JPEG (*.jpg, *.jpeg)|*.jpg;*.jpeg|TIFF (*.tif, *.tiff)|*.tif;*.tiff|BMP (*.bmp)|*.bmp|All Files (*.*)|*.*"
     # More on imagetypes: http://www.wxpython.org/docs/api/wx.Image-class.html#__init__
     colormapperWildcard = "Colormapper files (*.colormapper)|*.colormapper|All Files (*.*)|*.*"
         
@@ -159,12 +159,31 @@ class ColormapperFrame(wx.Frame):
 
     def ImportImage(self):
         # This code imports the image
-        
-        # On a successful import, we should clear the colormapper filename to
-        # prevent overwrites on the save command
-        self.filename = ""
+        if self.imageFilename:
+            try:
+                fileExtension = os.path.splitext(self.imageFilename)[1]
+                if fileExtension == ".png":
+                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_PNG)
+                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_JPEG)
+                elif fileExtension == ".tif" or fileExtension == ".tiff":
+                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_TIF)
+                elif fileExtension == ".bmp":
+                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_BMP)
+                else:
+                    # nolog = wx.LogNull() # Uncommenting will not log errors 
+                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_ANY)
+                    #del nolog
+                       
+                # On a successful import, we should clear the colormapper filename to
+                # prevent overwrites on the save command, as well as reinitialize the buffer
+                self.filename = ""
+                self.inputImagePanel.reInitBuffer = True
+            except:
+                wx.MessageBox("Error importing %s." % self.filename, "oops!",
+                    stype=wx.OK|wx.ICON_EXCLAMATION)
 
-        
+
     def ExportImage(self):
         # This code exports the image
         pass
