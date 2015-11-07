@@ -2,6 +2,7 @@ import wx
 import os
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
+from ControlPanel import ControlPanel
 
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
@@ -32,7 +33,7 @@ class ColormapperFrame(wx.Frame):
         # Create sub panels
         self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (400, 300))
         self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (400, 300))
-        self.controlPanel = BlockWindow(self, label = "Controls", size = (800, 200))                       
+        self.controlPanel = ControlPanel(self, inputImagePanel = self.inputImagePanel, outputImagePanel = self.outputImagePanel, label = "Control Panel", size = (800, 200), )                       
         # Arrange the input and output images side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         horizontalSizer.Add(self.inputImagePanel, 1, flag=wx.EXPAND)
@@ -177,8 +178,11 @@ class ColormapperFrame(wx.Frame):
                        
                 # On a successful import, we should clear the colormapper filename to
                 # prevent overwrites on the save command, as well as reinitialize the buffer
+                # and clear the output image
                 self.filename = ""
                 self.inputImagePanel.reInitBuffer = True
+                self.outputImagePanel.image = wx.EmptyImage()
+                self.outputImagePanel.reInitBuffer = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
