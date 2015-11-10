@@ -190,6 +190,26 @@ class ColormapperFrame(wx.Frame):
 
     def ExportImage(self):
         # This code exports the image
+        if self.exportFilename:
+            try:
+                fileExtension = os.path.splitext(self.exportFilename)[1]
+                if fileExtension == ".png":
+                    self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_PNG)
+                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                    self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_JPEG)
+                elif fileExtension == ".tif" or fileExtension == ".tiff":
+                    self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_TIF)
+                elif fileExtension == ".bmp":
+                    self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_BMP)
+                else:
+                    # nolog = wx.LogNull() # Uncommenting will not log errors 
+                    self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_ANY)
+                    #del nolog
+                
+            
+            except:
+                wx.MessageBox("Error exporting %s." % self.filename, "oops!",
+                    stype=wx.OK|wx.ICON_EXCLAMATION)
         pass
             
 
