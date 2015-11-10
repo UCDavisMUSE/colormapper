@@ -205,12 +205,9 @@ class ColormapperFrame(wx.Frame):
                     # nolog = wx.LogNull() # Uncommenting will not log errors 
                     self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_ANY)
                     #del nolog
-                
-            
             except:
                 wx.MessageBox("Error exporting %s." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
-        pass
             
 
     # Group empty event handlers together
