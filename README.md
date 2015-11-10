@@ -17,3 +17,4 @@ zharmany@gmail.com
 - Determine format for saving color conversion settings.
 - Check to see if the use of Accelerator Menus would aid in localization efforts. See the blog posts [here](http://www.blog.pythonlibrary.org/2010/12/02/wxpython-keyboard-shortcuts-accelerators/) and [here](http://www.blog.pythonlibrary.org/2008/07/02/wxpython-working-with-menus-toolbars-and-accelerators/).
 - Method to simply import / export the algorithm settings (as to apply to a new image without needing to load the source image and mapped image).
+- Upon Import/Export or Open/Save, ensure the current working directory gets updated so that a user does not need to re-navigate to the directory. This may need to be done with the os python module, since os.getcwd() gets the current working directory.
