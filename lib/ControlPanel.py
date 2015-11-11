@@ -1,5 +1,6 @@
 import wx
 import numpy as np
+import colormappingMethods
 
 class ControlPanel(wx.Panel):
     def __init__(self, parent, inputImagePanel, outputImagePanel, ID = -1, label = "",
