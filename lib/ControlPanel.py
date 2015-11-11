@@ -34,9 +34,20 @@ class ControlPanel(wx.Panel):
             # If we use OpenCV, the image is expected to be BGR
             # inputImageArray = cv2.cvtColor(inputImageArray, cv2.COLOR_RGB2BGR)
             
-            # Do image processing, get dimensions of output image
-            # Simple color invert as an example:
-            outputImageArray = 255 - inputImageArray
+            # Do image processing and color conversion here
+            X = np.array([ [  0, 228, 244],
+                           [  0, 250, 205],
+                           [  0, 166, 100] ])
+               
+            Y = np.array([ [255,  70, 230],
+                           [255,  30, 160],
+                           [255, 150, 200] ])
+
+            (A, c) = colormappingMethods.learnAffineColorspaceMap(X,Y)
+
+            outputImageArray = colormappingMethods.applyAffineColorspaceMap(inputImageArray,A,c)
+            
+            # Get/set dimensions of output image
             outputImageWidth = inputImageWidth
             outputImageHeight = inputImageHeight
             outputImageSize = inputImageSize
