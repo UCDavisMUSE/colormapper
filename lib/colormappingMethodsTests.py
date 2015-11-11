@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 from colormappingMethods import *
 # This script tests the colormapping methods in colormappingMethods.py
 
@@ -32,21 +33,17 @@ print(np.dot(A,X) + np.dot(c,np.ones((1,3),float)))
 #   255.0000
 
 image = cv2.imread("testImages/AVG_Stack-9.jpg") 
-cv2.imshow("Image",image) # the window title will be "image"
-k = cv2.waitKey(0) & 0xFF # Mask the return of waitKey
-if k == 27:         # wait for ESC key to exit
-    cv2.destroyAllWindows() #closes all windows
-
 image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+
+plt.imshow(image, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+plt.show()
 
 newImage = applyAffineColorspaceMap(image,A,c)
 
-newImage = cv2.cvtColor(newImage, cv2.COLOR_RGB2BGR)
-
-cv2.imshow("image",newImage) # the window title will be "image"
-k = cv2.waitKey(0) & 0xFF # Mask the return of waitKey
-if k == 27:         # wait for ESC key to exit
-    cv2.destroyAllWindows() #closes all windows
+plt.imshow(newImage, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+plt.show()
 
 
 # Second Test
@@ -78,18 +75,14 @@ print(np.dot(A,X) + np.dot(c,np.ones((1,3),float)))
 #   255.0000
 
 image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
-cv2.imshow("Image",image) # the window title will be "image"
-k = cv2.waitKey(0) & 0xFF # Mask the return of waitKey
-if k == 27:         # wait for ESC key to exit
-    cv2.destroyAllWindows() #closes all windows
-
 image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+
+plt.imshow(image, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+plt.show()
 
 newImage = applyAffineColorspaceMap(image,A,c)
 
-newImage = cv2.cvtColor(newImage, cv2.COLOR_RGB2BGR)
-
-cv2.imshow("image",newImage) # the window title will be "image"
-k = cv2.waitKey(0) & 0xFF # Mask the return of waitKey
-if k == 27:         # wait for ESC key to exit
-    cv2.destroyAllWindows() #closes all windows
+plt.imshow(newImage, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+plt.show()
