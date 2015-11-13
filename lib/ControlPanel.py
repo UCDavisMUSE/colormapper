@@ -1,6 +1,9 @@
 import wx
 import numpy as np
 import colormappingMethods
+from BlockWindow import BlockWindow
+
+
 
 class ControlPanel(wx.Panel):
     def __init__(self, parent, inputImagePanel, outputImagePanel, ID = -1, label = "",
@@ -8,14 +11,46 @@ class ControlPanel(wx.Panel):
         wx.Panel.__init__(self, parent, ID, pos, size, wx.NO_BORDER, label)
         self.inputImagePanel = inputImagePanel
         self.outputImagePanel = outputImagePanel
-        
-        self.panel = wx.Panel(self, -1, size = size)
-        
+                
         # ControlPanel attributes
-        self.computeButton = wx.Button(self.panel, label = "Compute", pos = (0, 0))
+        # Panel for buttons
+        self.buttonPanel = wx.Panel(self, size = (120, 40))
+        self.computeButton = wx.Button(self.buttonPanel, label = "Compute", size = (100, 20))
         
+        # Add input and output colors
+        self.numberOfColors = 4
+        self.labels = map(str, range(self.numberOfColors))        
+        box1 = self.MakeStaticBoxSizer("Input Colors", self.labels[0:self.numberOfColors])
+        box2 = self.MakeStaticBoxSizer("Output Colors", self.labels[0:self.numberOfColors])
+
+        # Arrange the input and output colors side-by-side
+        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
+        horizontalSizer.Add(box1, 1, flag=wx.EXPAND)
+        horizontalSizer.Add(box2, 1, flag=wx.EXPAND)
+
+        # Arrange the controls below input and output colors
+        verticalSizer = wx.BoxSizer(wx.VERTICAL)
+        verticalSizer.Add(horizontalSizer, 0, flag=wx.EXPAND)
+        verticalSizer.Add(self.buttonPanel, 1, flag=wx.ALIGN_RIGHT)
+
+        # Set the sizer to be the verticalSizer
+        self.SetSizer(verticalSizer)
+        verticalSizer.Fit(self)
+
         # Event handlers
         self.Bind(wx.EVT_BUTTON, self.OnComputeButtonClick, self.computeButton)
+
+
+    def MakeStaticBoxSizer(self, boxlabel, itemlabels):
+        box = wx.StaticBox(self, -1, boxlabel)
+        sizer = wx.StaticBoxSizer(box, wx.HORIZONTAL)
+        
+        for label in itemlabels:
+            bw = BlockWindow(self, label=label, size = (30, 30))
+            sizer.Add(bw, 1, wx.ALL, 1)
+        
+        return sizer
+
         
     def OnComputeButtonClick(self, event):
         if self.inputImagePanel.image.Ok():
