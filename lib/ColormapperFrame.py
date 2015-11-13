@@ -33,7 +33,7 @@ class ColormapperFrame(wx.Frame):
         # Create sub panels
         self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (400, 300))
         self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (400, 300))
-        self.controlPanel = ControlPanel(self, inputImagePanel = self.inputImagePanel, outputImagePanel = self.outputImagePanel, label = "Control Panel", size = (800, 200), )                       
+        self.controlPanel = ControlPanel(self, inputImagePanel = self.inputImagePanel, outputImagePanel = self.outputImagePanel, label = "Control Panel", size = (800, 200))                       
         # Arrange the input and output images side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         horizontalSizer.Add(self.inputImagePanel, 1, flag=wx.EXPAND)
