@@ -1,7 +1,7 @@
 import wx
 import numpy as np
 import colormappingMethods
-from BlockWindow import BlockWindow
+from ColorButton import ColorButton
 
 
 
@@ -18,10 +18,14 @@ class ControlPanel(wx.Panel):
         self.computeButton = wx.Button(self.buttonPanel, label = "Compute", size = (100, 20))
         
         # Add input and output colors
-        self.numberOfColors = 4
+        self.numberOfColors = 3
+        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
+        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
+
+
         self.labels = map(str, range(self.numberOfColors))        
-        box1 = self.MakeStaticBoxSizer("Input Colors", self.labels[0:self.numberOfColors])
-        box2 = self.MakeStaticBoxSizer("Output Colors", self.labels[0:self.numberOfColors])
+        (box1, self.inputColorButtons) = self.MakeColorButtonsBoxSizer("Input Colors", self.inputColors)
+        (box2, self.outputColorButtons) = self.MakeColorButtonsBoxSizer("Output Colors", self.outputColors)
 
         # Arrange the input and output colors side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -41,15 +45,16 @@ class ControlPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.OnComputeButtonClick, self.computeButton)
 
 
-    def MakeStaticBoxSizer(self, boxlabel, itemlabels):
+    def MakeColorButtonsBoxSizer(self, boxlabel, buttonColors):
         box = wx.StaticBox(self, -1, boxlabel)
         sizer = wx.StaticBoxSizer(box, wx.HORIZONTAL)
+        colorButtons = []
+        for color in buttonColors:
+            colorButton = ColorButton(self, color = color, size = (30, 30))
+            sizer.Add(colorButton, 1, wx.ALL, 1)
+            colorButtons.append(colorButton)
         
-        for label in itemlabels:
-            bw = BlockWindow(self, label=label, size = (30, 30))
-            sizer.Add(bw, 1, wx.ALL, 1)
-        
-        return sizer
+        return (sizer, colorButtons)
 
         
     def OnComputeButtonClick(self, event):
