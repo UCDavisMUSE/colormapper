@@ -21,12 +21,9 @@ class ControlPanel(wx.Panel):
         self.numberOfColors = 3
         self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
         self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
-
-
-        self.labels = map(str, range(self.numberOfColors))        
         (box1, self.inputColorButtons) = self.MakeColorButtonsBoxSizer("Input Colors", self.inputColors)
         (box2, self.outputColorButtons) = self.MakeColorButtonsBoxSizer("Output Colors", self.outputColors)
-
+        
         # Arrange the input and output colors side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         horizontalSizer.Add(box1, 1, flag=wx.EXPAND)
@@ -75,15 +72,16 @@ class ControlPanel(wx.Panel):
             # inputImageArray = cv2.cvtColor(inputImageArray, cv2.COLOR_RGB2BGR)
             
             # Do image processing and color conversion here
-            X = np.array([ [  0, 228, 244],
-                           [  0, 250, 205],
-                           [  0, 166, 100] ])
-               
-            Y = np.array([ [255,  70, 230],
-                           [255,  30, 160],
-                           [255, 150, 200] ])
+            # This works, but maybe there is a cleaner way to get the colors from the buttons?
+            inputColorMatrix = np.zeros((3, len(self.inputColorButtons)))
+            outputColorMatrix = np.zeros((3, len(self.outputColorButtons)))
+            for color in range(len(self.inputColorButtons)):
+                inputColorMatrix[:, color] = self.inputColorButtons[color].GetBackgroundColour()[0:3]
+            
+            for color in range(len(self.outputColorButtons)):
+                outputColorMatrix[:, color] = self.outputColorButtons[color].GetBackgroundColour()[0:3]
 
-            (A, c) = colormappingMethods.learnAffineColorspaceMap(X,Y)
+            (A, c) = colormappingMethods.learnAffineColorspaceMap(inputColorMatrix, outputColorMatrix)
 
             outputImageArray = colormappingMethods.applyAffineColorspaceMap(inputImageArray,A,c)
             
