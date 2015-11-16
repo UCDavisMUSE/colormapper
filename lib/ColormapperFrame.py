@@ -31,13 +31,13 @@ class ColormapperFrame(wx.Frame):
         
     def createMainInterfaceWindow(self):
         # Create sub panels
-        self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (400, 300))
-        self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (400, 300))
+        self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (300, 200))
+        self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (300, 200))
         self.controlPanel = ControlPanel(self, inputImagePanel = self.inputImagePanel, outputImagePanel = self.outputImagePanel, label = "Control Panel", size = (800, 100))                       
         # Arrange the input and output images side-by-side
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-        horizontalSizer.Add(self.inputImagePanel, 1, flag=wx.EXPAND)
-        horizontalSizer.Add(self.outputImagePanel, 1, flag=wx.EXPAND)
+        horizontalSizer.Add(self.inputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
+        horizontalSizer.Add(self.outputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
         # Arrange the controls below the images
         verticalSizer = wx.BoxSizer(wx.VERTICAL)
         verticalSizer.Add(horizontalSizer, 1, flag=wx.EXPAND)
@@ -180,8 +180,10 @@ class ColormapperFrame(wx.Frame):
                 # prevent overwrites on the save command, as well as reinitialize the buffer
                 # and clear the output image
                 self.filename = ""
+                self.inputImagePanel.newImageData = True
                 self.inputImagePanel.reInitBuffer = True
                 self.outputImagePanel.image = wx.EmptyImage()
+                self.outputImagePanel.newImageData = True
                 self.outputImagePanel.reInitBuffer = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
