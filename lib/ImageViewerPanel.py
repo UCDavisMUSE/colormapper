@@ -33,6 +33,7 @@ class ImageViewerPanel(wx.Panel):
         self.viewMode = 1
         self.SetBackgroundColour("Black")
         self.image = wx.EmptyImage() # Initialize with an empty image
+        self.newImageData = False
         
         # Initialize Buffer
         self.InitBuffer()
@@ -126,8 +127,6 @@ class ImageViewerPanel(wx.Panel):
 
 
     def InitBuffer(self):
-        (self.display_width, self.display_height) = self.GetImageDisplaySize()
-        
         # Setup Display Context equal to size of area to be painted
         (view_width, view_height) = self.GetClientSize()
         self.buffer = wx.EmptyBitmap(view_width,view_height)
@@ -135,6 +134,16 @@ class ImageViewerPanel(wx.Panel):
         
         # Draw translated bitmap if it contains data
         if self.image.Ok():
+            oldWidth = self.display_width
+            oldHeight = self.display_height
+            (self.display_width, self.display_height) = self.GetImageDisplaySize()
+    
+            if self.newImageData or oldWidth != self.display_width or oldHeight != self.display_height:
+                self.bmp = wx.BitmapFromImage(
+                        self.image.Scale(self.display_width, self.display_height, 
+                            quality = self.resizeMethod))
+                self.newImageData = False
+
             dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
 
         self.reInitBuffer = False
@@ -163,8 +172,6 @@ class ImageViewerPanel(wx.Panel):
         if not self.image.Ok():
             return (1,1)
     
-        oldWidth = self.display_width
-        oldHeight = self.display_height
         if self.viewMode == 0:
             (display_width, display_height) = self.image.GetSize()
             self.zoomFactor = 1.0
@@ -184,10 +191,7 @@ class ImageViewerPanel(wx.Panel):
             (img_width, img_height) = self.image.GetSize()
             display_width = round(1.0*self.zoomFactor*img_width)
             display_height = round(1.0*self.zoomFactor*img_height)
-            
-        if oldWidth != display_width or oldHeight != display_height:
-            self.bmp = wx.BitmapFromImage(self.image.Scale(display_width,display_height,quality = self.resizeMethod))
-                 
+                
         return (display_width, display_height) 
 
 
