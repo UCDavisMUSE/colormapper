@@ -98,6 +98,7 @@ class ControlPanel(wx.Panel):
             self.outputImagePanel.image = wx.EmptyImage(outputImageWidth, outputImageHeight)
             self.outputImagePanel.image.SetData(outputImageArray.tostring())
 
-            # Tell the outputImagePanel to refresh the display            
+            # Tell the outputImagePanel to refresh the display    
+            self.outputImagePanel.newImageData = True        
             self.outputImagePanel.reInitBuffer = True
             
