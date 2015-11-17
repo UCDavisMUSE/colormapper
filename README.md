@@ -20,3 +20,4 @@ zharmany@gmail.com
 - Upon Import/Export or Open/Save, ensure the current working directory gets updated so that a user does not need to re-navigate to the directory. This may need to be done with the os python module, since os.getcwd() gets the current working directory.
 - [FIXED] Bug: When importing an image with the same dimensions as the current image, the input image panel does not refresh. This is because I resize the image to fit the panel within the GetImageDisplaySize method of the ImageViewerPanel class, and skip resizing if the dimensions don't change to save on CPU cycles. 
 - Feature: Be able to specify the number of selected colors. 
+- History of computed colormappings in a panel with image thumbnails. This is temporary and is purged upon closing.
