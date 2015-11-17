@@ -100,5 +100,3 @@ class ControlPanel(wx.Panel):
             self.outputImagePanel.newImageData = True        
             self.outputImagePanel.reInitBuffer = True
             
-
-            

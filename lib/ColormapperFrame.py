@@ -24,9 +24,8 @@ class ColormapperFrame(wx.Frame):
         self.filename = ""
         self.exportFilename = ""
         self.numberOfColors = 3
-        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100), (0,0,0) ]
-        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200), (0,0,0) ]
-
+        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
+        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -195,7 +194,6 @@ class ColormapperFrame(wx.Frame):
             label = "Control Panel", size = (800, 100))                       
         self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
         self.verticalSizer.Layout()
-        
 
 
     def ImportImage(self):
