@@ -1,5 +1,6 @@
 import wx
 import os
+import cPickle
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
 from ControlPanel import ControlPanel
@@ -150,12 +151,41 @@ class ColormapperFrame(wx.Frame):
             
     def ReadFile(self):
         # This code reads a colormapper file
-        pass
-        
+        if self.filename:
+            try:
+                f = open(self.filename, 'r')
+                (inputColors, outputColors) = cPickle.load(f)
+                self.SetInputOutputColors(inputColors, outputColors)
+            except cPickle.UnpicklingError:
+                wx.MessageBox("%s is not a sketch file." % self.filename, "oops!",
+                    stype=wx.OK|wx.ICON_EXCLAMATION)
+
 
     def SaveFile(self):
         # This code saves a colormapper file
-        pass
+        if self.filename:
+            (inputColors, outputColors) = self.GetInputOutputColors()
+            f = open(self.filename, 'w')
+            cPickle.dump((inputColors, outputColors), f)
+            f.close()
+
+
+    def GetInputOutputColors(self):
+        inputColors = [];
+        for color in range(len(self.controlPanel.inputColorButtons)):
+            inputColors += [self.controlPanel.inputColorButtons[color].GetBackgroundColour()[0:3]]
+        outputColors = [];
+        for color in range(len(self.controlPanel.outputColorButtons)):
+            outputColors += [self.controlPanel.outputColorButtons[color].GetBackgroundColour()[0:3]]
+        return (inputColors, outputColors)
+
+    
+    def SetInputOutputColors(self,inputColors,outputColors):
+        for color in range(len(inputColors)):
+            self.controlPanel.inputColorButtons[color].SetBackgroundColour(inputColors[color])
+        for color in range(len(outputColors)):
+            self.controlPanel.outputColorButtons[color].SetBackgroundColour(outputColors[color])
+        self.controlPanel.Refresh()
 
 
     def ImportImage(self):
