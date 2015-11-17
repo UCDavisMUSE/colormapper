@@ -73,7 +73,7 @@ class ColormapperFrame(wx.Frame):
                         ("C&ut",                "Cut converted image to clipboard",     self.OnCut),
                         ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste),
                         ("",                    "",                                     ""),
-                        ("&Options...",         "Display Options",                      self.OnOptions)))        
+                        ("&Number of Colors...",         "Change Number of Colors",                      self.OnOptions)))        
           
     
     def createMenuBar(self):
@@ -254,7 +254,30 @@ class ColormapperFrame(wx.Frame):
     def OnCopy(self, event): pass
     def OnCut(self, event): pass
     def OnPaste(self, event): pass
-    def OnOptions(self, event): pass
+
+    def OnOptions(self, event): 
+        choices = ["3", "4", "5"]
+        dialog = wx.SingleChoiceDialog(None, "Select the number of colors to map", "Number of Colors",
+            choices)
+        if dialog.ShowModal() == wx.ID_OK:
+            newNumberOfColors = int(dialog.GetStringSelection())
+            (inputColors, outputColors) = self.GetInputOutputColors()
+            if newNumberOfColors > len(inputColors):
+                # Need to add colors
+                while len(inputColors) < newNumberOfColors:
+                    inputColors += [(0, 0, 0)] # Append with Black
+                while len(outputColors) < newNumberOfColors:
+                    outputColors += [(0, 0, 0)] #Append with Black
+                self.SetInputOutputColors(inputColors, outputColors)
+                
+            elif newNumberOfColors < len(inputColors):
+                # Need to remove colors
+                inputColors = inputColors[0:newNumberOfColors]
+                outputColors = outputColors[0:newNumberOfColors]
+                self.SetInputOutputColors(inputColors, outputColors)
+        
+        dialog.Destroy()
+        
     
     def OnCloseWindow(self, event):
         self.Destroy()                
