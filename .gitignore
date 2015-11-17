@@ -26,3 +26,7 @@ Thumbs.db
 
 # Temporary directory
 tmp
+
+# Build and distribution directory for Py2Exe
+build
+dist
