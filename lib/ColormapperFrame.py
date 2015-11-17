@@ -23,6 +23,10 @@ class ColormapperFrame(wx.Frame):
         self.imageFilename = ""
         self.filename = ""
         self.exportFilename = ""
+        self.numberOfColors = 3
+        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100), (0,0,0) ]
+        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200), (0,0,0) ]
+
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -34,17 +38,20 @@ class ColormapperFrame(wx.Frame):
         # Create sub panels
         self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (300, 200))
         self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (300, 200))
-        self.controlPanel = ControlPanel(self, inputImagePanel = self.inputImagePanel, outputImagePanel = self.outputImagePanel, label = "Control Panel", size = (800, 100))                       
+        self.controlPanel = ControlPanel(self, 
+            inputColors = self.inputColors, inputImagePanel = self.inputImagePanel,
+            outputColors = self.outputColors, outputImagePanel = self.outputImagePanel,
+            label = "Control Panel", size = (800, 100))                       
         # Arrange the input and output images side-by-side
-        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-        horizontalSizer.Add(self.inputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
-        horizontalSizer.Add(self.outputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
+        self.horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.horizontalSizer.Add(self.inputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
+        self.horizontalSizer.Add(self.outputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
         # Arrange the controls below the images
-        verticalSizer = wx.BoxSizer(wx.VERTICAL)
-        verticalSizer.Add(horizontalSizer, 1, flag=wx.EXPAND)
-        verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
+        self.verticalSizer = wx.BoxSizer(wx.VERTICAL)
+        self.verticalSizer.Add(self.horizontalSizer, 1, flag=wx.EXPAND)
+        self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
-        self.SetSizer(verticalSizer)
+        self.SetSizer(self.verticalSizer)
 
     
     def createStatusBar(self):
@@ -181,11 +188,14 @@ class ColormapperFrame(wx.Frame):
 
     
     def SetInputOutputColors(self,inputColors,outputColors):
-        for color in range(len(inputColors)):
-            self.controlPanel.inputColorButtons[color].SetBackgroundColour(inputColors[color])
-        for color in range(len(outputColors)):
-            self.controlPanel.outputColorButtons[color].SetBackgroundColour(outputColors[color])
-        self.controlPanel.Refresh()
+        self.controlPanel.Destroy()
+        self.controlPanel = ControlPanel(self,
+            inputColors = inputColors, inputImagePanel = self.inputImagePanel, 
+            outputColors = outputColors, outputImagePanel = self.outputImagePanel, 
+            label = "Control Panel", size = (800, 100))                       
+        self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
+        self.verticalSizer.Layout()
+        
 
 
     def ImportImage(self):
