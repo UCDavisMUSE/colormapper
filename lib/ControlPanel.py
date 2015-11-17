@@ -4,12 +4,13 @@ import colormappingMethods
 from ColorButton import ColorButton
 
 
-
 class ControlPanel(wx.Panel):
-    def __init__(self, parent, inputImagePanel, outputImagePanel, ID = -1, label = "",
+    def __init__(self, parent, inputColors, inputImagePanel, outputColors, outputImagePanel, ID = -1, label = "",
                 pos = wx.DefaultPosition, size = wx.DefaultSize):
         wx.Panel.__init__(self, parent, ID, pos, size, wx.NO_BORDER, label)
+        self.inputColors = inputColors
         self.inputImagePanel = inputImagePanel
+        self.outputColors = outputColors
         self.outputImagePanel = outputImagePanel
                 
         # ControlPanel attributes
@@ -18,9 +19,6 @@ class ControlPanel(wx.Panel):
         self.computeButton = wx.Button(self.buttonPanel, label = "Compute", size = (100, 20))
         
         # Add input and output colors
-        self.numberOfColors = 3
-        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
-        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
         (box1, self.inputColorButtons) = self.MakeColorButtonsBoxSizer("Input Colors", self.inputColors)
         (box2, self.outputColorButtons) = self.MakeColorButtonsBoxSizer("Output Colors", self.outputColors)
         
@@ -101,4 +99,6 @@ class ControlPanel(wx.Panel):
             # Tell the outputImagePanel to refresh the display    
             self.outputImagePanel.newImageData = True        
             self.outputImagePanel.reInitBuffer = True
+            
+
             
