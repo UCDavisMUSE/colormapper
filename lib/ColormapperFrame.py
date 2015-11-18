@@ -76,7 +76,6 @@ class ColormapperFrame(wx.Frame):
         if self.HasCapture():
             self.currentPosition = event.GetPositionTuple()
 
-
     
     def OnLeftUp(self, event):
         if self.HasCapture():
@@ -93,6 +92,7 @@ class ColormapperFrame(wx.Frame):
                     self.currentButtonClicked.SetBackgroundColour(currentColor)
                     self.Refresh()
             self.ReleaseMouse()
+            
             
     def OnMotion(self, event):
         currentPosition = event.GetPositionTuple()
@@ -111,17 +111,12 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("", 1)
             self.Refresh()
 
-#         if self.HasCapture():
-#             # Draw crosshairs on image
-#             self.currentPosition = event.GetPositionTuple()
-            
-        
-    
-    
+
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(3)
         self.statusbar.SetStatusWidths([200, -2, -3])
+
 
     def OnInputMotion(self, event):
         currentPosition = event.GetPositionTuple()
@@ -140,6 +135,7 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("", 1)
         event.Skip()
             
+
     def OnOutputMotion(self, event):
         currentPosition = event.GetPositionTuple()
         #self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
