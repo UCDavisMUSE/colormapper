@@ -51,12 +51,49 @@ class ColormapperFrame(wx.Frame):
         self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
         self.SetSizer(self.verticalSizer)
+        
+        self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
+        self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
 
     
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(3)
         self.statusbar.SetStatusWidths([200, -2, -3])
+
+    def OnInputMotion(self, event):
+        currentPosition = event.GetPositionTuple()
+       # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
+        if self.inputImagePanel.image.Ok():
+            currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
+                               currentPosition[1] - self.inputImagePanel.translation[1])
+            width = self.inputImagePanel.displayedImage.GetWidth()
+            height = self.inputImagePanel.displayedImage.GetHeight()
+            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
+            else:
+                self.statusbar.SetStatusText("", 1)
+        event.Skip()
+            
+    def OnOutputMotion(self, event):
+        currentPosition = event.GetPositionTuple()
+        #self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
+        if self.outputImagePanel.image.Ok():
+            currentPosition = (currentPosition[0] - self.outputImagePanel.translation[0],
+                               currentPosition[1] - self.outputImagePanel.translation[1])
+            width = self.outputImagePanel.displayedImage.GetWidth()
+            height = self.outputImagePanel.displayedImage.GetHeight()
+            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                currentColor = (self.outputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                self.outputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                self.outputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
+            else:
+                self.statusbar.SetStatusText("", 1)
+        event.Skip()
         
     
     def menuData(self):
