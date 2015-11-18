@@ -55,6 +55,68 @@ class ColormapperFrame(wx.Frame):
         self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
         self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
 
+        # Code for overriding button behavior to select colors from image
+        for button in self.controlPanel.inputColorButtons:
+            button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
+            
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        self.Bind(wx.EVT_MOTION, self.OnInputMotion)
+            
+        
+    def OverrideInputColorButtons(self, event):
+        self.currentButtonClicked = event.GetEventObject()
+        if False:
+            self.CaptureMouse()        
+        else:
+            event.Skip()
+
+    
+    def OnLeftDown(self, event):
+        if self.HasCapture():
+            self.currentPosition = event.GetPositionTuple()
+
+
+    
+    def OnLeftUp(self, event):
+        if self.HasCapture():
+            # Update color selection if valid
+            if self.inputImagePanel.image.Ok():
+                currentPosition = (self.currentPosition[0] - self.inputImagePanel.translation[0],
+                                   self.currentPosition[1] - self.inputImagePanel.translation[1])
+                width = self.inputImagePanel.displayedImage.GetWidth()
+                height = self.inputImagePanel.displayedImage.GetHeight()
+                if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                    currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                    self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                    self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                    self.currentButtonClicked.SetBackgroundColour(currentColor)
+                    self.Refresh()
+            self.ReleaseMouse()
+            
+    def OnMotion(self, event):
+        currentPosition = event.GetPositionTuple()
+       # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
+        if self.inputImagePanel.image.Ok():
+            currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
+                               currentPosition[1] - self.inputImagePanel.translation[1])
+            width = self.inputImagePanel.displayedImage.GetWidth()
+            height = self.inputImagePanel.displayedImage.GetHeight()
+            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
+            else:
+                self.statusbar.SetStatusText("", 1)
+            self.Refresh()
+
+#         if self.HasCapture():
+#             # Draw crosshairs on image
+#             self.currentPosition = event.GetPositionTuple()
+            
+        
+    
     
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
