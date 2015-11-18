@@ -66,7 +66,7 @@ class ColormapperFrame(wx.Frame):
         
     def OverrideInputColorButtons(self, event):
         self.currentButtonClicked = event.GetEventObject()
-        if False:
+        if self.controlPanel.choice.GetSelection() == 1:
             self.CaptureMouse()        
         else:
             event.Skip()

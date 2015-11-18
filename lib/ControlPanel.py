@@ -16,8 +16,13 @@ class ControlPanel(wx.Panel):
         # ControlPanel attributes
         # Panel for buttons
         self.buttonPanel = wx.Panel(self, size = (120, 40))
-        self.computeButton = wx.Button(self.buttonPanel, label = "Compute", size = (100, 20))
+        self.computeButton = wx.Button(self.buttonPanel, label = "Compute", size = (100, 20), pos = (0, 0))
         
+        self.choicePanel = wx.Panel(self, size = (300, 40))
+        self.choiceText = wx.StaticText(self.choicePanel, -1, "Select Input Colors From:", size = (150, 30), pos = (10, 5))
+        self.choice = wx.Choice(self.choicePanel, -1, size = (130, 40), pos = (170, -7), choices=("Color Picker","Input Image"))
+        self.choice.SetSelection(0)
+
         # Add input and output colors
         (box1, self.inputColorButtons) = self.MakeColorButtonsBoxSizer("Input Colors", self.inputColors)
         (box2, self.outputColorButtons) = self.MakeColorButtonsBoxSizer("Output Colors", self.outputColors)
@@ -26,11 +31,16 @@ class ControlPanel(wx.Panel):
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         horizontalSizer.Add(box1, 1, flag=wx.EXPAND)
         horizontalSizer.Add(box2, 1, flag=wx.EXPAND)
+        
+        # Arrange the choice panel and button panel side-by-side
+        horizontalSizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        horizontalSizer2.Add(self.choicePanel, 1, flag=wx.EXPAND)
+        horizontalSizer2.Add(self.buttonPanel, 0, flag=wx.EXPAND)
 
         # Arrange the controls below input and output colors
         verticalSizer = wx.BoxSizer(wx.VERTICAL)
         verticalSizer.Add(horizontalSizer, 0, flag=wx.EXPAND)
-        verticalSizer.Add(self.buttonPanel, 1, flag=wx.ALIGN_RIGHT)
+        verticalSizer.Add(horizontalSizer2, 1, flag=wx.EXPAND)
 
         # Set the sizer to be the verticalSizer
         self.SetSizer(verticalSizer)
