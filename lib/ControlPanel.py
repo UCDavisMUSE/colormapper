@@ -20,7 +20,10 @@ class ControlPanel(wx.Panel):
         
         self.choicePanel = wx.Panel(self, size = (300, 40))
         self.choiceText = wx.StaticText(self.choicePanel, -1, "Select Input Colors From:", size = (150, 30), pos = (10, 5))
-        self.choice = wx.Choice(self.choicePanel, -1, size = (130, 40), pos = (170, -7), choices=("Color Picker","Input Image"))
+        choicePos = (170, 0)
+        if wx.Platform == "__WXMAC__":
+            choicePos = (170, -7)
+        self.choice = wx.Choice(self.choicePanel, -1, size = (130, 40), pos = choicePos, choices=("Color Picker","Input Image"))
         self.choice.SetSelection(0)
 
         # Add input and output colors
