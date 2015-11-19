@@ -42,21 +42,50 @@ def learnAffineColorspaceMap(X, Y):
            
     return (A,c)
     
-def applyAffineColorspaceMap(X, A, c):
+def applyAffineColorspaceMap(X, A, c, method = 0):
     # Applies the affine colorspace map
     # y = Ax + c
     # to every pixel in the image X
     X = X.astype(float)
-    (n1, n2, n3) = X.shape
-    X = X.astype(float)
-    X = X.reshape(n1*n2,n3)
-    X = np.dot(X,A.transpose()) + np.dot(np.ones((n1*n2,1),float),c.transpose())
-    X = X.reshape(n1,n2,n3)
-    # Truncate to [0,255]
-    X[X < 0.0] = 0.0
-    X[X > 255.0] = 255.0
-    X = X.astype(np.uint8)
-    return X
+    if method == 0:
+        # Done using reshapes and matrix multiplication
+        (n1, n2, n3) = X.shape
+        X = X.reshape(n1*n2,n3)
+        X = np.dot(X,A.transpose()) + np.dot(np.ones((n1*n2,1),float),c.transpose())
+        X = X.reshape(n1,n2,n3)
+        # Truncate to [0,255]
+        X[X < 0.0] = 0.0
+        X[X > 255.0] = 255.0
+        X = X.astype(np.uint8)
+        return X
+
+    elif method == 1:
+        # Done using a for loop
+        (n1, n2, n3) = X.shape
+        Y = np.empty((n1, n2, n3),float)
+        for color in range(n3):
+            Y[:,:,color] = A[color,0]*X[:,:,0] + A[color,1]*X[:,:,1] + A[color,2]*X[:,:,2] + c[color]
+        Y[Y < 0.0] = 0.0
+        Y[Y > 255.0] = 255.0
+        Y = Y.astype(np.uint8)
+        return Y
+
+    elif method == 2:
+        # Done using unrolled for loops, always assume 3 colors
+        Y = np.empty(X.shape, float)
+        Y[:,:,0] = A[0,0]*X[:,:,0] + A[0,1]*X[:,:,1] + A[0,2]*X[:,:,2] + c[0]
+        Y[:,:,1] = A[1,0]*X[:,:,0] + A[1,1]*X[:,:,1] + A[1,2]*X[:,:,2] + c[1]
+        Y[:,:,2] = A[2,0]*X[:,:,0] + A[2,1]*X[:,:,1] + A[2,2]*X[:,:,2] + c[2]
+        Y[Y < 0.0] = 0.0
+        Y[Y > 255.0] = 255.0
+        Y = Y.astype(np.uint8)
+        return Y
+        
+    else:
+        print("Incorrect method parameter.")
+        return
+        
+        
     
     
     
