@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+import time
 from colormappingMethods import *
 # This script tests the colormapping methods in colormappingMethods.py
 
@@ -14,7 +15,10 @@ Y = np.array([ [255,  70, 230],
                [255,  30, 160],
                [255, 150, 200] ])
 
+start = time.time()
 (A, c) = learnAffineColorspaceMap(X,Y)
+end = time.time()
+print("Learn Affine Colorspace Map Time: " + str(end-start))
 
 print(A)
 print(c)
@@ -39,7 +43,10 @@ plt.imshow(image, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
 plt.show()
 
+start = time.time()
 newImage = applyAffineColorspaceMap(image,A,c)
+end = time.time()
+print("Apply Affine Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
@@ -56,7 +63,11 @@ Y = np.array([ [255,  70, 230],
                [255,  30, 160],
                [255, 150, 200] ])
 
+start = time.time()
 (A, c) = learnAffineColorspaceMap(X,Y)
+end = time.time()
+print("Learn Affine Colorspace Map Time: " + str(end-start))
+
 
 print(A)
 print(c)
@@ -81,7 +92,10 @@ plt.imshow(image, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
 plt.show()
 
+start = time.time()
 newImage = applyAffineColorspaceMap(image,A,c)
+end = time.time()
+print("Apply Affine Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
