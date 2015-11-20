@@ -1,5 +1,6 @@
 import wx
 import numpy as np
+import copy
 import colormappingMethods
 from ColorButton import ColorButton
 
@@ -94,7 +95,8 @@ class ControlPanel(wx.Panel):
 
             (A, c) = colormappingMethods.learnAffineColorspaceMap(inputColorMatrix, outputColorMatrix)
 
-            outputImageArray = colormappingMethods.applyAffineColorspaceMap(inputImageArray,A,c)
+            outputImageArray = copy.copy(inputImageArray)
+            outputImageArray = colormappingMethods.applyAffineColorspaceMap(outputImageArray,A,c,method = 3, tileSize = (64, 64))
             
             # Get/set dimensions of output image
             outputImageWidth = inputImageWidth
