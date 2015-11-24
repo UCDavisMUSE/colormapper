@@ -5,6 +5,26 @@ from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
 from ControlPanel import ControlPanel
 
+# Class for file drop target
+class MyFileDropTarget(wx.FileDropTarget):
+
+    def __init__(self, window):
+        wx.FileDropTarget.__init__(self)
+        self.window = window
+    
+    def OnDropFiles(self, x, y, filenames):
+        if len(filenames) > 1:
+            dlg = wx.MessageBox( 
+                "This application only supports dragging a single file at a time.",
+                "Multiple files detected", wx.OK | wx.ICON_EXCLAMATION)
+            return
+        if os.path.splitext(filenames[0])[1].lower() == ".colormapper":
+            self.window.filename = filenames[0]
+            self.window.ReadFile()
+        else:
+            self.window.imageFilename = filenames[0]
+            self.window.ImportImage()
+
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
     # Internal class data
@@ -32,6 +52,10 @@ class ColormapperFrame(wx.Frame):
         statusBar = self.createStatusBar()
         menuBar = self.createMenuBar()
         self.createMainInterfaceWindow()
+        
+        # Add drop target
+        dropTarget = MyFileDropTarget(self)
+        self.SetDropTarget(dropTarget)
         
         
     def createMainInterfaceWindow(self):
