@@ -36,7 +36,7 @@ class ImageViewerPanel(wx.Panel):
         self.displayedImage = wx.EmptyImage()
         self.bmp = wx.EmptyBitmap(1,1)
         self.newImageData = False
-        self.drawCrosshair = True
+        self.drawCrosshair = False
         
         # Initialize Buffer
         self.InitBuffer()
