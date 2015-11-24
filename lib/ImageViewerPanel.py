@@ -155,7 +155,10 @@ class ImageViewerPanel(wx.Panel):
             dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
             
         position = event.GetPositionTuple()            
-        dc.CrossHair(*position)        
+        #dc.CrossHair(*position)        
+        dc.DrawLine(0, position[1], view_width, position[1])
+        dc.DrawLine(position[0], 0, position[0], view_height)
+        
 
                                 
             
