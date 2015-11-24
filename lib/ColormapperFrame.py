@@ -117,24 +117,7 @@ class ColormapperFrame(wx.Frame):
                     self.currentButtonClicked.SetBackgroundColour(currentColor)
                     self.Refresh()
             self.ReleaseMouse()
-            
-            
-    def OnMotion(self, event):
-        currentPosition = event.GetPositionTuple()
-       # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
-        if self.inputImagePanel.image.Ok():
-            currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
-                               currentPosition[1] - self.inputImagePanel.translation[1])
-            width = self.inputImagePanel.displayedImage.GetWidth()
-            height = self.inputImagePanel.displayedImage.GetHeight()
-            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
-                currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
-                                self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
-                                self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
-                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
-            else:
-                self.statusbar.SetStatusText("", 1)
-            self.Refresh()
+            self.inputImagePanel.InitBuffer()
 
 
     def createStatusBar(self):
@@ -158,6 +141,8 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
             else:
                 self.statusbar.SetStatusText("", 1)
+        if self.HasCapture():
+            self.inputImagePanel.DrawCrosshair(event)
         event.Skip()
             
 
