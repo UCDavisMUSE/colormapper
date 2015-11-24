@@ -34,7 +34,9 @@ class ImageViewerPanel(wx.Panel):
         self.SetBackgroundColour("Black")
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.displayedImage = wx.EmptyImage()
+        self.bmp = wx.EmptyBitmap(1,1)
         self.newImageData = False
+        self.drawCrosshair = True
         
         # Initialize Buffer
         self.InitBuffer()
@@ -43,6 +45,7 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.OnSize)       
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
         # Mouse event handlers                
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
@@ -51,14 +54,17 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
+    def OnLeaveWindow(self, event):
+        self.InitBuffer()
+        self.Refresh()
+        
 
     def OnLeftDown(self, event):
         if self.viewMode == 3:
             self.pos = event.GetPositionTuple()
             self.oldTranslation = self.translation
-        self.CaptureMouse()          
+        self.CaptureMouse()     
         
-
     def OnLeftUp(self, event):
         if self.HasCapture():
             if self.viewMode == 0: 
@@ -97,6 +103,10 @@ class ImageViewerPanel(wx.Panel):
                 delta = (newPos[0] - self.pos[0], newPos[1] - self.pos[1])
                 self.translation = (self.oldTranslation[0] + delta[0], self.oldTranslation[1] + delta[1])
                 self.reInitBuffer = True
+                
+        # Draw crosshairs if crosshairs are enabled
+        if self.drawCrosshair:
+            self.DrawCrosshair(event)
         event.Skip()
         
         
@@ -125,6 +135,32 @@ class ImageViewerPanel(wx.Panel):
         self.zoomFactor = self.zoomFactorDecreaseMultiplier*self.zoomFactor
         if self.zoomFactor < self.zoomFactorMin:
             self.zoomFactor = self.zoomFactorMin
+            
+    def DrawCrosshair(self, event):
+        (view_width, view_height) = self.GetClientSize()
+        self.buffer = wx.EmptyBitmap(view_width,view_height)
+        dc = wx.BufferedDC(wx.ClientDC(self), self.buffer)
+
+        # Draw translated bitmap if it contains data
+        if self.image.Ok():
+            oldWidth = self.display_width
+            oldHeight = self.display_height
+            (self.display_width, self.display_height) = self.GetImageDisplaySize()
+    
+            if self.newImageData or oldWidth != self.display_width or oldHeight != self.display_height:
+                self.displayedImage = self.image.Scale(self.display_width, self.display_height, 
+                    quality = self.resizeMethod)
+                self.bmp = wx.BitmapFromImage(self.displayedImage)
+                self.newImageData = False
+            dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
+            
+        position = event.GetPositionTuple()            
+        dc.CrossHair(*position)        
+
+                                
+            
+            
+            
 
 
     def InitBuffer(self):
