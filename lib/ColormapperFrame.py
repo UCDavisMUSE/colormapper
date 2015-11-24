@@ -23,6 +23,7 @@ class ColormapperFrame(wx.Frame):
         self.imageFilename = ""
         self.filename = ""
         self.exportFilename = ""
+        self.currentDirectory = ""
         self.numberOfColors = 3
         self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
         self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
@@ -198,10 +199,13 @@ class ColormapperFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Open colormapper file...",
                 os.getcwd(), style=wx.OPEN,
                 wildcard = self.colormapperWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)
         if dlg.ShowModal() == wx.ID_OK:
             self.filename = dlg.GetPath()
             self.ReadFile()
             self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+            self.currentDirectory = os.path.split(self.filename)[0]
         dlg.Destroy()
 
 
@@ -216,6 +220,8 @@ class ColormapperFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Save colormapper file...",
                 os.getcwd(), style = wx.SAVE | wx.OVERWRITE_PROMPT,
                 wildcard = self.colormapperWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
             if not os.path.splitext(filename)[1]:
@@ -223,6 +229,7 @@ class ColormapperFrame(wx.Frame):
             self.filename = filename
             self.SaveFile()
             self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+            self.currentDirectory = os.path.split(self.filename)[0]
         dlg.Destroy()
 
 
@@ -230,10 +237,13 @@ class ColormapperFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Import image...",
                 os.getcwd(), style=wx.OPEN,
                 wildcard = self.imageWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)                
         if dlg.ShowModal() == wx.ID_OK:
             self.imageFilename = dlg.GetPath()
             self.ImportImage()
             self.SetTitle(self.title + ' - ' + "Untitled")
+            self.currentDirectory = os.path.split(self.imageFilename)[0]            
         dlg.Destroy()
 
 
@@ -241,12 +251,15 @@ class ColormapperFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Save colormapper file...",
                 os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
                 wildcard = self.imageWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)                
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
             if not os.path.splitext(filename)[1]:
                 filename = filename + self.defaultImageType
             self.exportFilename = filename
             self.ExportImage()
+            self.currentDirectory = os.path.split(self.exportFilename)[0]
         dlg.Destroy()
 
             
