@@ -181,18 +181,18 @@ class ColormapperFrame(wx.Frame):
     
     def menuData(self):
         return (("&File",
-                        ("&Open Colormap...\tCtrl-O",            "Open colormapper file",        self.OnOpen),
-                        ("&Save Colormap\tCtrl-S",               "Save colormapper file",        self.OnSave),
-                        ("Save Colormap &As...\tShift-Ctrl-S",   "Save colormapper file as",     self.OnSaveAs),
-                        ("&Import Image...\tCtrl-I",             "Import image for conversion",  self.OnImport),
-                        ("&Export Image...\tCtrl-E",             "Export converted image",       self.OnExport),
-                        ("&Quit\tCtrl-Q",                        "Quit",                         self.OnCloseWindow)),
+                        ("&Open Colormap...\tCtrl-O",               "Open colormapper file",        self.OnOpen),
+                        ("&Save Colormap\tCtrl-S",                  "Save colormapper file",        self.OnSave),
+                        ("Save Colormap &As...\tShift-Ctrl-S",      "Save colormapper file as",     self.OnSaveAs),
+                        ("&Import Image for Conversion...\tCtrl-I", "Import image for conversion",  self.OnImport),
+                        ("&Export Converted Image...\tCtrl-E",      "Export converted image",       self.OnExport),
+                        ("&Quit\tCtrl-Q",                           "Quit",                         self.OnCloseWindow)),
                         
                 ("&Edit",
-                        ("&Copy\tCtrl-C",       "Copy converted image to clipboard",    self.OnCopy),
-                        ("C&ut",                "Cut converted image to clipboard",     self.OnCut),
-                        ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste),
-                        ("",                    "",                                     ""),
+#                        ("&Copy\tCtrl-C",       "Copy converted image to clipboard",    self.OnCopy),
+#                        ("C&ut",                "Cut converted image to clipboard",     self.OnCut),
+#                        ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste),
+#                        ("",                    "",                                     ""),
                         ("&Number of Colors...",         "Change Number of Colors",                      self.OnOptions)))        
           
     
@@ -258,7 +258,7 @@ class ColormapperFrame(wx.Frame):
 
 
     def OnImport(self, event):
-        dlg = wx.FileDialog(self, "Import image...",
+        dlg = wx.FileDialog(self, "Import image for conversion...",
                 os.getcwd(), style=wx.OPEN,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
@@ -272,7 +272,7 @@ class ColormapperFrame(wx.Frame):
 
 
     def OnExport(self, event):
-        dlg = wx.FileDialog(self, "Save colormapper file...",
+        dlg = wx.FileDialog(self, "Export converted image...",
                 os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
@@ -295,7 +295,7 @@ class ColormapperFrame(wx.Frame):
                 (inputColors, outputColors) = cPickle.load(f)
                 self.SetInputOutputColors(inputColors, outputColors)
             except cPickle.UnpicklingError:
-                wx.MessageBox("%s is not a sketch file." % self.filename, "oops!",
+                wx.MessageBox("%s is not a colormapper file." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
 
 

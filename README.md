@@ -25,3 +25,4 @@ zharmany@gmail.com
 - Clipboard functionality.
 - Undo / Redo functionality.
 - [DONE] Drag and drop image to open functionality.
+- Disable export menu item if no image has been converted.
