@@ -24,11 +24,10 @@ zharmany@gmail.com
 - Check if threads can be used for saving, and applying the colormap. This should help the UI be more responsive.
 - Investigate faster methods to save large image files, especially PNG files
 - In Windows, double check that the open / save / import / export dialog boxes open to the directory of the last successful open / save / import / export operation. 
-- Add the name of the image (perhaps instead of the colormapper file) in the title bar. Perhaps adding an asterisk if not imported with the current settings.
-
 
 ### Finished
 
+- [DONE: Simply added the name of the original image in the title bar] Add the name of the image (perhaps instead of the colormapper file) in the title bar. Perhaps adding an asterisk if not imported with the current settings.
 - [Fixed] Double check that it works on drop target.
 - [DONE: Use cPickle] Determine format for saving color conversion settings.
 - [DONE: Save / Open loads the input and output colors] Method to simply import / export the algorithm settings (as to apply to a new image without needing to load the source image and mapped image).
