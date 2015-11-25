@@ -24,7 +24,6 @@ zharmany@gmail.com
 - Check if threads can be used for saving, and applying the colormap. This should help the UI be more responsive.
 - Investigate faster methods to save large image files, especially PNG files
 - Double check that the open / save / import / export dialog boxes open to the directory of the last successful open / save / import / export operation. 
-
 - Add the name of the image (perhaps instead of the colormapper file) in the title bar. Perhaps adding an asterisk if not imported with the current settings.
 
 
