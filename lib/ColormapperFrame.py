@@ -213,8 +213,6 @@ class ColormapperFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.filename = dlg.GetPath()
             self.ReadFile()
-            self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
-            self.currentDirectory = os.path.split(self.filename)[0]
         dlg.Destroy()
 
 
@@ -237,8 +235,6 @@ class ColormapperFrame(wx.Frame):
                 filename = filename + '.colormapper'
             self.filename = filename
             self.SaveFile()
-            self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
-            self.currentDirectory = os.path.split(self.filename)[0]
         dlg.Destroy()
 
 
@@ -251,8 +247,6 @@ class ColormapperFrame(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             self.imageFilename = dlg.GetPath()
             self.ImportImage()
-            self.SetTitle(self.title + ' - ' + "Untitled")
-            self.currentDirectory = os.path.split(self.imageFilename)[0]            
         dlg.Destroy()
 
 
@@ -268,7 +262,6 @@ class ColormapperFrame(wx.Frame):
                 filename = filename + self.defaultImageType
             self.exportFilename = filename
             self.ExportImage()
-            self.currentDirectory = os.path.split(self.exportFilename)[0]
         dlg.Destroy()
 
             
@@ -279,6 +272,8 @@ class ColormapperFrame(wx.Frame):
                 f = open(self.filename, 'r')
                 (inputColors, outputColors) = cPickle.load(f)
                 self.SetInputOutputColors(inputColors, outputColors)
+                self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+                self.currentDirectory = os.path.split(self.filename)[0]
             except cPickle.UnpicklingError:
                 wx.MessageBox("%s is not a colormapper file." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
@@ -291,6 +286,9 @@ class ColormapperFrame(wx.Frame):
             f = open(self.filename, 'w')
             cPickle.dump((inputColors, outputColors), f)
             f.close()
+            self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+            self.currentDirectory = os.path.split(self.filename)[0]
+
 
 
     def GetInputOutputColors(self):
@@ -330,6 +328,8 @@ class ColormapperFrame(wx.Frame):
                     # nolog = wx.LogNull() # Uncommenting will not log errors 
                     self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_ANY)
                     #del nolog
+                self.SetTitle(self.title + ' - ' + "Untitled")
+                self.currentDirectory = os.path.split(self.imageFilename)[0]            
                        
                 # On a successful import, we should clear the colormapper filename to
                 # prevent overwrites on the save command, as well as reinitialize the buffer
@@ -362,6 +362,7 @@ class ColormapperFrame(wx.Frame):
                     # nolog = wx.LogNull() # Uncommenting will not log errors 
                     self.outputImagePanel.image.SaveFile(self.exportFilename, wx.BITMAP_TYPE_ANY)
                     #del nolog
+                self.currentDirectory = os.path.split(self.exportFilename)[0]    
             except:
                 wx.MessageBox("Error exporting %s." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)

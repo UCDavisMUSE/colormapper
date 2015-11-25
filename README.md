@@ -21,9 +21,16 @@ zharmany@gmail.com
 - Clipboard functionality.
 - Undo / Redo functionality.
 - Disable export menu item if no image has been converted.
+- Check if threads can be used for saving, and applying the colormap. This should help the UI be more responsive.
+- Investigate faster methods to save large image files, especially PNG files
+- Double check that the open / save / import / export dialog boxes open to the directory of the last successful open / save / import / export operation. 
+
+- Add the name of the image (perhaps instead of the colormapper file) in the title bar. Perhaps adding an asterisk if not imported with the current settings.
+
 
 ### Finished
 
+- [Fixed] Double check that it works on drop target.
 - [DONE: Use cPickle] Determine format for saving color conversion settings.
 - [DONE: Save / Open loads the input and output colors] Method to simply import / export the algorithm settings (as to apply to a new image without needing to load the source image and mapped image).
 - [DONE] Upon Import/Export or Open/Save, ensure the current working directory gets updated so that a user does not need to re-navigate to the directory. This may need to be done with the os python module, since os.getcwd() gets the current working directory.
