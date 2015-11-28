@@ -122,7 +122,55 @@ def applyAffineColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         print("Incorrect method parameter.")
         return
         
-        
+def learnLogisticColorspaceMap(X, Y):
+    # Learn the affine colorspace map
+    # y = 255/(1 + exp(-(Ax + c)))
+    # from example data in the matrices X and Y
+    
+    tolerance = 1e-10 # Terminate when the norm of the gradient falls below this value
+    logepsilon = 1e-10 # Parameter to avoid singularities in the log term
+    
+    (x1, x2) = X.shape
+    (y1, y2) = Y.shape
+  
+    X = X.astype(float)
+    Y = Y.astype(float)
+    Y = np.log((Y + logepsilon)/(255 - Y + logepsilon))
+    
+    # Precompute quantities
+    onesVect = np.ones((x2,1), float)
+    XXT = np.dot(X, X.transpose())
+    AX = Y
+    cNew = np.dot((Y - AX), onesVect/x2)
+    gradNorm = tolerance + 1
+    while gradNorm > tolerance:
+        # Minimize wrt c
+        c = cNew
+        # Minimize wrt A
+        A = np.dot((Y - np.dot(c,onesVect.transpose())), np.linalg.pinv(X))
+        AX = np.dot(A,X)
+        # Compute gradient norm
+        cNew = np.dot((Y - AX), onesVect/x2)
+        gradNorm = np.linalg.norm(c - cNew)
+           
+    return (A,c) 
+    
+def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
+    # Applies the affine colorspace map
+    # y = Ax + c
+    # to every pixel in the image X
+    if method == 0:
+        # Done using reshapes and matrix multiplication
+        X = X.astype(float)
+        (n1, n2, n3) = X.shape
+        X = X.reshape(n1*n2,n3)
+        X = np.dot(X,A.transpose()) + np.dot(np.ones((n1*n2,1),float),c.transpose())
+        X = 255/(1 + np.exp(-X))
+        X = X.reshape(n1,n2,n3)
+        X = X.astype(np.uint8)
+        return X
+
+       
     
     
     

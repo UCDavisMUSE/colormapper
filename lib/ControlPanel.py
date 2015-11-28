@@ -97,6 +97,12 @@ class ControlPanel(wx.Panel):
 
             outputImageArray = copy.copy(inputImageArray)
             outputImageArray = colormappingMethods.applyAffineColorspaceMap(outputImageArray,A,c,method = 3, tileSize = (64, 64))
+
+#             (A, c) = colormappingMethods.learnLogisticColorspaceMap(inputColorMatrix, outputColorMatrix)
+#  
+#             outputImageArray = copy.copy(inputImageArray)
+#             outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
+
             
             # Get/set dimensions of output image
             outputImageWidth = inputImageWidth
