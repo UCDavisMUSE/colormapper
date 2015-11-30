@@ -307,6 +307,9 @@ class ColormapperFrame(wx.Frame):
             label = "Control Panel", size = (800, 100))                       
         self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
         self.verticalSizer.Layout()
+        # Code for overriding button behavior to select colors from image
+        for button in self.controlPanel.inputColorButtons:
+            button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
 
 
     def ImportImage(self):
