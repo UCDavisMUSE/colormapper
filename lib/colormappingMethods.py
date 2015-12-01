@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import scipy.optimize.nnls as nnls
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
 # along with various parameters to produce an output that is a numpy array of type uint8.
