@@ -128,14 +128,18 @@ def learnLogisticColorspaceMap(X, Y):
     # from example data in the matrices X and Y
     
     tolerance = 1e-10 # Terminate when the norm of the gradient falls below this value
-    logepsilon = 1e-10 # Parameter to avoid singularities in the log term
+    logepsilon = 1e-2 # Parameter to avoid singularities in the log term
     
     (x1, x2) = X.shape
     (y1, y2) = Y.shape
-  
+    
     X = X.astype(float)
     Y = Y.astype(float)
-    Y = np.log((Y + logepsilon)/(255 - Y + logepsilon))
+    
+    X = X/255
+    Y = Y/255
+
+    Y = np.log(Y/(1 - Y + logepsilon))
     
     # Precompute quantities
     onesVect = np.ones((x2,1), float)
@@ -162,15 +166,47 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
     if method == 0:
         # Done using reshapes and matrix multiplication
         X = X.astype(float)
+        X = X/255
         (n1, n2, n3) = X.shape
         X = X.reshape(n1*n2,n3)
         X = np.dot(X,A.transpose()) + np.dot(np.ones((n1*n2,1),float),c.transpose())
         X = 255/(1 + np.exp(-X))
         X = X.reshape(n1,n2,n3)
+        print(X.min(),X.max())
         X = X.astype(np.uint8)
         return X
 
        
+def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False):
+
+    inputImage = inputImage.astype(float)/255
+    unmixMatrix = inputColors.astype(float)/255
+    outputColors = outputColors.astype(float)/255
+    outputColors = 1-outputColors
+
+    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose)
+
+    outputImage = np.ones( (inputImage.shape[0], inputImage.shape[1], inputColors.shape[0]) )
+
+    for i in range(inputColors.shape[1]):
+        for color in range(outputColors.shape[0]):
+            outputImage[:,:,color] *= np.exp( - outputColors[color,i]*unmixedImage[:,:,i] )
+
+    outputImage *= 255
+                
+    return outputImage.astype(np.uint8)
+
+def unmixImage(unmixMatrix, inputImage, verbose=False):
+
+    unmixedImage = np.zeros((inputImage.shape[0], inputImage.shape[1], unmixMatrix.shape[1]))
+    
+    for i in range(inputImage.shape[0]):
+        for j in range(inputImage.shape[1]):
+            (unmixedImage[i,j,:], residual) = nnls(unmixMatrix,inputImage[i,j,:].astype(float))
+        if verbose:
+            print("Row: " + str(i))
+            
+    return unmixedImage
     
     
     
