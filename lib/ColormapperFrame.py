@@ -375,7 +375,7 @@ class ColormapperFrame(wx.Frame):
     def OnPaste(self, event): pass
 
     def OnOptions(self, event): 
-        choices = ["3", "4", "5"]
+        choices = ["2", "3", "4", "5"]
         dialog = wx.SingleChoiceDialog(None, "Select the number of colors to map", "Number of Colors",
             choices)
         if dialog.ShowModal() == wx.ID_OK:

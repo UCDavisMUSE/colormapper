@@ -92,16 +92,24 @@ class ControlPanel(wx.Panel):
             
             for color in range(len(self.outputColorButtons)):
                 outputColorMatrix[:, color] = self.outputColorButtons[color].GetBackgroundColour()[0:3]
-
+                
+            # Affine Color Map                
             (A, c) = colormappingMethods.learnAffineColorspaceMap(inputColorMatrix, outputColorMatrix)
 
             outputImageArray = copy.copy(inputImageArray)
             outputImageArray = colormappingMethods.applyAffineColorspaceMap(outputImageArray,A,c,method = 3, tileSize = (64, 64))
 
+            # Logistic Color Map
 #             (A, c) = colormappingMethods.learnLogisticColorspaceMap(inputColorMatrix, outputColorMatrix)
 #  
 #             outputImageArray = copy.copy(inputImageArray)
 #             outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
+
+            # Unmix and Recolor
+#             outputImageArray = copy.copy(inputImageArray)
+#             outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False)
+
+
 
             
             # Get/set dimensions of output image
