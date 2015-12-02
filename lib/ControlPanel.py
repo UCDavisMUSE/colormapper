@@ -107,7 +107,7 @@ class ControlPanel(wx.Panel):
                 outputImageArray = colormappingMethods.applyAffineColorspaceMap(outputImageArray,A,c,method = 3, tileSize = (64, 64))
             elif self.methodChoice.GetSelection() == 1:
                 # Logistic Color Map
-                (A, c) = colormappingMethods.learnLogisticColorspaceMap(inputColorMatrix, outputColorMatrix)
+                (A, c) = colormappingMethods.learnLogisticColorspaceMapGradient(inputColorMatrix, outputColorMatrix)
                 outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
             elif self.methodChoice.GetSelection() == 2:
                 # Unmix and Recolor
