@@ -173,7 +173,6 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         X = np.dot(X,A.transpose()) + np.dot(np.ones((n1*n2,1),float),c.transpose())
         X = 255/(1 + np.exp(-X))
         X = X.reshape(n1,n2,n3)
-        print(X.min(),X.max())
         X = X.astype(np.uint8)
         return X
 
