@@ -177,7 +177,7 @@ def learnLogisticColorspaceMapGradient(X, Y):
     if Y.max() == 255:
         tolerance = 1e-3
     else:
-        tolerance = 1e-10
+        tolerance = 1e-5
     
     (x1, x2) = X.shape
     (y1, y2) = Y.shape
@@ -194,9 +194,13 @@ def learnLogisticColorspaceMapGradient(X, Y):
 
     # Bound on the Hessian, inverse of stepsize, should work better than below
     # This seems to work okay, keep for now.
+    # Welp, doesn't work. Kill it.
     alphaA = normSum/4.0
     alphac = alphaA
     
+    # Bound on the Hessian
+    alphaA = 3/4.0*X.shape[1]
+    alphac = alphaA    
     
     # Initialize A, c
     A = np.zeros((Y.shape[0], X.shape[0]), float)
@@ -223,7 +227,7 @@ def learnLogisticColorspaceMapGradient(X, Y):
         # Compute gradient norm
         grad = np.hstack( (gradA.flatten(), gradc.flatten()))
         gradNorm = np.linalg.norm(grad)
-#        print(gradNorm)
+        print(gradNorm)
         
     return (A,c)
         
