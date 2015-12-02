@@ -227,7 +227,7 @@ def learnLogisticColorspaceMapGradient(X, Y):
         # Compute gradient norm
         grad = np.hstack( (gradA.flatten(), gradc.flatten()))
         gradNorm = np.linalg.norm(grad)
-        print(gradNorm)
+#        print(gradNorm)
         
     return (A,c)
         
