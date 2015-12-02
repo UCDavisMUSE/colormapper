@@ -31,7 +31,7 @@ class ControlPanel(wx.Panel):
         methodPos = (410, 0)
         if wx.Platform == "__WXMAC__":
             methodPos = (410, -7)
-        self.methodChoice = wx.Choice(self.choicePanel, -1, size = (200, 40), pos = methodPos, choices=("Affine", "Logistic", "Unmix & Brightfield (slow)"))
+        self.methodChoice = wx.Choice(self.choicePanel, -1, size = (200, 40), pos = methodPos, choices=("Affine", "Logistic (LSQ)", "Logistic (Likelihood)", "Unmix & Brightfield (slow)"))
         self.methodChoice.SetSelection(0)
 
         # Add input and output colors
@@ -106,10 +106,14 @@ class ControlPanel(wx.Panel):
                 (A, c) = colormappingMethods.learnAffineColorspaceMap(inputColorMatrix, outputColorMatrix)
                 outputImageArray = colormappingMethods.applyAffineColorspaceMap(outputImageArray,A,c,method = 3, tileSize = (64, 64))
             elif self.methodChoice.GetSelection() == 1:
-                # Logistic Color Map
-                (A, c) = colormappingMethods.learnLogisticColorspaceMapGradient(inputColorMatrix, outputColorMatrix)
+                # Logistic Color Map 
+                (A, c) = colormappingMethods.learnLogisticColorspaceMap(inputColorMatrix, outputColorMatrix)
                 outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
             elif self.methodChoice.GetSelection() == 2:
+                # Logistic Color Map Gradient Descent 
+                (A, c) = colormappingMethods.learnLogisticColorspaceMapGradient(inputColorMatrix, outputColorMatrix)
+                outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
+            elif self.methodChoice.GetSelection() == 3:
                 # Unmix and Recolor
                 outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False)
                 
