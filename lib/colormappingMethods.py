@@ -124,12 +124,15 @@ def applyAffineColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         return
         
 def learnLogisticColorspaceMap(X, Y):
-    # Learn the affine colorspace map
+    # Learn the logistic colorspace map
     # y = 255/(1 + exp(-(Ax + c)))
     # from example data in the matrices X and Y
     
     tolerance = 1e-10 # Terminate when the norm of the gradient falls below this value
-    logepsilon = 1e-2 # Parameter to avoid singularities in the log term
+    if Y.max() == 255:
+        logepsilon = 1e-2 # Parameter to avoid singularities in the log term
+    else:
+        logepsilon = 0
     
     (x1, x2) = X.shape
     (y1, y2) = Y.shape
@@ -159,6 +162,71 @@ def learnLogisticColorspaceMap(X, Y):
         gradNorm = np.linalg.norm(c - cNew)
            
     return (A,c) 
+    
+    
+def learnLogisticColorspaceMapGradient(X, Y):
+    # Learn the logistic colorspace map
+    # y = 255/(1 + exp(-(Ax + c)))
+    # from example data in the matrices X and Y
+    # Using gradient descent with a step size derived from the largest 
+    # eigenvalue of the Hessian matrix
+    
+    def sigma(a,c,x):
+        return 1/(1 + np.exp( - (c + np.dot(a,x))))
+    
+    if Y.max() == 255:
+        tolerance = 1e-3
+    else:
+        tolerance = 1e-10
+    
+    (x1, x2) = X.shape
+    (y1, y2) = Y.shape
+    
+    X = X.astype(float)
+    Y = Y.astype(float)
+    
+    X = X/255
+    Y = Y/255
+    
+    normSum = 0.0
+    for i in range(X.shape[1]):
+        normSum += np.dot(X[:,i],X[:,i])
+
+    # Bound on the Hessian, inverse of stepsize, should work better than below
+    # This seems to work okay, keep for now.
+    alphaA = normSum/4.0
+    alphac = alphaA
+    
+    
+    # Initialize A, c
+    A = np.zeros((Y.shape[0], X.shape[0]), float)
+    c = np.zeros((Y.shape[0],1), float)
+    
+    gradA = np.zeros((Y.shape[0], X.shape[0]), float)
+    gradc = np.zeros((Y.shape[0],1), float)
+    
+    gradNorm = tolerance + 1
+    while gradNorm > tolerance:
+        # Compute Gradient
+        gradA = 0.0*gradA
+        gradc = 0.0*gradc
+        for l in range(A.shape[0]):
+            for i in range(X.shape[1]):
+                precompute = sigma(A[l,:],c[l],X[:,i]) - Y[l,i]
+                gradA[l,:] += precompute*X[:,i]
+                gradc[l] += precompute            
+            
+        # Take Gradient Descent Step
+        A = A - gradA/alphaA
+        c = c - gradc/alphac
+        
+        # Compute gradient norm
+        grad = np.hstack( (gradA.flatten(), gradc.flatten()))
+        gradNorm = np.linalg.norm(grad)
+#        print(gradNorm)
+        
+    return (A,c)
+        
     
 def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
     # Applies the affine colorspace map

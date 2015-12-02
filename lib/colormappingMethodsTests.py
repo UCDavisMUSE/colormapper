@@ -5,6 +5,8 @@ import time
 from colormappingMethods import *
 # This script tests the colormapping methods in colormappingMethods.py
 
+showPlots = True
+
 # First Test
 
 X = np.array([ [  0, 134, 130],
@@ -41,7 +43,8 @@ image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
 
 plt.imshow(image, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
 
 start = time.time()
 newImage = applyAffineColorspaceMap(image,A,c)
@@ -50,7 +53,8 @@ print("Apply Affine Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
 
 
 # Second Test
@@ -90,7 +94,8 @@ image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
 
 plt.imshow(image, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
 
 start = time.time()
 newImage = applyAffineColorspaceMap(image,A,c)
@@ -99,33 +104,35 @@ print("Apply Affine Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
 
 # Third Test
-
-X = np.array([ [  0, 134, 130],
-               [  0, 168,  81],
-               [  0, 242,  66] ])
-               
-Y = np.array([ [255,  70, 230],
-               [255,  30, 160],
-               [255, 150, 200] ])
-
-start = time.time()
-(A, c) = learnLogisticColorspaceMap(X,Y)
-end = time.time()
-print("Learn Logistic Colorspace Map Time: " + str(end-start))
-
-print(A)
-print(c)
-print(255/(1 + np.exp(-(np.dot(A,X) + np.dot(c,np.ones((1,3),float))))))
 
 image = cv2.imread("testImages/AVG_Stack-9.jpg") 
 image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
 
 plt.imshow(image, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
+
+
+X = np.array([ [  0, 134, 130],
+               [  0, 168,  81],
+               [  0, 242,  66] ])
+               
+Y = np.array([ [254,  70, 230],
+               [254,  30, 160],
+               [254, 150, 200] ])
+
+start = time.time()
+(A, c) = learnLogisticColorspaceMap(X,Y)
+end = time.time()
+print("Learn Logistic Colorspace Map Time: " + str(end-start))
+print(A)
+print(c)
+print(255/(1 + np.exp(-(np.dot(A,X.astype(float)/255) + np.dot(c,np.ones((1,3),float))))))
 
 start = time.time()
 newImage = applyLogisticColorspaceMap(image,A,c)
@@ -134,10 +141,37 @@ print("Apply Logistic Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
+
+start = time.time()
+(A, c) = learnLogisticColorspaceMapGradient(X,Y)
+end = time.time()
+print("Learn Logistic Colorspace Map Gradient Time: " + str(end-start))
+print(A)
+print(c)
+print(255/(1 + np.exp(-(np.dot(A,X.astype(float)/255) + np.dot(c,np.ones((1,3),float))))))
+
+start = time.time()
+newImage = applyLogisticColorspaceMap(image,A,c)
+end = time.time()
+print("Apply Logistic Colorspace Map Time: " + str(end-start))
+
+plt.imshow(newImage, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+if showPlots:
+    plt.show()
 
 
 # Fourth Test
+
+image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
+image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
+
+plt.imshow(image, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+if showPlots:
+    plt.show()
 
 X = np.array([ [  0, 228, 244],
                [  0, 250, 205],
@@ -151,18 +185,9 @@ start = time.time()
 (A, c) = learnLogisticColorspaceMap(X,Y)
 end = time.time()
 print("Learn Logistic Colorspace Map Time: " + str(end-start))
-
-
 print(A)
 print(c)
-print(255/(1 + np.exp(-(np.dot(A,X) + np.dot(c,np.ones((1,3),float))))))
-
-image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
-image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
-
-plt.imshow(image, interpolation = "bicubic")
-plt.xticks([]), plt.yticks([])
-plt.show()
+print(255/(1 + np.exp(-(np.dot(A,X.astype(float)/255) + np.dot(c,np.ones((1,3),float))))))
 
 start = time.time()
 newImage = applyLogisticColorspaceMap(image,A,c)
@@ -171,7 +196,23 @@ print("Apply Logistic Colorspace Map Time: " + str(end-start))
 
 plt.imshow(newImage, interpolation = "bicubic")
 plt.xticks([]), plt.yticks([])
-plt.show()
+if showPlots:
+    plt.show()
 
+start = time.time()
+(A, c) = learnLogisticColorspaceMapGradient(X,Y)
+end = time.time()
+print("Learn Logistic Colorspace Map Gradient Time: " + str(end-start))
+print(A)
+print(c)
+print(255/(1 + np.exp(-(np.dot(A,X.astype(float)/255) + np.dot(c,np.ones((1,3),float))))))
 
+start = time.time()
+newImage = applyLogisticColorspaceMap(image,A,c)
+end = time.time()
+print("Apply Logistic Colorspace Map Time: " + str(end-start))
 
+plt.imshow(newImage, interpolation = "bicubic")
+plt.xticks([]), plt.yticks([])
+if showPlots:
+    plt.show()
