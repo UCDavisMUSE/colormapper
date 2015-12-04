@@ -280,6 +280,24 @@ def unmixImage(unmixMatrix, inputImage, verbose=False):
             
     return unmixedImage
     
-    
+def unmixAndRecolorFluorescent(inputColors, outputColors, inputImage,verbose=False):
+
+    inputImage = inputImage.astype(float)/255
+    unmixMatrix = inputColors.astype(float)/255
+    outputColors = outputColors.astype(float)/255
+
+    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose)
+
+    outputImage = np.zeros( (inputImage.shape[0], inputImage.shape[1], inputColors.shape[0]) )
+
+    for i in range(inputColors.shape[1]):
+        for color in range(outputColors.shape[0]):
+            outputImage[:,:,color] += outputColors[color,i]*unmixedImage[:,:,i]
+
+    outputImage *= 255
+    outputImage[outputImage > 255] = 255
+    outputImage[outputImage < 0] = 0
+                
+    return outputImage.astype(np.uint8)    
     
     
