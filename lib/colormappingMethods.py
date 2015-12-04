@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import scipy.optimize.nnls as nnls
+import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
 # along with various parameters to produce an output that is a numpy array of type uint8.
@@ -270,14 +271,23 @@ def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False):
 
 def unmixImage(unmixMatrix, inputImage, verbose=False):
 
-    unmixedImage = np.zeros((inputImage.shape[0], inputImage.shape[1], unmixMatrix.shape[1]))
+    (n1, n2, n3) = inputImage.shape
+    inputImage = inputImage.reshape(n1*n2,n3)
+    k = unmixMatrix.shape[1]
+    unmixedImage = amaps.NNLS(inputImage, unmixMatrix.transpose())
+    unmixedImage = unmixedImage.reshape(n1,n2,k)
     
-    for i in range(inputImage.shape[0]):
-        for j in range(inputImage.shape[1]):
-            (unmixedImage[i,j,:], residual) = nnls(unmixMatrix,inputImage[i,j,:].astype(float))
-        if verbose:
-            print("Row: " + str(i))
-            
+    print("Finished Unmixing!")
+    
+    # unmixedImage = np.zeros((inputImage.shape[0], inputImage.shape[1], unmixMatrix.shape[1]))
+#        
+#     
+#     for i in range(inputImage.shape[0]):
+#         for j in range(inputImage.shape[1]):
+#             (unmixedImage[i,j,:], residual) = nnls(unmixMatrix,inputImage[i,j,:].astype(float))
+#         if verbose:
+#             print("Row: " + str(i))
+#             
     return unmixedImage
     
 def unmixAndRecolorFluorescent(inputColors, outputColors, inputImage,verbose=False):
