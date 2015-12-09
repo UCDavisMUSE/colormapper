@@ -105,7 +105,7 @@ class ColormapperFrame(wx.Frame):
     def OnLeftUp(self, event):
         if self.HasCapture():
             # Update color selection if valid
-            if self.inputImagePanel.image.Ok():
+            if self.inputImagePanel.displayedImage.Ok():
                 currentPosition = (self.currentPosition[0] - self.inputImagePanel.translation[0],
                                    self.currentPosition[1] - self.inputImagePanel.translation[1])
                 width = self.inputImagePanel.displayedImage.GetWidth()
@@ -129,7 +129,7 @@ class ColormapperFrame(wx.Frame):
     def OnInputMotion(self, event):
         currentPosition = event.GetPositionTuple()
        # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
-        if self.inputImagePanel.image.Ok():
+        if self.inputImagePanel.displayedImage.Ok():
             currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
                                currentPosition[1] - self.inputImagePanel.translation[1])
             width = self.inputImagePanel.displayedImage.GetWidth()
@@ -149,7 +149,7 @@ class ColormapperFrame(wx.Frame):
     def OnOutputMotion(self, event):
         currentPosition = event.GetPositionTuple()
         #self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
-        if self.outputImagePanel.image.Ok():
+        if self.outputImagePanel.displayedImage.Ok():
             currentPosition = (currentPosition[0] - self.outputImagePanel.translation[0],
                                currentPosition[1] - self.outputImagePanel.translation[1])
             width = self.outputImagePanel.displayedImage.GetWidth()
