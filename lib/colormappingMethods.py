@@ -277,7 +277,7 @@ def unmixImage(unmixMatrix, inputImage, verbose=False):
     unmixedImage = amaps.NNLS(inputImage, unmixMatrix.transpose())
     unmixedImage = unmixedImage.reshape(n1,n2,k)
     
-    print("Finished Unmixing!")
+#    print("Finished Unmixing!")
     
     # unmixedImage = np.zeros((inputImage.shape[0], inputImage.shape[1], unmixMatrix.shape[1]))
 #        
