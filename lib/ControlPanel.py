@@ -27,7 +27,7 @@ class ControlPanel(wx.Panel):
         self.choice = wx.Choice(self.choicePanel, -1, size = (130, 40), pos = choicePos, choices=("Color Picker","Input Image"))
         self.choice.SetSelection(0)
         
-        self.methodText = wx.StaticText(self.choicePanel, -1, "Method:", size = (150, 30), pos = (350, 5))
+        self.methodText = wx.StaticText(self.choicePanel, -1, "Method:", size = (60, 30), pos = (350, 5))
         methodPos = (410, 0)
         if wx.Platform == "__WXMAC__":
             methodPos = (410, -7)
