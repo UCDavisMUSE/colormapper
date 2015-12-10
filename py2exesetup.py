@@ -6,6 +6,7 @@ setup(
     options = {
             "py2exe":{
             "dll_excludes": ["MSVCP90.dll", "HID.DLL", "w9xpopen.exe"],
+            "includes": ['scipy', 'scipy.integrate', 'scipy.special.*','scipy.linalg.*','scipy.sparse.csgraph.*'],
         }
     },
     windows = [{'script': 'colormapper.py'}]
