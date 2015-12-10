@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import scipy.optimize.nnls as nnls
-import pysptools.abundance_maps.amaps as amaps
+#import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
 # along with various parameters to produce an output that is a numpy array of type uint8.
@@ -274,7 +274,7 @@ def unmixImage(unmixMatrix, inputImage, verbose=False):
     (n1, n2, n3) = inputImage.shape
     inputImage = inputImage.reshape(n1*n2,n3)
     k = unmixMatrix.shape[1]
-    unmixedImage = amaps.NNLS(inputImage, unmixMatrix.transpose())
+    unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
     unmixedImage = unmixedImage.reshape(n1,n2,k)
     
 #    print("Finished Unmixing!")
@@ -311,3 +311,36 @@ def unmixAndRecolorFluorescent(inputColors, outputColors, inputImage,verbose=Fal
     return outputImage.astype(np.uint8)    
     
     
+    
+# Stolen NNLS method from pysptools    
+def NNLS(M, U):
+    """
+    NNLS performs non-negative constrained least squares of each pixel
+    in M using the endmember signatures of U.  Non-negative constrained least
+    squares with the abundance nonnegative constraint (ANC).
+    Utilizes the method of Bro.
+
+    Parameters:
+        M: `numpy array`
+            2D data matrix (N x p).
+
+        U: `numpy array`
+            2D matrix of endmembers (q x p).
+
+    Returns: `numpy array`
+        An abundance maps (N x q).
+
+    References:
+        Bro R., de Jong S., Journal of Chemometrics, 1997, 11, 393-401.
+    """
+    import scipy.optimize as opt
+
+    N, p1 = M.shape
+    q, p2 = U.shape
+
+    X = np.zeros((N, q), dtype=np.float32)
+    MtM = np.dot(U, U.T)
+    for n1 in xrange(N):
+        # opt.nnls() return a tuple, the first element is the result
+        X[n1] = opt.nnls(MtM, np.dot(U, M[n1]))[0]
+    return X    
