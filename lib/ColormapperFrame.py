@@ -45,8 +45,8 @@ class ColormapperFrame(wx.Frame):
         self.exportFilename = ""
         self.currentDirectory = ""
         self.numberOfColors = 3
-        self.inputColors  = [ (  0,   0,   0), (228, 250, 166), (244, 205, 100) ]
-        self.outputColors = [ (255, 255, 255), ( 70,  30, 150), (230, 160, 200) ]
+        self.inputColors  = [ (228, 250, 166), (244, 205, 100), (  0,   0,   0) ]
+        self.outputColors = [ ( 70,  30, 150), (230, 160, 200), (255, 255, 255) ]
 
         # Attributes 
         statusBar = self.createStatusBar()
