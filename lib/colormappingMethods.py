@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import scipy.optimize.nnls as nnls
+import time
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
@@ -272,10 +273,19 @@ def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False):
 def unmixImage(unmixMatrix, inputImage, verbose=False):
 
     (n1, n2, n3) = inputImage.shape
+    start = time.time()
     inputImage = inputImage.reshape(n1*n2,n3)
+    end = time.time()
+    print("Input reshape time: " + str(end-start))
     k = unmixMatrix.shape[1]
+    start = time.time()
     unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
+    end = time.time()
+    print("NNLS time: " + str(end-start))
+    start = time.time()
     unmixedImage = unmixedImage.reshape(n1,n2,k)
+    end = time.time()
+    print("Output reshape time: " + str(end-start))
     
 #    print("Finished Unmixing!")
     
@@ -342,5 +352,13 @@ def NNLS(M, U):
     MtM = np.dot(U, U.T)
     for n1 in xrange(N):
         # opt.nnls() return a tuple, the first element is the result
-        X[n1] = opt.nnls(MtM, np.dot(U, M[n1]))[0]
+#        X[n1] = opt.nnls(MtM, np.dot(U, M[n1]))[0]
+        
+        X[n1] = opt.nnls(U.T, M[n1])[0]
     return X    
+    
+    
+    
+    
+    
+    
