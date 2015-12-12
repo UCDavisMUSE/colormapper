@@ -31,7 +31,7 @@ class ControlPanel(wx.Panel):
         methodPos = (410, 0)
         if wx.Platform == "__WXMAC__":
             methodPos = (410, -7)
-        self.methodChoice = wx.Choice(self.choicePanel, -1, size = (200, 40), pos = methodPos, choices=("Affine", "Logistic (LSQ)", "Logistic (Likelihood)", "Unmix & Brightfield (slow)", "Unmix & Fluorescent (slow)"))
+        self.methodChoice = wx.Choice(self.choicePanel, -1, size = (200, 40), pos = methodPos, choices=("Affine", "Logistic (LSQ)", "Logistic (Likelihood)", "Unmix & Brightfield (NNLS, slow)", "Unmix & Brightfield (LS)", "Unmix & Fluorescent (NNLS, slow)", "Unmix & Fluorescent (LS)"))
         self.methodChoice.SetSelection(0)
 
         # Add input and output colors
@@ -117,7 +117,14 @@ class ControlPanel(wx.Panel):
                 # Unmix and Recolor
                 outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False)
             elif self.methodChoice.GetSelection() == 4:
+                # Unmix and Recolor, Least-Squares
+                outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False,method='ls')
+            elif self.methodChoice.GetSelection() == 5:
+                # Unmix and Recolor Fluorescent
                 outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=True)
+            elif self.methodChoice.GetSelection() == 6:
+                # Unmix and Recolor Fluorescent, Least-Squares
+                outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=True,method='ls')
                 
 
 

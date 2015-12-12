@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import scipy.optimize.nnls as nnls
-import time
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
@@ -251,14 +250,14 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         return X
 
        
-def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False):
+def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='nnls'):
 
     inputImage = inputImage.astype(float)/255
     unmixMatrix = inputColors.astype(float)/255
     outputColors = outputColors.astype(float)/255
     outputColors = 1-outputColors
 
-    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose)
+    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose,method=method)
 
     outputImage = np.ones( (inputImage.shape[0], inputImage.shape[1], inputColors.shape[0]) )
 
@@ -270,22 +269,16 @@ def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False):
                 
     return outputImage.astype(np.uint8)
 
-def unmixImage(unmixMatrix, inputImage, verbose=False):
+def unmixImage(unmixMatrix, inputImage, verbose=False, method='nnls'):
 
     (n1, n2, n3) = inputImage.shape
-    start = time.time()
     inputImage = inputImage.reshape(n1*n2,n3)
-    end = time.time()
-    print("Input reshape time: " + str(end-start))
     k = unmixMatrix.shape[1]
-    start = time.time()
-    unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
-    end = time.time()
-    print("NNLS time: " + str(end-start))
-    start = time.time()
+    if method == 'nnls':
+        unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
+    elif method == 'ls':
+        unmixedImage = LS(inputImage, unmixMatrix.transpose())
     unmixedImage = unmixedImage.reshape(n1,n2,k)
-    end = time.time()
-    print("Output reshape time: " + str(end-start))
     
 #    print("Finished Unmixing!")
     
@@ -300,13 +293,13 @@ def unmixImage(unmixMatrix, inputImage, verbose=False):
 #             
     return unmixedImage
     
-def unmixAndRecolorFluorescent(inputColors, outputColors, inputImage,verbose=False):
+def unmixAndRecolorFluorescent(inputColors, outputColors, inputImage,verbose=False,method='nnls'):
 
     inputImage = inputImage.astype(float)/255
     unmixMatrix = inputColors.astype(float)/255
     outputColors = outputColors.astype(float)/255
 
-    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose)
+    unmixedImage = unmixImage(unmixMatrix, inputImage, verbose=verbose,method=method)
 
     outputImage = np.zeros( (inputImage.shape[0], inputImage.shape[1], inputColors.shape[0]) )
 
@@ -357,6 +350,15 @@ def NNLS(M, U):
         X[n1] = opt.nnls(U.T, M[n1])[0]
     return X    
     
+    
+def LS(M, U):
+
+    import numpy.linalg as lin
+    
+    X = np.dot(lin.pinv(U.T), M.T).T
+    X[X < 0] = 0
+        
+    return X    
     
     
     
