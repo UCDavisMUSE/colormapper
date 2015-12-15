@@ -115,16 +115,16 @@ class ControlPanel(wx.Panel):
                 outputImageArray = colormappingMethods.applyLogisticColorspaceMap(outputImageArray,A,c)
             elif self.methodChoice.GetSelection() == 3:
                 # Unmix and Recolor
-                outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False)
+                outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, outputImageArray,verbose=False)
             elif self.methodChoice.GetSelection() == 4:
                 # Unmix and Recolor, Least-Squares
-                outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=False,method='ls')
+                outputImageArray = colormappingMethods.unmixAndRecolor(inputColorMatrix, outputColorMatrix, outputImageArray,verbose=False,method='ls')
             elif self.methodChoice.GetSelection() == 5:
                 # Unmix and Recolor Fluorescent
-                outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=True)
+                outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, outputImageArray,verbose=True)
             elif self.methodChoice.GetSelection() == 6:
                 # Unmix and Recolor Fluorescent, Least-Squares
-                outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, inputImageArray,verbose=True,method='ls')
+                outputImageArray = colormappingMethods.unmixAndRecolorFluorescent(inputColorMatrix, outputColorMatrix, outputImageArray,verbose=True,method='ls')
                 
 
 
