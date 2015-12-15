@@ -53,7 +53,7 @@ def unmixParallelColNNLS(image, A):
     """
     Performs NNLS Column-wise
     """
-    results = Parallel(n_jobs=2)(delayed(dummyCol)(A, image[:,j,:])
+    results = Parallel(n_jobs=4)(delayed(dummyCol)(A, image[:,j,:])
         for j in range(image.shape[1]))
     X = np.array(results).reshape(image.shape[1], image.shape[0], -1).transpose(1, 0, 2)
     
@@ -63,7 +63,7 @@ def unmixParallelRowNNLS(image, A):
     """
     Performs NNLS Row-wise
     """
-    results = Parallel(n_jobs=2)(delayed(dummyCol)(A, image[i,:,:])
+    results = Parallel(n_jobs=4)(delayed(dummyCol)(A, image[i,:,:])
         for i in range(image.shape[0]))
     X = np.array(results).reshape(image.shape[0], image.shape[1], -1)
     
