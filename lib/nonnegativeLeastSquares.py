@@ -137,8 +137,9 @@ if __name__=='__main__':
     # unmixing matrix A is 3 x k, where k is the number of components,
     # unmixed results should be n1 x n2 x k.
 
-    showPlots = False
-    example = 2
+    showPlots = True
+    threshold = True
+    example = 1
     
     if example == 1:
         # Example unmixing matrix
@@ -149,7 +150,7 @@ if __name__=='__main__':
         image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
     elif example == 2:
         # Example unmixing matrix
-        A = np.array([ [ 255,   0],
+        A = np.array([ [   0,   0],
                        [ 255,   0],
                        [ 255, 255] ])
         # Test image (Convert to RGB)
@@ -160,7 +161,7 @@ if __name__=='__main__':
     
 #   Method: unmixIntensityPreservingPinvLS
     start = time.time()
-    X_unmixIntensityPreservingPinvLS = unmixIntensityPreservingPinvLS(image, A)
+    X_unmixIntensityPreservingPinvLS = unmixIntensityPreservingPinvLS(image, A, threshold=threshold)
     end = time.time()
     print("unmixIntensityPreservingPinvLS Time: " + str(end-start) + " seconds.")
     print("Result is an " + 
@@ -175,7 +176,7 @@ if __name__=='__main__':
     
 #   Method: unmixPinvLS:
     start = time.time()
-    X_unmixPinvLS = unmixPinvLS(image, A)
+    X_unmixPinvLS = unmixPinvLS(image, A, threshold=threshold)
     end = time.time()
     print("unmixPinvLSLS Time: " + str(end-start) + " seconds.")
     print("Result is an " + 
