@@ -9,51 +9,46 @@ import time
 from joblib import Parallel, delayed
 from itertools import product
 
-# results = Parallel(n_jobs=10)(delayed(nnls)(A, b_array[:,i,j])[0]
-#              for i, j in product(range(100), range(100)))
-# x_array = np.array(results).reshape(100, 100, -1).transpose(2, 0, 1)
+# Function Definitions
 
-def parallelEx():
-    results = Parallel(n_jobs=4)(delayed(math.sqrt)(i*j)
-        for i, j in product(range(10), range(10)))
-    return results
-
-def dummy(A, x):
+def nnlsWrapper(A, x):
     return nnls(A, x)[0]
-#    return np.dot(A.T, x)
-
     
 def unmixParallelNNLS(image, A):
     """
     Performs Nonnegative Least Squares Unmixing via NNLS by
     parallel looping over the pixels in the image.
+    
+    Note: This does not work well for large images due to
+    multithreading overhead.
     """
+
     # Both Versions seem to perform about the same
     
-# Version 1
-#     image = image.transpose(2, 0, 1)
-#     results = Parallel(n_jobs=4)(delayed(dummy)(A, image[:,i,j])
-#         for i, j in product(range(image.shape[1]), range(image.shape[2])))
-#     X = np.array(results).reshape(image.shape[1], image.shape[2], -1)
+    # Version 1
+    # image = image.transpose(2, 0, 1)
+    # results = Parallel(n_jobs=4)(delayed(nnlsWrapper)(A, image[:,i,j])
+    #     for i, j in product(range(image.shape[1]), range(image.shape[2])))
+    # X = np.array(results).reshape(image.shape[1], image.shape[2], -1)
 
-# Version 2
-    results = Parallel(n_jobs=4)(delayed(dummy)(A, image[i,j,:])
+    # Version 2
+    results = Parallel(n_jobs=4)(delayed(nnlsWrapper)(A, image[i,j,:])
         for i, j in product(range(image.shape[0]), range(image.shape[1])))
     X = np.array(results).reshape(image.shape[0], image.shape[1], -1)
     
     return X
 
-def dummyCol(A, X):
-    Z = np.zeros((X.shape[0],A.shape[1]), dtype=np.float)
-    for i in range(X.shape[0]):
-        Z[i,:] = nnls(A, X[i,:])[0]
-    return Z
+def unmixSerialVectorNNLS(vector, A):
+    X = np.zeros((vector.shape[0],A.shape[1]), dtype=np.float)
+    for i in range(vector.shape[0]):
+        X[i,:] = nnls(A, vector[i,:])[0]
+    return X    
     
 def unmixParallelColNNLS(image, A):
     """
-    Performs NNLS Column-wise
+    Performs Parallel Column-wise NNLS unmixing.
     """
-    results = Parallel(n_jobs=2)(delayed(dummyCol)(A, image[:,j,:])
+    results = Parallel(n_jobs=2)(delayed(unmixSerialVectorNNLS)(image[:,j,:], A)
         for j in range(image.shape[1]))
     X = np.array(results).reshape(image.shape[1], image.shape[0], -1).transpose(1, 0, 2)
     
@@ -61,23 +56,13 @@ def unmixParallelColNNLS(image, A):
     
 def unmixParallelRowNNLS(image, A):
     """
-    Performs NNLS Row-wise
+    Performs Parallel Row-wise NNLS unmixing.
     """
-    results = Parallel(n_jobs=2)(delayed(dummyCol)(A, image[i,:,:])
+    results = Parallel(n_jobs=2)(delayed(unmixSerialVectorNNLS)(image[i,:,:], A)
         for i in range(image.shape[0]))
     X = np.array(results).reshape(image.shape[0], image.shape[1], -1)
     
     return X
-        
-        
-        
-
-
-
-
-
-
-### --- Clean from here down ---
 
 def unmixSerialNNLS(image, A):
     """
@@ -85,7 +70,7 @@ def unmixSerialNNLS(image, A):
     looping over the pixels in the image.
     """
     # Allocate output matrix   
-    X = np.zeros((image.shape[0], image.shape[1], A.shape[1]), dtype=np.float32)
+    X = np.zeros((image.shape[0], image.shape[1], A.shape[1]), dtype=np.float)
     # Loop over all pixels
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
@@ -111,8 +96,8 @@ def unmixPinvLS(image, A):
     # Set negative values to zero
     X[X < 0] = 0
     return X
-
-
+    
+# Function tests and benchmarks
 if __name__=='__main__':
     # Perform Tests
     # Image is an n1 x n2 x 3 numpy array,
@@ -128,100 +113,81 @@ if __name__=='__main__':
 
     # Test image (Convert to RGB)
     image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
-#    image = image[0:400,0:300,:]
     image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
     print("For a " + str(image.shape[0]) + " by " + str(image.shape[1]) + " image:")
-
-#    print(parallelEx())
+    
+#   Method: unmixPinvLS:
+    start = time.time()
+    X_unmixPinvLS = unmixPinvLS(image, A)
+    end = time.time()
+    print("unmixPinvLSLS Time: " + str(end-start) + " seconds.")
+    print("Result is an " + 
+        str(X_unmixPinvLS.shape[0]) + " by " + 
+        str(X_unmixPinvLS.shape[1]) + " by " + 
+        str(X_unmixPinvLS.shape[2]) + " matrix.")
+    if showPlots:
+        for i in range(X_unmixPinvLS.shape[2]):
+            plt.imshow(X_unmixPinvLS[:,:,i], interpolation = "bicubic")
+            plt.xticks([]), plt.yticks([])
+            plt.show()    
+    
+#   Method: unmixSerialNNLS
+    start = time.time()
+    X_unmixSerialNNLS = unmixSerialNNLS(image, A)
+    end = time.time()
+    print("unmixSerialNNLS Time: " + str(end-start) + " seconds.")
+    print("Result is an " + 
+        str(X_unmixSerialNNLS.shape[0]) + " by " + 
+        str(X_unmixSerialNNLS.shape[1]) + " by " + 
+        str(X_unmixSerialNNLS.shape[2]) + " matrix.")
+    if showPlots:        
+        for i in range(X_unmixSerialNNLS.shape[2]):
+            plt.imshow(X_unmixSerialNNLS[:,:,i], interpolation = "bicubic")
+            plt.xticks([]), plt.yticks([])
+            plt.show()
 
 #   Method: unmixParalleRowNNLS
     start = time.time()
-    X3 = unmixParallelRowNNLS(image, A)
+    X_unmixParalleRowNNLS = unmixParallelRowNNLS(image, A)
     end = time.time()
     print("unmixParallelRowNNLS Time: " + str(end-start) + " seconds.")
     print("Result is an " + 
-        str(X3.shape[0]) + " by " + 
-        str(X3.shape[1]) + " by " + 
-        str(X3.shape[2]) + " matrix.")
-    for i in range(X3.shape[2]):
-        plt.imshow(X3[:,:,i], interpolation = "bicubic")
-        plt.xticks([]), plt.yticks([])
-        if showPlots:
+        str(X_unmixParalleRowNNLS.shape[0]) + " by " + 
+        str(X_unmixParalleRowNNLS.shape[1]) + " by " + 
+        str(X_unmixParalleRowNNLS.shape[2]) + " matrix.")
+    if showPlots:
+        for i in range(X_unmixParalleRowNNLS.shape[2]):
+            plt.imshow(X_unmixParalleRowNNLS[:,:,i], interpolation = "bicubic")
+            plt.xticks([]), plt.yticks([])
             plt.show()
 
 #   Method: unmixParalleCollNNLS
     start = time.time()
-    X1 = unmixParallelColNNLS(image, A)
+    X_unmixParallelColNNLS = unmixParallelColNNLS(image, A)
     end = time.time()
     print("unmixParallelColNNLS Time: " + str(end-start) + " seconds.")
     print("Result is an " + 
-        str(X1.shape[0]) + " by " + 
-        str(X1.shape[1]) + " by " + 
-        str(X1.shape[2]) + " matrix.")
-    for i in range(X1.shape[2]):
-        plt.imshow(X1[:,:,i], interpolation = "bicubic")
-        plt.xticks([]), plt.yticks([])
-        if showPlots:
+        str(X_unmixParallelColNNLS.shape[0]) + " by " + 
+        str(X_unmixParallelColNNLS.shape[1]) + " by " + 
+        str(X_unmixParallelColNNLS.shape[2]) + " matrix.")
+    if showPlots:        
+        for i in range(X_unmixParallelColNNLS.shape[2]):
+            plt.imshow(X_unmixParallelColNNLS[:,:,i], interpolation = "bicubic")
+            plt.xticks([]), plt.yticks([])
             plt.show()
-                
+
 #   Method: unmixParallelNNLS
-#   Too slow!!
+#   This method is too slow for large images
 #     start = time.time()
-#     X2 = unmixParallelNNLS(image, A)
+#     X_unmixParallelNNLS = unmixParallelNNLS(image, A)
 #     end = time.time()
 #     print("unmixParallelNNLS Time: " + str(end-start) + " seconds.")
 #     print("Result is an " + 
-#         str(X2.shape[0]) + " by " + 
-#         str(X2.shape[1]) + " by " + 
-#         str(X2.shape[2]) + " matrix.")
-#     for i in range(X2.shape[2]):
-#         plt.imshow(X2[:,:,i], interpolation = "bicubic")
-#         plt.xticks([]), plt.yticks([])
-#         if showPlots:
+#         str(X_unmixParallelNNLS.shape[0]) + " by " + 
+#         str(X_unmixParallelNNLS.shape[1]) + " by " + 
+#         str(X_unmixParallelNNLS.shape[2]) + " matrix.")
+#     if showPlots:
+#         for i in range(X_unmixParallelNNLS.shape[2]):
+#             plt.imshow(X_unmixParallelNNLS[:,:,i], interpolation = "bicubic")
+#             plt.xticks([]), plt.yticks([])
 #             plt.show()
-
- 
-#   Method: unmixSerialNNLS
-    start = time.time()
-    X = unmixSerialNNLS(image, A)
-    end = time.time()
-    print("unmixSerialNNLS Time: " + str(end-start) + " seconds.")
-    print("Result is an " + 
-        str(X.shape[0]) + " by " + 
-        str(X.shape[1]) + " by " + 
-        str(X.shape[2]) + " matrix.")
-        
-    for i in range(X.shape[2]):
-        plt.imshow(X[:,:,i], interpolation = "bicubic")
-        plt.xticks([]), plt.yticks([])
-        if showPlots:
-            plt.show()
-
-
-        
-    diff = abs(X - X1)
-    print(diff.max())
-    
-#     diff = abs(X - X2)
-#     print(diff.max())
-    
-    diff = abs(X - X3)
-    print(diff.max())
-      
-        
-#   Method: unmixPinvLS:
-    start = time.time()
-    X = unmixPinvLS(image, A)
-    end = time.time()
-    print("unmixPinvLSLS Time: " + str(end-start) + " seconds.")
-    print("Result is an " + 
-        str(X.shape[0]) + " by " + 
-        str(X.shape[1]) + " by " + 
-        str(X.shape[2]) + " matrix.")
-    
-    for i in range(X.shape[2]):
-        plt.imshow(X[:,:,i], interpolation = "bicubic")
-        plt.xticks([]), plt.yticks([])
-        if showPlots:
-            plt.show()    
-    
