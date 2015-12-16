@@ -11,6 +11,38 @@ from itertools import product
 
 # Function Definitions
 
+def unmixIntensityPreservingPinvLS(image, A, threshold = True):
+    """
+    Performs Least Squares Unmixing via least-squares by using
+    the psuedoinverse of the unmixing matrix. The solution is 
+    subsequently adjusted so that the total intensity is preserved.
+    This result is the solution of a least-squares minimization
+    with a total intensity preservation constraint.
+    Subsequently sets all negative values to zero.    
+    """
+    # Get dimensions of input image and matrix
+    (n1, n2, n3) = image.shape
+    k = A.shape[1]
+    # Reshape to n3 x n1*n2 matrix
+    image = image.reshape(n1*n2,n3).T
+    # Pre-calculate pinv
+    pinvA = lin.pinv(A)
+    ATones = A.sum(0)
+    # Least-squares via pinv
+    XLS = np.dot(pinvA, image)
+    # Intensity preservation adjustment
+    whiteUnmix = pinvA.sum(1) # (if doesn't work, try this) np.dot(pinvA, np.ones((n3,1), dtype = float))
+    weights = (image.sum(0) - np.dot(ATones, XLS))/np.inner(ATones, whiteUnmix)
+    X = XLS + np.outer(whiteUnmix,weights)
+    # Reshape back to n1 x n2 x k image
+    X = X.T.reshape(n1,n2,k)
+    # Set negative values to zero
+    if threshold:
+        X[X < 0] = 0
+    return X
+
+
+
 def nnlsWrapper(A, x):
     return nnls(A, x)[0]
     
@@ -78,7 +110,7 @@ def unmixSerialNNLS(image, A):
             X[i,j,:] = nnls(A, image[i,j,:])[0]
     return X
     
-def unmixPinvLS(image, A):
+def unmixPinvLS(image, A, threshold = True):
     """
     Performs Least Squares Unmixing via least-squares by using
     the psuedoinverse of the unmixing matrix.
@@ -94,7 +126,8 @@ def unmixPinvLS(image, A):
     # Reshape back to n1 x n2 x k image
     X = X.T.reshape(n1,n2,k)
     # Set negative values to zero
-    X[X < 0] = 0
+    if threshold:
+        X[X < 0] = 0
     return X
     
 # Function tests and benchmarks
@@ -105,16 +138,40 @@ if __name__=='__main__':
     # unmixed results should be n1 x n2 x k.
 
     showPlots = False
+    example = 2
     
-    # Example unmixing matrix
-    A = np.array([ [ 228, 244],
-                   [ 250, 205],
-                   [ 166, 100] ])
-
-    # Test image (Convert to RGB)
-    image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
+    if example == 1:
+        # Example unmixing matrix
+        A = np.array([ [ 228, 244],
+                       [ 250, 205],
+                       [ 166, 100] ])
+        # Test image (Convert to RGB)
+        image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
+    elif example == 2:
+        # Example unmixing matrix
+        A = np.array([ [ 255,   0],
+                       [ 255,   0],
+                       [ 255, 255] ])
+        # Test image (Convert to RGB)
+        image = cv2.imread("testImages/Unmix Phantom.png")
+        
     image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
     print("For a " + str(image.shape[0]) + " by " + str(image.shape[1]) + " image:")
+    
+#   Method: unmixIntensityPreservingPinvLS
+    start = time.time()
+    X_unmixIntensityPreservingPinvLS = unmixIntensityPreservingPinvLS(image, A)
+    end = time.time()
+    print("unmixIntensityPreservingPinvLS Time: " + str(end-start) + " seconds.")
+    print("Result is an " + 
+        str(X_unmixIntensityPreservingPinvLS.shape[0]) + " by " + 
+        str(X_unmixIntensityPreservingPinvLS.shape[1]) + " by " + 
+        str(X_unmixIntensityPreservingPinvLS.shape[2]) + " matrix.")
+    if showPlots:        
+        for i in range(X_unmixIntensityPreservingPinvLS.shape[2]):
+            plt.imshow(X_unmixIntensityPreservingPinvLS[:,:,i], interpolation = "nearest")
+            plt.xticks([]), plt.yticks([])
+            plt.show()        
     
 #   Method: unmixPinvLS:
     start = time.time()
@@ -127,7 +184,7 @@ if __name__=='__main__':
         str(X_unmixPinvLS.shape[2]) + " matrix.")
     if showPlots:
         for i in range(X_unmixPinvLS.shape[2]):
-            plt.imshow(X_unmixPinvLS[:,:,i], interpolation = "bicubic")
+            plt.imshow(X_unmixPinvLS[:,:,i], interpolation = "nearest")
             plt.xticks([]), plt.yticks([])
             plt.show()    
     
@@ -142,7 +199,7 @@ if __name__=='__main__':
         str(X_unmixSerialNNLS.shape[2]) + " matrix.")
     if showPlots:        
         for i in range(X_unmixSerialNNLS.shape[2]):
-            plt.imshow(X_unmixSerialNNLS[:,:,i], interpolation = "bicubic")
+            plt.imshow(X_unmixSerialNNLS[:,:,i], interpolation = "nearest")
             plt.xticks([]), plt.yticks([])
             plt.show()
 
@@ -157,7 +214,7 @@ if __name__=='__main__':
         str(X_unmixParalleRowNNLS.shape[2]) + " matrix.")
     if showPlots:
         for i in range(X_unmixParalleRowNNLS.shape[2]):
-            plt.imshow(X_unmixParalleRowNNLS[:,:,i], interpolation = "bicubic")
+            plt.imshow(X_unmixParalleRowNNLS[:,:,i], interpolation = "nearest")
             plt.xticks([]), plt.yticks([])
             plt.show()
 
@@ -172,10 +229,10 @@ if __name__=='__main__':
         str(X_unmixParallelColNNLS.shape[2]) + " matrix.")
     if showPlots:        
         for i in range(X_unmixParallelColNNLS.shape[2]):
-            plt.imshow(X_unmixParallelColNNLS[:,:,i], interpolation = "bicubic")
+            plt.imshow(X_unmixParallelColNNLS[:,:,i], interpolation = "nearest")
             plt.xticks([]), plt.yticks([])
             plt.show()
-
+            
 #   Method: unmixParallelNNLS
 #   This method is too slow for large images
 #     start = time.time()
@@ -188,6 +245,6 @@ if __name__=='__main__':
 #         str(X_unmixParallelNNLS.shape[2]) + " matrix.")
 #     if showPlots:
 #         for i in range(X_unmixParallelNNLS.shape[2]):
-#             plt.imshow(X_unmixParallelNNLS[:,:,i], interpolation = "bicubic")
+#             plt.imshow(X_unmixParallelNNLS[:,:,i], interpolation = "nearest")
 #             plt.xticks([]), plt.yticks([])
 #             plt.show()
