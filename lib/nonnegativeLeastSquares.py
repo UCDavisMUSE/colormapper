@@ -31,7 +31,7 @@ def unmixIntensityPreservingPinvLS(image, A, threshold = True):
     # Least-squares via pinv
     XLS = np.dot(pinvA, image)
     # Intensity preservation adjustment
-    whiteUnmix = pinvA.sum(1) # (if doesn't work, try this) np.dot(pinvA, np.ones((n3,1), dtype = float))
+    whiteUnmix = pinvA.sum(1)
     weights = (image.sum(0) - np.dot(ATones, XLS))/np.inner(ATones, whiteUnmix)
     X = XLS + np.outer(whiteUnmix,weights)
     # Reshape back to n1 x n2 x k image
@@ -139,7 +139,7 @@ if __name__=='__main__':
 
     showPlots = True
     threshold = True
-    example = 1
+    example = 3
     
     if example == 1:
         # Example unmixing matrix
@@ -148,6 +148,7 @@ if __name__=='__main__':
                        [ 166, 100] ])
         # Test image (Convert to RGB)
         image = cv2.imread("testImages/restored mouse liver-157151117-67.png")
+        image = image[::4,::4,:]
     elif example == 2:
         # Example unmixing matrix
         A = np.array([ [   0,   0],
@@ -155,6 +156,13 @@ if __name__=='__main__':
                        [ 255, 255] ])
         # Test image (Convert to RGB)
         image = cv2.imread("testImages/Unmix Phantom.png")
+    elif example == 3:
+        # Example unmixing matrix
+        A = np.array([ [127,   0],
+                       [127, 127],
+                       [  0, 127] ])
+        # Test image (Convert to RGB)
+        image = cv2.imread("testImages/SpectralQuadrant.png")
         
     image = cv2.cvtColor(image,cv2.COLOR_RGB2BGR)
     print("For a " + str(image.shape[0]) + " by " + str(image.shape[1]) + " image:")
@@ -170,9 +178,9 @@ if __name__=='__main__':
         str(X_unmixIntensityPreservingPinvLS.shape[2]) + " matrix.")
     if showPlots:        
         for i in range(X_unmixIntensityPreservingPinvLS.shape[2]):
-            plt.imshow(X_unmixIntensityPreservingPinvLS[:,:,i], interpolation = "nearest")
+            plt.imshow(X_unmixIntensityPreservingPinvLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
             plt.xticks([]), plt.yticks([])
-            plt.show()        
+            plt.show()
     
 #   Method: unmixPinvLS:
     start = time.time()
@@ -185,9 +193,9 @@ if __name__=='__main__':
         str(X_unmixPinvLS.shape[2]) + " matrix.")
     if showPlots:
         for i in range(X_unmixPinvLS.shape[2]):
-            plt.imshow(X_unmixPinvLS[:,:,i], interpolation = "nearest")
+            plt.imshow(X_unmixPinvLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
             plt.xticks([]), plt.yticks([])
-            plt.show()    
+            plt.show()
     
 #   Method: unmixSerialNNLS
     start = time.time()
@@ -200,7 +208,7 @@ if __name__=='__main__':
         str(X_unmixSerialNNLS.shape[2]) + " matrix.")
     if showPlots:        
         for i in range(X_unmixSerialNNLS.shape[2]):
-            plt.imshow(X_unmixSerialNNLS[:,:,i], interpolation = "nearest")
+            plt.imshow(X_unmixSerialNNLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
             plt.xticks([]), plt.yticks([])
             plt.show()
 
@@ -215,7 +223,7 @@ if __name__=='__main__':
         str(X_unmixParalleRowNNLS.shape[2]) + " matrix.")
     if showPlots:
         for i in range(X_unmixParalleRowNNLS.shape[2]):
-            plt.imshow(X_unmixParalleRowNNLS[:,:,i], interpolation = "nearest")
+            plt.imshow(X_unmixParalleRowNNLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
             plt.xticks([]), plt.yticks([])
             plt.show()
 
@@ -230,7 +238,7 @@ if __name__=='__main__':
         str(X_unmixParallelColNNLS.shape[2]) + " matrix.")
     if showPlots:        
         for i in range(X_unmixParallelColNNLS.shape[2]):
-            plt.imshow(X_unmixParallelColNNLS[:,:,i], interpolation = "nearest")
+            plt.imshow(X_unmixParallelColNNLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
             plt.xticks([]), plt.yticks([])
             plt.show()
             
@@ -246,6 +254,6 @@ if __name__=='__main__':
 #         str(X_unmixParallelNNLS.shape[2]) + " matrix.")
 #     if showPlots:
 #         for i in range(X_unmixParallelNNLS.shape[2]):
-#             plt.imshow(X_unmixParallelNNLS[:,:,i], interpolation = "nearest")
+#             plt.imshow(X_unmixParallelNNLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
 #             plt.xticks([]), plt.yticks([])
 #             plt.show()
