@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import scipy.optimize.nnls as nnls
+from nonnegativeLeastSquares import *
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
@@ -164,7 +165,6 @@ def learnLogisticColorspaceMap(X, Y):
            
     return (A,c) 
     
-    
 def learnLogisticColorspaceMapGradient(X, Y):
     # Learn the logistic colorspace map
     # y = 255/(1 + exp(-(Ax + c)))
@@ -232,7 +232,6 @@ def learnLogisticColorspaceMapGradient(X, Y):
         
     return (A,c)
         
-    
 def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
     # Applies the affine colorspace map
     # y = Ax + c
@@ -249,7 +248,6 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         X = X.astype(np.uint8)
         return X
 
-       
 def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='nnls'):
 
     inputImage = inputImage.astype(float)/255
@@ -271,14 +269,16 @@ def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='
 
 def unmixImage(unmixMatrix, inputImage, verbose=False, method='nnls'):
 
-    (n1, n2, n3) = inputImage.shape
-    inputImage = inputImage.reshape(n1*n2,n3)
-    k = unmixMatrix.shape[1]
+#     (n1, n2, n3) = inputImage.shape
+#     inputImage = inputImage.reshape(n1*n2,n3)
+#     k = unmixMatrix.shape[1]
     if method == 'nnls':
-        unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
+        unmixedImage = unmixParallelColGradProjNNLS(inputImage, unmixMatrix, tolerance = 1e+1)
+#        unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
     elif method == 'ls':
-        unmixedImage = LS(inputImage, unmixMatrix.transpose())
-    unmixedImage = unmixedImage.reshape(n1,n2,k)
+        unmixPinvLS(inputImage, unmixMatrix, threshold = True)
+#        unmixedImage = LS(inputImage, unmixMatrix.transpose())
+#     unmixedImage = unmixedImage.reshape(n1,n2,k)
     
 #    print("Finished Unmixing!")
     
