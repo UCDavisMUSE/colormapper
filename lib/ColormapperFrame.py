@@ -381,6 +381,11 @@ class ColormapperFrame(wx.Frame):
         if dialog.ShowModal() == wx.ID_OK:
             newNumberOfColors = int(dialog.GetStringSelection())
             (inputColors, outputColors) = self.GetInputOutputColors()
+
+            oldChoice = self.controlPanel.choice.GetSelection()
+            oldMethodChoice = self.controlPanel.methodChoice.GetSelection()
+
+            
             if newNumberOfColors > len(inputColors):
                 # Need to add colors
                 while len(inputColors) < newNumberOfColors:
@@ -395,6 +400,9 @@ class ColormapperFrame(wx.Frame):
                 outputColors = outputColors[0:newNumberOfColors]
                 self.SetInputOutputColors(inputColors, outputColors)
         
+            self.controlPanel.choice.SetSelection(oldChoice)
+            self.controlPanel.methodChoice.SetSelection(oldMethodChoice)
+            
         dialog.Destroy()
         
     
