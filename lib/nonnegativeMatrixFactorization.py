@@ -31,7 +31,7 @@ k=2
 alpha = 20
 l1_ratio = 1
 init = 'random'#'nndsfda'
-model = NMF(n_components=k, init=init, l1_ratio = l1_ratio, alpha = alpha ,tol = 1e-3)
+model = NMF(n_components=k, init=init, l1_ratio = l1_ratio, alpha = alpha, tol = 1e-3)
 model.fit(Y)
 A = model.components_.T
 X = model.transform(Y)
@@ -46,7 +46,7 @@ if showPlots:
         plt.show()
 
 # If we assume that bluest spectra contains the nuclei, put in first column
-if A[2,1] > A[2,1]:
+if A[2,1] > A[2,0]:
     A[:,0], A[:,1] = A[:,1], A[:,0]
 
 # Normalize columns    
