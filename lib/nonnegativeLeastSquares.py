@@ -192,6 +192,27 @@ def unmixParallelRowNNLS(image, A):
     
     return X
     
+def unmixParallelTileGradProjNNLS(image, A, tolerance = 1e-4, tileSize = (64, 64)):
+    """
+    Performs Parallel Tile-wise NNLS unmixing using Gradient Projection NNLS.
+    
+    To Do: Determine the optimal tile size for a typical image.
+    """
+    (height, width, colors) = image.shape
+    heightTiles = int(math.ceil(1.0*height/tileSize[0]))
+    widthTiles = int(math.ceil(1.0*width/tileSize[1]))
+        
+    results = Parallel(n_jobs=4)(delayed(unmixGradProjMatrixNNLS)(image[tileSize[0]*i:tileSize[0]*(i+1),tileSize[1]*j:tileSize[1]*(j+1),:], A, tolerance)
+        for i,j in product(range(heightTiles), range(widthTiles)))
+        
+    # Reassemble results
+    X = np.zeros((image.shape[0], image.shape[1], A.shape[1]), dtype = float)
+    for i,j in product(range(heightTiles), range(widthTiles)):
+        X[tileSize[0]*i:tileSize[0]*(i+1),
+          tileSize[1]*j:tileSize[1]*(j+1),:] = np.array(results[j + widthTiles*i])
+    
+    return X        
+    
 def unmixParallelColGradProjNNLS(image, A, tolerance = 1e-4):
     """
     Performs Parallel Column-wise NNLS unmixing using Gradient Projection NNLS.
