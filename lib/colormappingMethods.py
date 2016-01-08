@@ -273,7 +273,7 @@ def unmixImage(unmixMatrix, inputImage, verbose=False, method='nnls'):
 #     inputImage = inputImage.reshape(n1*n2,n3)
 #     k = unmixMatrix.shape[1]
     if method == 'nnls':
-        unmixedImage = unmixParallelColGradProjNNLS(inputImage, unmixMatrix, tolerance = 1e+1)
+        unmixedImage = unmixParallelTileGradProjNNLS(inputImage, unmixMatrix, tolerance = 1e+1)
 #        unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
     elif method == 'ls':
         unmixPinvLS(inputImage, unmixMatrix, threshold = True)
