@@ -24,6 +24,8 @@ zharmany@gmail.com
 - Check if threads can be used for saving, and applying the colormap. This should help the UI be more responsive.
 - Investigate faster methods to save large image files, especially PNG files
 - In Windows, double check that the open / save / import / export dialog boxes open to the directory of the last successful open / save / import / export operation. 
+- Batch processing.
+- Take the colormapping code off the main thread.
 
 ### Finished
 
