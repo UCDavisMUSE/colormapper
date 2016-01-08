@@ -68,6 +68,21 @@ if showPlots:
         
 diff = X_unmixGradProjMatrixNNLS - X_unmixGradProjMatrixMinArcNNLS
 print('Max difference between Grad Proj NNLS and Grad Proj Min Arc NNLS: %8.3e' % abs(diff).max())
+
+#   Method: unmixParallelTileGradProjNNLS
+start = time.time()
+X_unmixParallelTileGradProjNNLS = unmixParallelTileGradProjNNLS(image, A, tolerance=1e1)
+end = time.time()
+print("unmixParallelTileGradProjNNLS Time: " + str(end-start) + " seconds.")
+print("Result is an " + 
+    str(X_unmixParallelTileGradProjNNLS.shape[0]) + " by " + 
+    str(X_unmixParallelTileGradProjNNLS.shape[1]) + " by " + 
+    str(X_unmixParallelTileGradProjNNLS.shape[2]) + " matrix.")
+if showPlots:
+    for i in range(X_unmixParallelTileGradProjNNLS.shape[2]):
+        plt.imshow(X_unmixParallelTileGradProjNNLS[:,:,i], interpolation = "nearest", cmap = plt.get_cmap("gray"))
+        plt.xticks([]), plt.yticks([])
+        plt.show()
             
         
 #   Method: unmixParallelRowGradProjNNLS
