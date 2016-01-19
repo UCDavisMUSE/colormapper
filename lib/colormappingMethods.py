@@ -2,6 +2,7 @@ import numpy as np
 import math
 import scipy.optimize.nnls as nnls
 from nonnegativeLeastSquares import *
+from OpenCLGradProjNNLS import *
 
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
@@ -249,7 +250,7 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         X = X.astype(np.uint8)
         return X
 
-def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='nnls'):
+def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='OpenCLnnls'):
 
     inputImage = inputImage.astype(float)/255
     unmixMatrix = inputColors.astype(float)/255
