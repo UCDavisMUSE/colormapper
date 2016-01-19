@@ -2,6 +2,7 @@ import numpy as np
 import math
 import scipy.optimize.nnls as nnls
 from nonnegativeLeastSquares import *
+from OpenCLGradProjNNLS import *
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
 # Each of the methods is coded to take as input a numpy array of type uint8, 
@@ -248,7 +249,7 @@ def applyLogisticColorspaceMap(X, A, c, method = 0, tileSize = (64, 64)):
         X = X.astype(np.uint8)
         return X
 
-def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='nnls'):
+def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='OpenCLnnls'):
 
     inputImage = inputImage.astype(float)/255
     unmixMatrix = inputColors.astype(float)/255
@@ -267,7 +268,7 @@ def unmixAndRecolor(inputColors, outputColors, inputImage,verbose=False,method='
                 
     return outputImage.astype(np.uint8)
 
-def unmixImage(unmixMatrix, inputImage, verbose=False, method='nnls'):
+def unmixImage(unmixMatrix, inputImage, verbose=False, method='OpenCLnnls'):
 
 #     (n1, n2, n3) = inputImage.shape
 #     inputImage = inputImage.reshape(n1*n2,n3)
@@ -276,7 +277,9 @@ def unmixImage(unmixMatrix, inputImage, verbose=False, method='nnls'):
         unmixedImage = unmixParallelTileGradProjNNLS(inputImage, unmixMatrix, tolerance = 1e+1)
 #        unmixedImage = NNLS(inputImage, unmixMatrix.transpose())
     elif method == 'ls':
-        unmixPinvLS(inputImage, unmixMatrix, threshold = True)
+        unmixedImage = unmixPinvLS(inputImage, unmixMatrix, threshold = True)
+    elif method == 'OpenCLnnls':
+        unmixedImage = OpenCLGradProjNNLS(inputImage, unmixMatrix, tolerance = 1e+1)
 #        unmixedImage = LS(inputImage, unmixMatrix.transpose())
 #     unmixedImage = unmixedImage.reshape(n1,n2,k)
     
