@@ -10,7 +10,7 @@ from itertools import product
 
 # Function Definitions
 
-def unmixGradProjMatrixNNLS(image, A, tolerance=1e-4):
+def unmixGradProjMatrixNNLS(image, A, tolerance=1e-4, maxiter=100):
     """
     Performs NNLS via Gradient Projection of the primal problem.
     Terminates when duality gap falls below tolerance
@@ -38,7 +38,7 @@ def unmixGradProjMatrixNNLS(image, A, tolerance=1e-4):
     gradthresh[gradthresh < 0] = 0
     gap = np.tensordot(X, gradthresh)/(n1*n2*k)
     iter = 0
-    while gap > tolerance:
+    while (gap > tolerance) and (iter < maxiter):
         iter += 1
         # Gradient Step
         X = X - grad/alpha
@@ -192,7 +192,7 @@ def unmixParallelRowNNLS(image, A):
     
     return X
     
-def unmixParallelTileGradProjNNLS(image, A, tolerance = 1e-4, tileSize = (64, 64)):
+def unmixParallelTileGradProjNNLS(image, A, tolerance = 1e-4, tileSize = (64, 64), maxiter = 100):
     """
     Performs Parallel Tile-wise NNLS unmixing using Gradient Projection NNLS.
     
@@ -202,7 +202,7 @@ def unmixParallelTileGradProjNNLS(image, A, tolerance = 1e-4, tileSize = (64, 64
     heightTiles = int(math.ceil(1.0*height/tileSize[0]))
     widthTiles = int(math.ceil(1.0*width/tileSize[1]))
         
-    results = Parallel(n_jobs=4)(delayed(unmixGradProjMatrixNNLS)(image[tileSize[0]*i:tileSize[0]*(i+1),tileSize[1]*j:tileSize[1]*(j+1),:], A, tolerance)
+    results = Parallel(n_jobs=4)(delayed(unmixGradProjMatrixNNLS)(image[tileSize[0]*i:tileSize[0]*(i+1),tileSize[1]*j:tileSize[1]*(j+1),:], A, tolerance, maxiter)
         for i,j in product(range(heightTiles), range(widthTiles)))
         
     # Reassemble results
