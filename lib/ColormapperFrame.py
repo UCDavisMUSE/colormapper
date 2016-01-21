@@ -1,11 +1,15 @@
 import wx
 import os
 import cPickle
+import numpy as np
+import copy
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
 from ControlPanel import ControlPanel
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
+from colormappingMethods import remixImage
+from OpenCLGradProjNNLS import *
 
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
@@ -26,9 +30,8 @@ class ColormapperFrame(wx.Frame):
         self.filename = ""
         self.exportFilename = ""
         self.currentDirectory = ""
-        self.numberOfColors = 3
-        self.inputColors  = [ (228, 250, 166), (244, 205, 100), (  0,   0,   0) ]
-        self.outputColors = [ ( 70,  30, 150), (230, 160, 200), (255, 255, 255) ]
+        self.inputColors  = [ (228, 250, 166), (244, 205, 100)]
+        self.outputColors = [ ( 70,  30, 150), (230, 160, 200)]
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -65,28 +68,52 @@ class ColormapperFrame(wx.Frame):
         
         self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
         self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
-
-        # Code for overriding button behavior to select colors from image
+        
+        # Add code to initialize input / output colors.
+        
+        # Add code for crosshair button click in Unmix and Remix Panels
+        self.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons,
+            self.unmixPanel.buttonBackgroundCrosshair)
+        
 #         for button in self.controlPanel.inputColorButtons:
 #             button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
             
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.Bind(wx.EVT_MOTION, self.OnInputMotion)
+        self.Bind(wx.EVT_IDLE, self.OnIdle)
+        self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+        
+    def OnKey(self, event):
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            if self.HasCapture():
+                self.ReleaseMouse()
+                self.inputImagePanel.reInitBuffer = True
+                self.inputImagePanel.InitBuffer()
+                self.Refresh()
+        event.Skip()
+                
+        
+    def OnIdle(self, event):
+        # This is where we recompute the unmix and remix:
+        if self.unmixPanel.recomputeUnmix:
+#            print("Unmixing...")
+            self.UnmixImage()
+            self.remixPanel.recomputeRemix = True
+            self.unmixPanel.recomputeUnmix = False 
             
+        if self.remixPanel.recomputeRemix:
+#            print("Remixing...")
+            self.RemixImage()
+            self.remixPanel.recomputeRemix = False       
         
     def OverrideInputColorButtons(self, event):
         self.currentButtonClicked = event.GetEventObject()
-        if self.controlPanel.choice.GetSelection() == 1:
-            self.CaptureMouse()        
-        else:
-            event.Skip()
-
+        self.CaptureMouse()        
     
     def OnLeftDown(self, event):
         if self.HasCapture():
             self.currentPosition = event.GetPositionTuple()
-
     
     def OnLeftUp(self, event):
         if self.HasCapture():
@@ -100,17 +127,15 @@ class ColormapperFrame(wx.Frame):
                     currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
                                     self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
                                     self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
-                    self.currentButtonClicked.SetBackgroundColour(currentColor)
+                    self.colorButtonBackgroundColor.SetBackgroundColour(currentColor)
                     self.Refresh()
             self.ReleaseMouse()
             self.inputImagePanel.InitBuffer()
-
 
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(3)
         self.statusbar.SetStatusWidths([200, -2, -3])
-
 
     def OnInputMotion(self, event):
         currentPosition = event.GetPositionTuple()
@@ -130,7 +155,6 @@ class ColormapperFrame(wx.Frame):
         if self.HasCapture():
             self.inputImagePanel.DrawCrosshair(event)
         event.Skip()
-            
 
     def OnOutputMotion(self, event):
         currentPosition = event.GetPositionTuple()
@@ -149,24 +173,23 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("", 1)
         event.Skip()
         
-    
     def menuData(self):
         return (("&File",
-                        ("&Open Colormap...\tCtrl-O",               "Open colormapper file",        self.OnOpen),
-                        ("&Save Colormap\tCtrl-S",                  "Save colormapper file",        self.OnSave),
-                        ("Save Colormap &As...\tShift-Ctrl-S",      "Save colormapper file as",     self.OnSaveAs),
+                        ("&Open Settings...\tCtrl-O",               "Open colormapper file",        self.OnOpen),
+                        ("&Save Settings\tCtrl-S",                  "Save colormapper file",        self.OnSave),
+                        ("Save Settings &As...\tShift-Ctrl-S",      "Save colormapper file as",     self.OnSaveAs),
                         ("&Import Image for Conversion...\tCtrl-I", "Import image for conversion",  self.OnImport),
                         ("&Export Converted Image...\tCtrl-E",      "Export converted image",       self.OnExport),
                         ("&Quit\tCtrl-Q",                           "Quit",                         self.OnCloseWindow)),
                         
-                ("&Edit",
+#                ("&Edit",
 #                        ("&Copy\tCtrl-C",       "Copy converted image to clipboard",    self.OnCopy),
 #                        ("C&ut",                "Cut converted image to clipboard",     self.OnCut),
 #                        ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste),
 #                        ("",                    "",                                     ""),
-                        ("&Number of Colors...",         "Change Number of Colors",                      self.OnOptions)))        
+#                        ("&Number of Colors...",         "Change Number of Colors",                      self.OnOptions))
+                )        
           
-    
     def createMenuBar(self):
         menuBar = wx.MenuBar()
         for eachMenuData in self.menuData():
@@ -177,7 +200,6 @@ class ColormapperFrame(wx.Frame):
         self.SetMenuBar(menuBar)
         return menuBar
         
-    
     def createMenu(self, menuItems):
         menu = wx.Menu()
         for eachLabel, eachStatus, eachHandler in menuItems:
@@ -188,7 +210,6 @@ class ColormapperFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, eachHandler, menuItem)
         return menu
         
-
     # Menu event handlers
     def OnOpen(self, event):
         dlg = wx.FileDialog(self, "Open colormapper file...",
@@ -201,14 +222,12 @@ class ColormapperFrame(wx.Frame):
             self.ReadFile()
         dlg.Destroy()
 
-
     def OnSave(self, event):
         if not self.filename:
             self.OnSaveAs(event)
         else:
             self.SaveFile()
 
-            
     def OnSaveAs(self, event):
         dlg = wx.FileDialog(self, "Save colormapper file...",
                 os.getcwd(), style = wx.SAVE | wx.OVERWRITE_PROMPT,
@@ -223,7 +242,6 @@ class ColormapperFrame(wx.Frame):
             self.SaveFile()
         dlg.Destroy()
 
-
     def OnImport(self, event):
         dlg = wx.FileDialog(self, "Import image for conversion...",
                 os.getcwd(), style=wx.OPEN,
@@ -234,7 +252,6 @@ class ColormapperFrame(wx.Frame):
             self.imageFilename = dlg.GetPath()
             self.ImportImage()
         dlg.Destroy()
-
 
     def OnExport(self, event):
         dlg = wx.FileDialog(self, "Export converted image...",
@@ -249,7 +266,6 @@ class ColormapperFrame(wx.Frame):
             self.exportFilename = filename
             self.ExportImage()
         dlg.Destroy()
-
             
     def ReadFile(self):
         # This code reads a colormapper file
@@ -263,7 +279,6 @@ class ColormapperFrame(wx.Frame):
                 wx.MessageBox("%s is not a colormapper file." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
 
-
     def SaveFile(self):
         # This code saves a colormapper file
         if self.filename:
@@ -272,8 +287,6 @@ class ColormapperFrame(wx.Frame):
             cPickle.dump((inputColors, outputColors), f)
             f.close()
             self.currentDirectory = os.path.split(self.filename)[0]
-
-
 
     def GetInputOutputColors(self):
         inputColors = [];
@@ -284,7 +297,6 @@ class ColormapperFrame(wx.Frame):
             outputColors += [self.controlPanel.outputColorButtons[color].GetBackgroundColour()[0:3]]
         return (inputColors, outputColors)
 
-    
     def SetInputOutputColors(self,inputColors,outputColors):
         self.controlPanel.Destroy()
         self.controlPanel = ControlPanel(self,
@@ -296,7 +308,6 @@ class ColormapperFrame(wx.Frame):
         # Code for overriding button behavior to select colors from image
         for button in self.controlPanel.inputColorButtons:
             button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
-
 
     def ImportImage(self):
         # This code imports the image
@@ -327,10 +338,10 @@ class ColormapperFrame(wx.Frame):
                 self.outputImagePanel.image = wx.EmptyImage()
                 self.outputImagePanel.newImageData = True
                 self.outputImagePanel.reInitBuffer = True
+                self.unmixPanel.recomputeUnmix = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
-
 
     def ExportImage(self):
         # This code exports the image
@@ -353,45 +364,77 @@ class ColormapperFrame(wx.Frame):
             except:
                 wx.MessageBox("Error exporting %s." % self.filename, "oops!",
                     stype=wx.OK|wx.ICON_EXCLAMATION)
+                    
+    def UnmixImage(self):
+        if not self.inputImagePanel.image.Ok():
+            return
+    
+        # Convert wx.Image to numpy array
+        inputImageBuffer = self.inputImagePanel.image.GetDataBuffer()
+        inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
             
+        # Reshape the input numpy array to a width X height X 3 RGB image
+        self.inputImageWidth = self.inputImagePanel.image.GetWidth()
+        self.inputImageHeight = self.inputImagePanel.image.GetHeight()
+        self.inputImageSize = inputImageArray.size     
+        self.inputImageArray = inputImageArray.reshape(self.inputImageWidth, self.inputImageHeight, 3)
+        self.outputImageArray = copy.copy(self.inputImageArray)
+        # If we use OpenCV, the image is expected to be BGR
+        # inputImageArray = cv2.cvtColor(inputImageArray, cv2.COLOR_RGB2BGR)
+        
+        # Do Unmixing
+        A = np.zeros((3, 2), dtype = np.float64)
+        A[:,0] = self.unmixPanel.backgroundSpectrum
+        A[:,1] = self.unmixPanel.nucleiSpectrum
+        if self.unmixPanel.subtractBackground:
+            maxAmount = np.inf
+            for color in range(A.shape[0]):
+                if A[color,0] != 0:
+                    maxAmount = min(maxAmount, 1.0*A[color,1]/A[color,0])
+            A[:,1] = A[:,1] - 1.0*(self.unmixPanel.subtractBackgroundAmount/100.0)*maxAmount*A[:,0]
+            
+        self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A, 
+            tolerance = 1e-1, maxiter = 100, context = 0)
+        # May need to add code here if I want to display the unmixComponents
 
+    def RemixImage(self):
+        if not self.inputImagePanel.image.Ok():
+            return
+    
+        components = copy.copy(self.unmixComponents)
+        B = np.zeros((3, 2), dtype = np.float64)
+        B[:,0] = self.remixPanel.backgroundColor
+        B[:,1] = self.remixPanel.nucleiColor
+        thresh = [self.remixPanel.backgroundThresh, self.remixPanel.nucleiThresh]
+        gain = [self.remixPanel.backgroundGain, self.remixPanel.nucleiGain]
+        gamma = [self.remixPanel.backgroundGamma, self.remixPanel.nucleiGamma]
+        method = self.remixPanel.remixMode
+        
+        # Do Remixing        
+        self.outputImageArray = remixImage(components, B, thresh, gain, gamma, method)
+        
+        # Get/set dimensions of output image
+        outputImageWidth = self.inputImageWidth
+        outputImageHeight = self.inputImageHeight
+        outputImageSize = self.inputImageSize
+        
+        # Reshape the output numpy array to a vector
+        self.outputImageArray = self.outputImageArray.reshape(outputImageSize)
+
+        # Convert the output numpy array to a wx.Image
+        # First initialize with an empty image
+        self.outputImagePanel.image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+        self.outputImagePanel.image.SetData(self.outputImageArray.tostring())
+
+        # Tell the outputImagePanel to refresh the display    
+        self.outputImagePanel.newImageData = True        
+        self.outputImagePanel.reInitBuffer = True
+            
     # Group empty event handlers together
     def OnCopy(self, event): pass
     def OnCut(self, event): pass
     def OnPaste(self, event): pass
 
-    def OnOptions(self, event): 
-        choices = ["2", "3", "4", "5"]
-        dialog = wx.SingleChoiceDialog(None, "Select the number of colors to map", "Number of Colors",
-            choices)
-        if dialog.ShowModal() == wx.ID_OK:
-            newNumberOfColors = int(dialog.GetStringSelection())
-            (inputColors, outputColors) = self.GetInputOutputColors()
-
-            oldChoice = self.controlPanel.choice.GetSelection()
-            oldMethodChoice = self.controlPanel.methodChoice.GetSelection()
-
-            
-            if newNumberOfColors > len(inputColors):
-                # Need to add colors
-                while len(inputColors) < newNumberOfColors:
-                    inputColors += [(0, 0, 0)] # Append with Black
-                while len(outputColors) < newNumberOfColors:
-                    outputColors += [(0, 0, 0)] #Append with Black
-                self.SetInputOutputColors(inputColors, outputColors)
-                
-            elif newNumberOfColors < len(inputColors):
-                # Need to remove colors
-                inputColors = inputColors[0:newNumberOfColors]
-                outputColors = outputColors[0:newNumberOfColors]
-                self.SetInputOutputColors(inputColors, outputColors)
-        
-            self.controlPanel.choice.SetSelection(oldChoice)
-            self.controlPanel.methodChoice.SetSelection(oldMethodChoice)
-            
-        dialog.Destroy()
-        
-    
     def OnCloseWindow(self, event):
         self.Destroy()        
         

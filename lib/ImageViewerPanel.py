@@ -192,6 +192,7 @@ class ImageViewerPanel(wx.Panel):
         if self.reInitBuffer:
             self.InitBuffer()
             self.Refresh()
+        event.Skip()
         
 
     def OnPaint(self, event):

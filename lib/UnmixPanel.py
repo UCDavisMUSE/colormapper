@@ -23,7 +23,8 @@ class UnmixPanel(wx.Panel):
         self.colorButtonBackgroundColor = ColorButton(self, -1, 
             color = self.backgroundColor, pos = (100, 25),
             size = (20, 20))
-        wx.Button(self, -1, label = "+", pos = (125, 19), size = (25, 25))
+        self.buttonBackgroundCrosshair = wx.Button(self, -1, 
+            label = "+", pos = (125, 19), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 25))
         self.colorButtonBackgroundSpectrum = ColorButton(self, -1, 
             color = self.backgroundSpectrum, pos = (250, 25),
@@ -67,13 +68,15 @@ class UnmixPanel(wx.Panel):
             self.OnSliderSubtractBackgroundScrollThumbtrack,
             self.sliderSubtractBackground)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE,
-            self.OnSliderSubtractBackgroundScrollThumbrelease)
-        self.Bind(wx.EVT_SPINCTRL, self.OnSpinCtrlSubtractBackgroundSpinCtrl,
+            self.OnSliderSubtractBackgroundScrollThumbrelease,
+            self.sliderSubtractBackground)
+        self.Bind(wx.EVT_SPINCTRL, 
+            self.OnSpinCtrlSubtractBackgroundSpinCtrl,
             self.spinCtrlSubtractBackground)
 
         self.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxSubtractBackgroundCheckbox,
             self.checkBoxSubtractBackground)
-        self.Bind(wx.EVT_IDLE, self.OnIdle)
+        
             
     def OnSliderSubtractBackgroundScrollThumbtrack(self, event):
         # Update Spin Control
@@ -160,10 +163,6 @@ class UnmixPanel(wx.Panel):
         self.colorButtonNucleiSpectrum.Refresh()
         self.recomputeUnmix = True
 
-    def OnIdle(self, event):
-        if self.recomputeUnmix:
-            print("Unmixing...")
-            self.recomputeUnmix = False         
     
 if __name__ == "__main__":
     app = wx.App()
