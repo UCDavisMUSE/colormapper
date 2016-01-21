@@ -394,8 +394,8 @@ class ColormapperFrame(wx.Frame):
             A[:,1] = A[:,1] - 1.0*(self.unmixPanel.subtractBackgroundAmount/100.0)*maxAmount*A[:,0]
             
         # Faster (Open CL-based) Method:
-         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A, 
-             tolerance = 1e-1, maxiter = 100, context = 0)
+        self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
+            tolerance = 1e-1, maxiter = 100, context = 0)
         # Slower (Multithreaded) Method:
 #         self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
 #             tolerance = 1e-1, maxiter = 100)
