@@ -8,21 +8,21 @@ class RemixPanel(wx.Panel):
     backgroundSpectrum = (99, 69, 86)
     backgroundThresh = 0
     backgroundGain = 1.0
-    backgroundGainSetting = 50
+    backgroundGainSetting = 25
     backgroundGamma = 1.0
     backgroundGammaSetting = 50
     nucleiColor = ( 70,  30, 150)
     nucleiSpectrum = (71, 31, 153)
     nucleiThresh = 0
     nucleiGain = 1.0
-    nucleiGainSetting = 50
+    nucleiGainSetting = 25
     nucleiGamma = 1.0
     nucleiGammaSetting = 50
     remixMode = 0
     
     # 
     recomputeRemix = False
-    gainValues = np.linspace(0,2,101)
+    gainValues = np.linspace(0,4,101)
     gammaValues = np.logspace(-1,1,101)
     
 
