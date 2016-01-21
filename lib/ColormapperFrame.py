@@ -8,7 +8,7 @@ from ImageViewerPanel import ImageViewerPanel
 from ControlPanel import ControlPanel
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
-from colormappingMethods import remixImage
+from colormappingMethods import remixImage, unmixParallelTileGradProjNNLS
 from OpenCLGradProjNNLS import *
 
 # This is the class for the main window of the Colormapper App        
@@ -393,8 +393,13 @@ class ColormapperFrame(wx.Frame):
                     maxAmount = min(maxAmount, 1.0*A[color,1]/A[color,0])
             A[:,1] = A[:,1] - 1.0*(self.unmixPanel.subtractBackgroundAmount/100.0)*maxAmount*A[:,0]
             
-        self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A, 
-            tolerance = 1e-1, maxiter = 100, context = 0)
+        # Faster (Open CL-based) Method:
+         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A, 
+             tolerance = 1e-1, maxiter = 100, context = 0)
+        # Slower (Multithreaded) Method:
+#         self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
+#             tolerance = 1e-1, maxiter = 100)
+            
         # May need to add code here if I want to display the unmixComponents
 
     def RemixImage(self):
