@@ -4,6 +4,8 @@ import cPickle
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
 from ControlPanel import ControlPanel
+from UnmixPanel import UnmixPanel
+from RemixPanel import RemixPanel
 
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
@@ -39,21 +41,25 @@ class ColormapperFrame(wx.Frame):
         
         
     def createMainInterfaceWindow(self):
+      
         # Create sub panels
         self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (300, 200))
         self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (300, 200))
-        self.controlPanel = ControlPanel(self, 
-            inputColors = self.inputColors, inputImagePanel = self.inputImagePanel,
-            outputColors = self.outputColors, outputImagePanel = self.outputImagePanel,
-            label = "Control Panel", size = (800, 100))                       
+        self.unmixPanel = UnmixPanel(self)
+        self.remixPanel = RemixPanel(self)
         # Arrange the input and output images side-by-side
         self.horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.horizontalSizer.Add(self.inputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
         self.horizontalSizer.Add(self.outputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
+        # Arrange the controls side-by-side
+        self.horizontalControlSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.horizontalControlSizer.Add(self.unmixPanel, 1, wx.EXPAND | wx.ALL, 2)
+        self.horizontalControlSizer.Add(self.remixPanel, 1, wx.EXPAND | wx.ALL, 2)
+        
         # Arrange the controls below the images
         self.verticalSizer = wx.BoxSizer(wx.VERTICAL)
         self.verticalSizer.Add(self.horizontalSizer, 1, flag=wx.EXPAND)
-        self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
+        self.verticalSizer.Add(self.horizontalControlSizer, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
         self.SetSizer(self.verticalSizer)
         
@@ -61,8 +67,8 @@ class ColormapperFrame(wx.Frame):
         self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
 
         # Code for overriding button behavior to select colors from image
-        for button in self.controlPanel.inputColorButtons:
-            button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
+#         for button in self.controlPanel.inputColorButtons:
+#             button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
             
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
