@@ -38,13 +38,14 @@ class ColorButton(wx.lib.buttons.GenButton):
         data.SetColour(
             wx.Colour(currentColor[0], currentColor[1], currentColor[2]))
         # Get the new color from the user
-        dlg = wx.ColourDialog(self, data)
-        if dlg.ShowModal() == wx.ID_OK:
-            self.color = dlg.GetColourData().GetColour()[0:3] # Remove Opacity
+        self.dlg = wx.ColourDialog(self, data)
+        if self.dlg.ShowModal() == wx.ID_OK:
+            self.color = \
+                self.dlg.GetColourData().GetColour()[0:3] # Remove Opacity
             self.SetBackgroundColour(self.color)            
-        dlg.Destroy()
-
-
+        self.dlg.Destroy()
+        event.Skip()
+        
 # Start the main loop of the ColorButtonTest App
 if __name__ == '__main__':
     app = ColorButtonTestApp(False)
