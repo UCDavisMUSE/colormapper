@@ -30,7 +30,7 @@ class RemixPanel(wx.Panel):
     
         # Construct Controls
         wx.Panel.__init__(self, parent, id)
-        wx.StaticText(self, -1, "Remix Controls")
+        wx.StaticText(self, -1, "Remix Controls:")
         
         # Background
         wx.StaticText(self, -1, "Bulk Tissue:", pos = (0, 25))
@@ -42,37 +42,37 @@ class RemixPanel(wx.Panel):
         self.colorButtonBackgroundSpectrum = ColorButton(self, -1,
             color = self.backgroundSpectrum, pos = (250, 25),
             size = (20, 20))
-        wx.StaticText(self, -1, "Thresh:", pos = (0, 50))
+        wx.StaticText(self, -1, "Threshold:", pos = (0, 50))
         self.sliderBackgroundThresh = wx.Slider(self, -1, 
-            self.backgroundThresh, 0, 100, pos=(80, 50),
-            size=(200, -1),
+            self.backgroundThresh, 0, 100, pos=(70, 50),
+            size=(220, -1),
             style=wx.SL_HORIZONTAL)
         self.spinCtrlBackgroundThresh = wx.SpinCtrl(self, -1,
             str(self.backgroundThresh),
             initial = self.backgroundThresh, min = 0, max = 100,
-            pos = (300, 50), size = (100, -1),
+            pos = (290, 50), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
         wx.StaticText(self, -1, "Gain:", pos = (0, 75))
         self.sliderBackgroundGain = wx.Slider(self, -1,
-            self.backgroundGainSetting, 0, 100, pos = (80, 75),
-            size = (200, -1),
+            self.backgroundGainSetting, 0, 100, pos = (70, 75),
+            size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlBackgroundGain = wx.TextCtrl(self, -1,
             value = str(self.gainValues[self.backgroundGainSetting]), 
-            pos = (300, 75), size = (83, -1))
+            pos = (290, 75), size = (83, -1))
         self.spinButtonBackgroundGain = wx.SpinButton(self, -1, 
-            pos = (384, 75), size = (-1, -1), 
+            pos = (374, 75), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         wx.StaticText(self, -1, "Gamma:", pos = (0, 100))
         self.sliderBackgroundGamma = wx.Slider(self, -1, 
-            self.backgroundGammaSetting, 0, 100, pos = (80, 100),
-            size = (200, -1),
+            self.backgroundGammaSetting, 0, 100, pos = (70, 100),
+            size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlBackgroundGamma = wx.TextCtrl(self, -1,
             value = str(self.gammaValues[self.backgroundGammaSetting]),
-            pos = (300, 100), size = (83, -1))
+            pos = (290, 100), size = (83, -1))
         self.spinButtonBackgroundGamma = wx.SpinButton(self, -1,
-            pos = (384, 100), size = (-1, -1),
+            pos = (374, 100), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         
         # Nuclei
@@ -85,37 +85,37 @@ class RemixPanel(wx.Panel):
         self.colorButtonNucleiSpectrum = ColorButton(self, -1,
             color = self.nucleiSpectrum, pos = (250, 125),
             size = (20, 20))
-        wx.StaticText(self, -1, "Thresh:", pos = (0, 150))
+        wx.StaticText(self, -1, "Threshold:", pos = (0, 150))
         self.sliderNucleiThresh = wx.Slider(self, -1,
-            self.nucleiThresh, 0, 100, pos=(80, 150),
-            size=(200, -1),
+            self.nucleiThresh, 0, 100, pos=(70, 150),
+            size=(220, -1),
             style=wx.SL_HORIZONTAL)
         self.spinCtrlNucleiThresh = wx.SpinCtrl(self, -1,
             str(self.nucleiThresh),
             initial = self.nucleiThresh, min = 0, max = 100,
-            pos = (300, 150), size = (100, -1),
+            pos = (290, 150), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
         wx.StaticText(self, -1, "Gain:", pos = (0, 175))
         self.sliderNucleiGain = wx.Slider(self, -1,
-            self.nucleiGainSetting, 0, 100, pos = (80, 175),
-            size = (200, -1),
+            self.nucleiGainSetting, 0, 100, pos = (70, 175),
+            size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGain = wx.TextCtrl(self, -1,
             value = str(self.gainValues[self.nucleiGainSetting]), 
-            pos = (300, 175), size = (83, -1))
+            pos = (290, 175), size = (83, -1))
         self.spinButtonNucleiGain = wx.SpinButton(self, -1, 
-            pos = (384, 175), size = (-1, -1), 
+            pos = (374, 175), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         wx.StaticText(self, -1, "Gamma:", pos = (0, 200))
         self.sliderNucleiGamma = wx.Slider(self, -1, 
-            self.nucleiGammaSetting, 0, 100, pos = (80, 200),
-            size = (200, -1),
+            self.nucleiGammaSetting, 0, 100, pos = (70, 200),
+            size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGamma = wx.TextCtrl(self, -1,
             value = str(self.gammaValues[self.nucleiGammaSetting]),
-            pos = (300, 200), size = (83, -1))
+            pos = (290, 200), size = (83, -1))
         self.spinButtonNucleiGamma = wx.SpinButton(self, -1,
-            pos = (384, 200), size = (-1, -1),
+            pos = (374, 200), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         
         wx.StaticText(self, -1, "Remix Mode:", pos = (0, 225))

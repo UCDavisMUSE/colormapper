@@ -17,7 +17,7 @@ class UnmixPanel(wx.Panel):
     
         # Construct Controls
         wx.Panel.__init__(self, parent, id)
-        wx.StaticText(self, -1, "Unmix Controls")
+        wx.StaticText(self, -1, "Unmix Controls:")
 
         wx.StaticText(self, -1, "Bulk Tissue:", pos = (0, 25))
         self.colorButtonBackgroundColor = ColorButton(self, -1, 
@@ -43,14 +43,15 @@ class UnmixPanel(wx.Panel):
         self.checkBoxSubtractBackground = wx.CheckBox(self, -1,
             label = "Subtract Background (Pure Spectrum)", pos = (0, 75))
         self.checkBoxSubtractBackground.SetValue(self.subtractBackground)
+        wx.StaticText(self, -1, "Amount:", pos = (0, 100))
         self.sliderSubtractBackground = wx.Slider(self, -1,
             self.subtractBackgroundAmount, 0, 100,
-            pos=(0, 100), size = (250, -1),
+            pos=(70, 100), size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.spinCtrlSubtractBackground = wx.SpinCtrl(self, -1,
             str(self.subtractBackgroundAmount),
             initial = self.subtractBackgroundAmount, min = 0, max = 100,
-            pos = (300, 100), size = (100, -1),
+            pos = (290, 100), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
             
             
