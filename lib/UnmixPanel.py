@@ -3,10 +3,10 @@ from ColorButton import ColorButton
 
 class UnmixPanel(wx.Panel):
     # Data Defaults
-    backgroundColor = (255, 255, 0)
-    backgroundSpectrum = (127, 127, 0)
-    nucleiColor = (0, 0, 255)
-    nucleiSpectrum = (0, 0, 255)
+    backgroundColor = (244, 205, 100)
+    backgroundSpectrum = (113, 95, 46)
+    nucleiColor = (228, 250, 166)
+    nucleiSpectrum = (90, 99, 66)
     subtractBackground = False
     subtractBackgroundAmount = 0
     
