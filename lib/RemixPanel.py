@@ -20,11 +20,10 @@ class RemixPanel(wx.Panel):
     nucleiGammaSetting = 50
     remixMode = 0
     
-    # 
+    # Other variables
     recomputeRemix = False
     gainValues = np.linspace(0,10,101)
     gammaValues = np.logspace(-1,1,101)
-    
 
     def __init__(self, parent, id = -1):
     
@@ -119,7 +118,7 @@ class RemixPanel(wx.Panel):
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         
         wx.StaticText(self, -1, "Remix Mode:", pos = (0, 225))
-        self.choiceRemixMode = wx.Choice(self, -1, pos = (100, 225), 
+        self.choiceRemixMode = wx.Choice(self, -1, pos = (85, 223), 
             choices = (
                 "Brightfield (Beer-Lambert)",
                 "Brightfield (Invert-Multiply)",
@@ -172,13 +171,6 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPIN_DOWN,
             self.OnSpinButtonBackgroundGammaSpinDown,
             self.spinButtonBackgroundGamma)
-
-
-
-
-
-
-
             
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderNucleiThreshScrollThumbtrack,

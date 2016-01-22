@@ -10,7 +10,7 @@ class UnmixPanel(wx.Panel):
     subtractBackground = False
     subtractBackgroundAmount = 0
     
-    # 
+    # Other Variables
     recomputeUnmix = False
 
     def __init__(self, parent, id = -1):
