@@ -38,3 +38,16 @@ zharmany@gmail.com
 - [FIXED] Bug: When importing an image with the same dimensions as the current image, the input image panel does not refresh. This is because I resize the image to fit the panel within the GetImageDisplaySize method of the ImageViewerPanel class, and skip resizing if the dimensions don't change to save on CPU cycles. 
 - [ADDED] Feature: Be able to specify the number of selected colors. 
 - [DONE] Drag and drop image to open functionality.
+
+### For Unmix Branch
+
+- Try to refactor code a bit better, easy spots:
+    - Slider plus spinner plus textbox controls as one item
+    - methods to set color of color box and spectrum
+- If sticking with Open CL unmix, stop shuttling info to/from GPU
+- Fastest way to get image displayed onto screen (Do remix in wx.Image domain?)
+- Toolbar for zoom / pan controls on the images
+- Save / load settings (perhaps a separate settings class, add save / load settings methods)
+- Code to grab color from image using crosshairs. 
+- Way to launch colormapper importing a particular image (for Farzad command line).
+- Try to get working correctly on windows.
