@@ -229,6 +229,7 @@ class RemixPanel(wx.Panel):
             self.backgroundGain = self.gainValues[self.backgroundGainSetting]
             self.sliderBackgroundGain.SetValue(self.backgroundGainSetting)
             self.textCtrlBackgroundGain.SetValue(str(self.backgroundGain))
+            self.recomputeRemix = True
     
     def OnSpinButtonBackgroundGainSpinDown(self, event):
         if self.backgroundGainSetting > 0:
@@ -236,6 +237,7 @@ class RemixPanel(wx.Panel):
             self.backgroundGain = self.gainValues[self.backgroundGainSetting]
             self.sliderBackgroundGain.SetValue(self.backgroundGainSetting)
             self.textCtrlBackgroundGain.SetValue(str(self.backgroundGain))
+            self.recomputeRemix = True            
 
     def OnSliderBackgroundGammaScrollThumbtrack(self, event):
         # Update Text Control
@@ -254,6 +256,7 @@ class RemixPanel(wx.Panel):
             self.backgroundGamma = self.gammaValues[self.backgroundGammaSetting]
             self.sliderBackgroundGamma.SetValue(self.backgroundGammaSetting)
             self.textCtrlBackgroundGamma.SetValue(str(self.backgroundGamma))
+            self.recomputeRemix = True            
     
     def OnSpinButtonBackgroundGammaSpinDown(self, event):
         if self.backgroundGammaSetting > 0:
@@ -261,6 +264,7 @@ class RemixPanel(wx.Panel):
             self.backgroundGamma = self.gammaValues[self.backgroundGammaSetting]
             self.sliderBackgroundGamma.SetValue(self.backgroundGammaSetting)
             self.textCtrlBackgroundGamma.SetValue(str(self.backgroundGamma))
+            self.recomputeRemix = True            
 
     def OnSliderNucleiGainScrollThumbtrack(self, event):
         # Update Text Control
@@ -279,6 +283,7 @@ class RemixPanel(wx.Panel):
             self.nucleiGain = self.gainValues[self.nucleiGainSetting]
             self.sliderNucleiGain.SetValue(self.nucleiGainSetting)
             self.textCtrlNucleiGain.SetValue(str(self.nucleiGain))
+            self.recomputeRemix = True            
     
     def OnSpinButtonNucleiGainSpinDown(self, event):
         if self.nucleiGainSetting > 0:
@@ -286,6 +291,7 @@ class RemixPanel(wx.Panel):
             self.nucleiGain = self.gainValues[self.nucleiGainSetting]
             self.sliderNucleiGain.SetValue(self.nucleiGainSetting)
             self.textCtrlNucleiGain.SetValue(str(self.nucleiGain))
+            self.recomputeRemix = True
 
     def OnSliderNucleiGammaScrollThumbtrack(self, event):
         # Update Text Control
@@ -304,6 +310,7 @@ class RemixPanel(wx.Panel):
             self.nucleiGamma = self.gammaValues[self.nucleiGammaSetting]
             self.sliderNucleiGamma.SetValue(self.nucleiGammaSetting)
             self.textCtrlNucleiGamma.SetValue(str(self.nucleiGamma))
+            self.recomputeRemix = True            
     
     def OnSpinButtonNucleiGammaSpinDown(self, event):
         if self.nucleiGammaSetting > 0:
@@ -311,6 +318,7 @@ class RemixPanel(wx.Panel):
             self.nucleiGamma = self.gammaValues[self.nucleiGammaSetting]
             self.sliderNucleiGamma.SetValue(self.nucleiGammaSetting)
             self.textCtrlNucleiGamma.SetValue(str(self.nucleiGamma))
+            self.recomputeRemix = True            
 
     def OnColorButtonBackgroundColorClick(self, event):
         self.backgroundColor = \
