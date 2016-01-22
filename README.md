@@ -51,3 +51,4 @@ zharmany@gmail.com
 - Code to grab color from image using crosshairs. 
 - Way to launch colormapper importing a particular image (for Farzad command line).
 - Try to get working correctly on windows.
+- Get unmix and remix off the main thread.
