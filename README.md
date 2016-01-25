@@ -52,3 +52,6 @@ zharmany@gmail.com
 - Way to launch colormapper importing a particular image (for Farzad command line).
 - Try to get working correctly on windows.
 - Get unmix and remix off the main thread.
+- Create a settings class:
+    - Use a dictionary for the settings (so that they can be easily saved and loaded)
+    - Create get and set methods, this is useful so that SetNucleiColor updates the spectrum automatically, and accounts for background subtraction.
