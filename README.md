@@ -55,3 +55,4 @@ zharmany@gmail.com
 - Create a settings class:
     - Use a dictionary for the settings (so that they can be easily saved and loaded)
     - Create get and set methods, this is useful so that SetNucleiColor updates the spectrum automatically, and accounts for background subtraction.
+    - Perhaps use YAML as a saving format for the settings.
