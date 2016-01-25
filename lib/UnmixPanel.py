@@ -49,7 +49,7 @@ class UnmixPanel(wx.Panel):
             pos=(70, 100), size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.spinCtrlSubtractBackground = wx.SpinCtrl(self, -1,
-            str(self.subtractBackgroundAmount),
+            "%.2f" % self.subtractBackgroundAmount,
             initial = self.subtractBackgroundAmount, min = 0, max = 100,
             pos = (290, 100), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
