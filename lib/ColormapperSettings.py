@@ -86,6 +86,12 @@ class ColormapperSettings:
     # Note: I have only written methods for variables that should be set
     # in the interface. Derived attributes will not have (at least for now)
     # public Set methods.
+    def SetUnmixSettings(self, unmix): self.unmix = unmix
+    def SetRemixSettings(self, remix): self.remix = remix
+    def SetSettings(self, unmix, remix):
+        self.SetUnmixSettings(unmix)
+        self.SetRemixSettings(remix)
+    
 
     ## Unmix
     def SetUnmixBackgroundColor(self, color):
