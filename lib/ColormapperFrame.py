@@ -78,37 +78,52 @@ class ColormapperFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
             self.remixPanel.buttonNucleiCrosshair)                                    
             
-#        self.Bind(wx.EVT_MOTION, self.OnMotion)            
         self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.outputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.outputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.Bind(wx.EVT_IDLE, self.OnIdle)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
+
+        self.Bind(wx.EVT_IDLE, self.OnIdle)
         
-    def OnKey(self, event):
-        if event.GetKeyCode() == wx.WXK_ESCAPE:
-            if self.inputImagePanel.HasCapture():
-                self.inputImagePanel.ReleaseMouse()
-                self.inputImagePanel.reInitBuffer = True
-                self.inputImagePanel.InitBuffer()
-            elif self.outputImagePanel.HasCapture():
-                self.outputImagePanel.ReleaseMouse()
-                self.outputImagePanel.reInitBuffer = True
-                self.outputImagePanel.InitBuffer()
-            self.Refresh()
+        
+    def OnInputMotion(self, event):
+        currentPosition = event.GetPositionTuple()
+        # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
+        if self.inputImagePanel.displayedImage.Ok():
+            currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
+                               currentPosition[1] - self.inputImagePanel.translation[1])
+            width = self.inputImagePanel.displayedImage.GetWidth()
+            height = self.inputImagePanel.displayedImage.GetHeight()
+            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
+            else:
+                self.statusbar.SetStatusText("", 1)
+        if self.inputImagePanel.HasCapture():
+            self.inputImagePanel.DrawCrosshair(event)
         event.Skip()
-                
-    def OnIdle(self, event):
-        # This is where we recompute the unmix and remix:
-        if self.unmixPanel.recomputeUnmix:
-            self.UnmixImage()
-            self.remixPanel.recomputeRemix = True
-            self.unmixPanel.recomputeUnmix = False 
-            
-        if self.remixPanel.recomputeRemix:
-            self.RemixImage()
-            self.remixPanel.recomputeRemix = False       
+
+    def OnOutputMotion(self, event):
+        currentPosition = event.GetPositionTuple()
+        # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
+        if self.outputImagePanel.displayedImage.Ok():
+            currentPosition = (currentPosition[0] - self.outputImagePanel.translation[0],
+                               currentPosition[1] - self.outputImagePanel.translation[1])
+            width = self.outputImagePanel.displayedImage.GetWidth()
+            height = self.outputImagePanel.displayedImage.GetHeight()
+            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
+                currentColor = (self.outputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
+                                self.outputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
+                                self.outputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
+                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
+            else:
+                self.statusbar.SetStatusText("", 1)
+        if self.outputImagePanel.HasCapture():     
+            self.outputImagePanel.DrawCrosshair(event)           
+        event.Skip()
         
     def OverrideCrosshairButtons(self, event):
         self.currentButtonClicked = event.GetEventObject()
@@ -117,12 +132,11 @@ class ColormapperFrame(wx.Frame):
             self.inputImagePanel.CaptureMouse()        
         elif ((self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair) or
             (self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair)):
-            self.outputImagePanel.CaptureMouse()
-    
+            self.outputImagePanel.CaptureMouse()        
+        
     def OnLeftDown(self, event):
         if self.inputImagePanel.HasCapture() or self.outputImagePanel.HasCapture():
             self.currentPosition = event.GetPositionTuple()
-            print(self.currentPosition)
     
     def OnLeftUp(self, event):
         if self.inputImagePanel.HasCapture():
@@ -157,10 +171,32 @@ class ColormapperFrame(wx.Frame):
                     self.remixPanel.recomputeRemix = True                     
             self.outputImagePanel.ReleaseMouse()                    
             self.outputImagePanel.InitBuffer()                      
-            self.outputImagePanel.Refresh()                    
+            self.outputImagePanel.Refresh() 
 
+    def OnKey(self, event):
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            if self.inputImagePanel.HasCapture():
+                self.inputImagePanel.ReleaseMouse()
+                self.inputImagePanel.reInitBuffer = True
+                self.inputImagePanel.InitBuffer()
+            elif self.outputImagePanel.HasCapture():
+                self.outputImagePanel.ReleaseMouse()
+                self.outputImagePanel.reInitBuffer = True
+                self.outputImagePanel.InitBuffer()
+            self.Refresh()
+        event.Skip()
+                
+    def OnIdle(self, event):
+        # This is where we recompute the unmix and remix:
+        if self.unmixPanel.recomputeUnmix:
+            self.UnmixImage()
+            self.remixPanel.recomputeRemix = True
+            self.unmixPanel.recomputeUnmix = False 
             
-
+        if self.remixPanel.recomputeRemix:
+            self.RemixImage()
+            self.remixPanel.recomputeRemix = False       
+        
     def GetInputPanelClickedPixelColor(self):
         currentPosition = (self.currentPosition[0] - self.inputImagePanel.translation[0],
                            self.currentPosition[1] - self.inputImagePanel.translation[1])
@@ -182,62 +218,12 @@ class ColormapperFrame(wx.Frame):
                             self.outputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
                             self.outputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))    
             return currentColor            
-    
-
-
-
-
-
 
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(3)
         self.statusbar.SetStatusWidths([200, -2, -3])
-        
-        
-    def OnInputMotion(self, event):
-        currentPosition = event.GetPositionTuple()
-       # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
-        if self.inputImagePanel.displayedImage.Ok():
-            currentPosition = (currentPosition[0] - self.inputImagePanel.translation[0],
-                               currentPosition[1] - self.inputImagePanel.translation[1])
-            width = self.inputImagePanel.displayedImage.GetWidth()
-            height = self.inputImagePanel.displayedImage.GetHeight()
-            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
-                currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
-                                self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
-                                self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
-                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
-            else:
-                self.statusbar.SetStatusText("", 1)
-#         if (self.HasCapture() and
-#             (self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair or
-#             self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair)):
-#             print("I'm here!")
-#             self.inputImagePanel.DrawCrosshair(event)
-        if self.inputImagePanel.HasCapture():
-            self.inputImagePanel.DrawCrosshair(event)
-        event.Skip()
-
-    def OnOutputMotion(self, event):
-        currentPosition = event.GetPositionTuple()
-        #self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
-        if self.outputImagePanel.displayedImage.Ok():
-            currentPosition = (currentPosition[0] - self.outputImagePanel.translation[0],
-                               currentPosition[1] - self.outputImagePanel.translation[1])
-            width = self.outputImagePanel.displayedImage.GetWidth()
-            height = self.outputImagePanel.displayedImage.GetHeight()
-            if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
-                currentColor = (self.outputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
-                                self.outputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
-                                self.outputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
-                self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
-            else:
-                self.statusbar.SetStatusText("", 1)
-        if self.outputImagePanel.HasCapture():     
-            self.outputImagePanel.DrawCrosshair(event)           
-        event.Skip()
-        
+                
     def menuData(self):
         return (("&File",
                         ("&Open Settings...\tCtrl-O",               "Open colormapper file",        self.OnOpen),
@@ -247,13 +233,10 @@ class ColormapperFrame(wx.Frame):
                         ("&Export Converted Image...\tCtrl-E",      "Export converted image",       self.OnExport),
                         ("&Quit\tCtrl-Q",                           "Quit",                         self.OnCloseWindow)),
                         
-#                ("&Edit",
-#                        ("&Copy\tCtrl-C",       "Copy converted image to clipboard",    self.OnCopy),
-#                        ("C&ut",                "Cut converted image to clipboard",     self.OnCut),
-#                        ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste),
-#                        ("",                    "",                                     ""),
-#                        ("&Number of Colors...",         "Change Number of Colors",                      self.OnOptions))
-                )        
+                ("&Edit",
+                        ("&Copy\tCtrl-C",       "Copy converted image to clipboard",    self.OnCopy),
+                        ("&Paste\tCtrl-V",      "Paste original image from clipboard",  self.OnPaste))
+                )
           
     def createMenuBar(self):
         menuBar = wx.MenuBar()
@@ -332,6 +315,30 @@ class ColormapperFrame(wx.Frame):
             self.ExportImage()
         dlg.Destroy()
             
+    def OnCopy(self, event):
+        data = wx.BitmapDataObject()
+        data.SetBitmap(wx.BitmapFromImage(self.outputImagePanel.image))
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(data)
+            wx.TheClipboard.Close()
+        else:
+            wx.MessageBox("Unable to open the clipboard", "Error")
+        
+    def OnPaste(self, event):
+        success = False
+        data = wx.BitmapDataObject()
+        if wx.TheClipboard.Open():
+            success = wx.TheClipboard.GetData(data)
+            wx.TheClipboard.Close()
+        if success:
+            self.inputImagePanel.image = wx.ImageFromBitmap(data.GetBitmap())
+            self.inputImagePanel.newImageData = True
+            self.inputImagePanel.reInitBuffer = True
+            self.outputImagePanel.image = wx.EmptyImage()
+            self.outputImagePanel.newImageData = True
+            self.outputImagePanel.reInitBuffer = True
+            self.unmixPanel.recomputeUnmix = True
+
     def ReadFile(self):
         # This code reads a colormapper file
         if self.filename:
@@ -365,7 +372,6 @@ class ColormapperFrame(wx.Frame):
             cPickle.dump((unmixSettings, remixSettings), f)
             f.close()
             self.currentDirectory = os.path.split(self.filename)[0]
-
 
     def ImportImage(self):
         # This code imports the image
@@ -449,8 +455,8 @@ class ColormapperFrame(wx.Frame):
         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
             tolerance = 1e-1, maxiter = 100, context = 0)
         # Slower (Multithreaded) Method:
-#         self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
-#             tolerance = 1e-1, maxiter = 100)
+        #  self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
+        #      tolerance = 1e-1, maxiter = 100)
             
         # May need to add code here if I want to display the unmixComponents
 
@@ -487,11 +493,6 @@ class ColormapperFrame(wx.Frame):
         self.outputImagePanel.newImageData = True        
         self.outputImagePanel.reInitBuffer = True
             
-    # Group empty event handlers together
-    def OnCopy(self, event): pass
-    def OnCut(self, event): pass
-    def OnPaste(self, event): pass
-
     def OnCloseWindow(self, event):
         self.Destroy()        
         
