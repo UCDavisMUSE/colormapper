@@ -316,13 +316,14 @@ class ColormapperFrame(wx.Frame):
         dlg.Destroy()
             
     def OnCopy(self, event):
-        data = wx.BitmapDataObject()
-        data.SetBitmap(wx.BitmapFromImage(self.outputImagePanel.image))
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(data)
-            wx.TheClipboard.Close()
-        else:
-            wx.MessageBox("Unable to open the clipboard", "Error")
+        if self.outputImagePanel.image.IsOk():
+            data = wx.BitmapDataObject()
+            data.SetBitmap(wx.BitmapFromImage(self.outputImagePanel.image))
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(data)
+                wx.TheClipboard.Close()
+            else:
+                wx.MessageBox("Unable to open the clipboard", "Error")
         
     def OnPaste(self, event):
         success = False
