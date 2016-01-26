@@ -120,11 +120,11 @@ class ColormapperSettings:
         
     def SetRemixBackgroundGainSetting(self, gainSetting):
         self.remix["backgroundGainSetting"] = gainSetting
-        self.remix["backgroundGain"] = self.gainValues(gainSetting)
+        self.remix["backgroundGain"] = self.gainValues[gainSetting]
         
     def SetRemixBackgroundGammaSetting(self, gammaSetting):
         self.remix["backgroundGammaSetting"] = gammaSetting
-        self.remix["backgroundGamma"] = self.gammaValues(gammaSetting)
+        self.remix["backgroundGamma"] = self.gammaValues[gammaSetting]
         
     def SetRemixNucleiColor(self, color):
         self.remix["nucleiColor"] = color
@@ -139,11 +139,11 @@ class ColormapperSettings:
         
     def SetRemixNucleiGainSetting(self, gainSetting):
         self.remix["nucleiGainSetting"] = gainSetting
-        self.remix["nucleiGain"] = self.gainValues(gainSetting)
+        self.remix["nucleiGain"] = self.gainValues[gainSetting]
         
     def SetRemixNucleiGammaSetting(self, gammaSetting):
         self.remix["nucleiGammaSetting"] = gammaSetting
-        self.remix["nucleiGamma"] = self.gammaValues(gammaSetting)
+        self.remix["nucleiGamma"] = self.gammaValues[gammaSetting]
     
     def SetRemixRemixMode(self, remixMode):
         self.remix["remixMode"] = remixMode
