@@ -53,6 +53,7 @@ class UnmixPanel(wx.Panel):
             
             
         # Event Handlers
+        ## Colors
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonBackgroundColorClick,
             self.colorButtonBackgroundColor)
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonBackgroundSpectrumClick,
@@ -61,7 +62,9 @@ class UnmixPanel(wx.Panel):
             self.colorButtonNucleiColor)
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiSpectrumClick,
             self.colorButtonNucleiSpectrum)                                
-
+        ## Background Subtraction
+        self.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxSubtractBackgroundCheckbox,
+            self.checkBoxSubtractBackground)
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderSubtractBackgroundScrollThumbtrack,
             self.sliderSubtractBackground)
@@ -72,9 +75,32 @@ class UnmixPanel(wx.Panel):
             self.OnSpinCtrlSubtractBackgroundSpinCtrl,
             self.spinCtrlSubtractBackground)
 
-        self.Bind(wx.EVT_CHECKBOX, self.OnCheckBoxSubtractBackgroundCheckbox,
-            self.checkBoxSubtractBackground)
+
+    ## Colors        
+    def OnColorButtonBackgroundColorClick(self, event):
+        self.settings.SetUnmixBackgroundColor(self.colorButtonBackgroundColor.GetBackgroundColour()[0:3])
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
+        self.colorButtonBackgroundSpectrum.Refresh()
+        self.recomputeUnmix = True
         
+    def OnColorButtonBackgroundSpectrumClick(self, event):
+        # Don't do anything, this just resets the color
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
+
+    def OnColorButtonNucleiColorClick(self, event):
+        self.settings.SetUnmixNucleiColor(self.colorButtonNucleiColor.GetBackgroundColour()[0:3])
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
+        self.colorButtonNucleiSpectrum.Refresh()
+        self.recomputeUnmix = True
+        
+    def OnColorButtonNucleiSpectrumClick(self, event):
+        # Don't do anything, this just resets the color
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
+        
+    ## Background Subtraction
+    def OnCheckBoxSubtractBackgroundCheckbox(self, event):
+        self.settings.SetUnmixSubtractBackground(self.checkBoxSubtractBackground.GetValue())
+        self.recomputeUnmix = True        
 
     def OnSliderSubtractBackgroundScrollThumbtrack(self, event):
         # Update Spin Control
@@ -98,36 +124,12 @@ class UnmixPanel(wx.Panel):
         self.colorButtonNucleiSpectrum.Refresh()
         if self.settings.GetUnmixSubtractBackground():
             self.recomputeUnmix = True
-        
-    def OnCheckBoxSubtractBackgroundCheckbox(self, event):
-        self.settings.SetUnmixSubtractBackground(self.checkBoxSubtractBackground.GetValue())
-        self.recomputeUnmix = True        
-
-    def OnColorButtonBackgroundColorClick(self, event):
-        self.settings.SetUnmixBackgroundColor(self.colorButtonBackgroundColor.GetBackgroundColour()[0:3])
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
-        self.colorButtonBackgroundSpectrum.Refresh()
-        self.recomputeUnmix = True
-        
-    def OnColorButtonBackgroundSpectrumClick(self, event):
-        # Don't do anything, this just resets the color
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
-
-    def OnColorButtonNucleiColorClick(self, event):
-        self.settings.SetUnmixNucleiColor(self.colorButtonNucleiColor.GetBackgroundColour()[0:3])
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
-        self.colorButtonNucleiSpectrum.Refresh()
-        self.recomputeUnmix = True
-        
-    def OnColorButtonNucleiSpectrumClick(self, event):
-        # Don't do anything, this just resets the color
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
 
     
 if __name__ == "__main__":
     app = wx.App()
     frame = wx.Frame(None,title = "Test Frame")
-    frame.SetSize((600,400))
+    frame.SetSize((600, 400))
     unmixPanel = UnmixPanel(frame)
     frame.Show()
     app.MainLoop()
