@@ -43,19 +43,25 @@ class ColormapperSettings:
     def __init__(self, unmix = unmix, remix = remix):
         self.unmix = unmix
         self.remix = remix
+        self.gainValues = np.linspace(self.remix["gainValuesStart"],
+            self.remix["gainValuesEnd"], 101)
+        self.gammaValues = np.logspace(self.remix["gammaValuesStart"],
+            self.remix["gammaValuesEnd"], 101)
         
     # Get Methods
     def GetUnmixSettings(self): return self.unmix
     def GetRemixSettings(self): return self.remix
-    def GetAllSettings(self): return (self.GetUnmixSettings, self.GetRemixSettings)
-    # Unmix
+    def GetSettings(self): return (self.GetUnmixSettings(), self.GetRemixSettings())
+
+    ## Unmix
     def GetUnmixBackgroundColor(self): return self.unmix["backgroundColor"]
     def GetUnmixBackgroundSpectrum(self): return self.unmix["backgroundSpectrum"]
     def GetUnmixNucleiColor(self): return self.unmix["nucleiColor"]
     def GetUnmixNucleiSpectrum(self): return self.unmix["nucleiSpectrum"]
     def GetUnmixSubtractBackground(self): return self.unmix["subtractBackground"]
     def GetUnmixSubtractBackgroundAmount(self): return self.unmix["subtractBackgroundAmount"]
-    # Remix
+
+    ## Remix
     def GetRemixBackgroundColor(self): return self.remix["backgroundColor"]
     def GetRemixBackgroundSpectrum(self): return self.remix["backgroundSpectrum"]
     def GetRemixBackgroundThresh(self): return self.remix["backgroundThresh"]
@@ -80,6 +86,8 @@ class ColormapperSettings:
     # Note: I have only written methods for variables that should be set
     # in the interface. Derived attributes will not have (at least for now)
     # public Set methods.
+
+    ## Unmix
     def SetUnmixBackgroundColor(self, color):
         self.unmix["backgroundColor"] = color
         self.unmix["backgroundSpectrum"] = self.__NormalizeSpectrum(color)
@@ -91,7 +99,50 @@ class ColormapperSettings:
                 self.GetUnmixBackgroundColor(), 
                 self.GetUnmixSubtractBackgroundAmount())
         self.unmix["nucleiColor"] = self.__NormalizeSpectrum(color)
-            
+    
+    def SetUnmixSubtractBackground(self, subtractBackground):
+        self.unmix["subtractBackground"] = subtractBackground
+        
+    def SetUnmixSubtractBackgroundAmount(self, subtractBackgroundAmount):
+        self.unmix["subtractBackgroundAmount"] = subtractBackgroundAmount
+        
+    ## Remix
+    def SetRemixBackgroundColor(self, color):
+        self.remix["backgroundColor"] = color
+        self.remix["backgroundSpectrum"] = self.__NormalizeSpectrum(color)
+        
+    def SetRemixBackgroundThresh(self, thresh):
+        self.remix["backgroundThresh"] = thresh
+        
+    def SetRemixBackgroundGainSetting(self, gainSetting):
+        self.remix["backgroundGainSetting"] = gainSetting
+        self.remix["backgroundGain"] = self.gainValues(gainSetting)
+        
+    def SetRemixBackgroundGammaSetting(self, gammaSetting):
+        self.remix["backgroundGammaSetting"] = gammaSetting
+        self.remix["backgroundGamma"] = self.gammaValues(gammaSetting)
+        
+    def SetRemixNucleiColor(self, color):
+        self.remix["nucleiColor"] = color
+        self.remix["nucleiSpectrum"] = self.__NormalizeSpectrum(color)
+        
+    def SetRemixNucleiColor(self, color):
+        self.remix["nucleiColor"] = color
+        self.remix["nucleiSpectrum"] = self.__NormalizeSpectrum(color)
+        
+    def SetRemixNucleiThresh(self, thresh):
+        self.remix["nucleiThresh"] = thresh
+        
+    def SetRemixNucleiGainSetting(self, gainSetting):
+        self.remix["nucleiGainSetting"] = gainSetting
+        self.remix["nucleiGain"] = self.gainValues(gainSetting)
+        
+    def SetRemixNucleiGammaSetting(self, gammaSetting):
+        self.remix["nucleiGammaSetting"] = gammaSetting
+        self.remix["nucleiGamma"] = self.gammaValues(gammaSetting)
+    
+    def SetRemixRemixMode(self, remixMode):
+        self.remix["remixMode"] = remixMode
         
     # Private Methods
     def __NormalizeSpectrum(self, color):
