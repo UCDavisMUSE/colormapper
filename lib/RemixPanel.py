@@ -47,7 +47,8 @@ class RemixPanel(wx.Panel):
         self.colorButtonBackgroundColor = ColorButton(self, -1,
             color = self.settings.GetRemixBackgroundColor(), pos = (100, 25),
             size = (20, 20))
-        wx.Button(self, -1, label = "+", pos = (125, 19), size = (25, 25))
+        self.buttonBackgroundCrosshair = wx.Button(self, -1,
+            label = "+", pos = (125, 19), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 25))
         self.colorButtonBackgroundSpectrum = ColorButton(self, -1,
             color = self.settings.GetRemixBackgroundSpectrum(), pos = (250, 25),
@@ -90,7 +91,8 @@ class RemixPanel(wx.Panel):
         self.colorButtonNucleiColor = ColorButton(self, -1,
             color = self.settings.GetRemixNucleiColor(), pos = (100, 125),
             size = (20, 20))
-        wx.Button(self, -1, label = "+", pos = (125, 119), size = (25, 25))
+        self.buttonNucleiCrosshair = wx.Button(self, -1, 
+            label = "+", pos = (125, 119), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 125))
         self.colorButtonNucleiSpectrum = ColorButton(self, -1,
             color = self.settings.GetRemixNucleiSpectrum(), pos = (250, 125),

@@ -31,7 +31,8 @@ class UnmixPanel(wx.Panel):
         self.colorButtonNucleiColor = ColorButton(self, -1, 
             color = self.settings.GetUnmixNucleiColor(), pos = (100, 50),
             size = (20, 20))
-        wx.Button(self, -1, label = "+", pos = (125, 43), size = (25, 25))
+        self.buttonNucleiCrosshair = wx.Button(self, -1,
+            label = "+", pos = (125, 43), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 50))
         self.colorButtonNucleiSpectrum = ColorButton(self, -1, 
             color = self.settings.GetUnmixNucleiSpectrum(), pos = (250, 50),
