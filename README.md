@@ -18,7 +18,7 @@ zharmany@gmail.com
 - Localize menu items and keyboard shortcuts for Windows.
 - Check to see if the use of Accelerator Menus would aid in localization efforts. See the blog posts [here](http://www.blog.pythonlibrary.org/2010/12/02/wxpython-keyboard-shortcuts-accelerators/) and [here](http://www.blog.pythonlibrary.org/2008/07/02/wxpython-working-with-menus-toolbars-and-accelerators/).
 - History of computed colormappings in a panel with image thumbnails. This is temporary and is purged upon closing.
-- Clipboard functionality.
+- [Done!] Clipboard functionality.
 - Undo / Redo functionality.
 - Disable export menu item if no image has been converted.
 - Check if threads can be used for saving, and applying the colormap. This should help the UI be more responsive.
@@ -48,7 +48,7 @@ zharmany@gmail.com
 - Fastest way to get image displayed onto screen (Do remix in wx.Image domain?)
 - Toolbar for zoom / pan controls on the images
 - [Done] Save / load settings (perhaps a separate settings class, add save / load settings methods)
-- Code to grab color from image using crosshairs. 
+- [Done!] Code to grab color from image using crosshairs. 
 - Way to launch colormapper importing a particular image (for Farzad command line).
 - Try to get working correctly on windows.
 - Get unmix and remix off the main thread.
