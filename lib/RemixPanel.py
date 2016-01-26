@@ -1,8 +1,15 @@
 import wx
 import numpy as np
 from ColorButton import ColorButton
+from ColormapperSettings import ColormapperSettings
 
-class RemixPanel(wx.Panel):      
+class RemixPanel(wx.Panel):     
+    # Default Settings
+    settings = ColormapperSettings()
+    # Other variables
+    recomputeRemix = False
+   
+ 
     # Data Defaults
     backgroundColor = (230, 160, 200)
     backgroundSpectrum = (99, 69, 86)
@@ -24,13 +31,13 @@ class RemixPanel(wx.Panel):
     gammaValuesStart = -1
     gammaValuesEnd = 1
     
-    # Other variables
-    recomputeRemix = False
     gainValues = np.linspace(gainValuesStart, gainValuesEnd, 101)
     gammaValues = np.logspace(gammaValuesStart, gammaValuesEnd, 101)
 
-    def __init__(self, parent, id = -1):
-    
+    def __init__(self, parent, settings = settings, id = -1):
+        # Optional Settings
+        self.settings = settings
+   
         # Construct Controls
         wx.Panel.__init__(self, parent, id)
         wx.StaticText(self, -1, "Remix Controls:")
@@ -38,41 +45,41 @@ class RemixPanel(wx.Panel):
         # Background
         wx.StaticText(self, -1, "Bulk Tissue:", pos = (0, 25))
         self.colorButtonBackgroundColor = ColorButton(self, -1,
-            color = self.backgroundColor, pos = (100, 25),
+            color = self.settings.GetRemixBackgroundColor(), pos = (100, 25),
             size = (20, 20))
         wx.Button(self, -1, label = "+", pos = (125, 19), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 25))
         self.colorButtonBackgroundSpectrum = ColorButton(self, -1,
-            color = self.backgroundSpectrum, pos = (250, 25),
+            color = self.settings.GetRemixBackgroundSpectrum(), pos = (250, 25),
             size = (20, 20))
         wx.StaticText(self, -1, "Threshold:", pos = (0, 50))
         self.sliderBackgroundThresh = wx.Slider(self, -1, 
-            self.backgroundThresh, 0, 100, pos=(70, 50),
+            self.settings.GetRemixBackgroundThresh(), 0, 100, pos=(70, 50),
             size=(220, -1),
             style=wx.SL_HORIZONTAL)
         self.spinCtrlBackgroundThresh = wx.SpinCtrl(self, -1,
-            "%.2f" % self.backgroundThresh,
-            initial = self.backgroundThresh, min = 0, max = 100,
+            "%.2f" % self.settings.GetRemixBackgroundThresh(),
+            initial = self.settings.GetRemixBackgroundThresh(), min = 0, max = 100,
             pos = (290, 50), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
         wx.StaticText(self, -1, "Gain:", pos = (0, 75))
         self.sliderBackgroundGain = wx.Slider(self, -1,
-            self.backgroundGainSetting, 0, 100, pos = (70, 75),
+            self.settings.GetRemixBackgroundGainSetting(), 0, 100, pos = (70, 75),
             size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlBackgroundGain = wx.TextCtrl(self, -1,
-            value = "%.2f" % self.gainValues[self.backgroundGainSetting], 
+            value = "%.2f" % settings.GetRemixBackgroundGain(),
             pos = (290, 75), size = (83, -1))
         self.spinButtonBackgroundGain = wx.SpinButton(self, -1, 
             pos = (374, 75), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         wx.StaticText(self, -1, "Gamma:", pos = (0, 100))
         self.sliderBackgroundGamma = wx.Slider(self, -1, 
-            self.backgroundGammaSetting, 0, 100, pos = (70, 100),
+            self.settings.GetRemixBackgroundGammaSetting(), 0, 100, pos = (70, 100),
             size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlBackgroundGamma = wx.TextCtrl(self, -1,
-            value = "%.2f" % self.gammaValues[self.backgroundGammaSetting],
+            value = "%.2f" % self.settings.GetRemixBackgroundGamma(),
             pos = (290, 100), size = (83, -1))
         self.spinButtonBackgroundGamma = wx.SpinButton(self, -1,
             pos = (374, 100), size = (-1, -1),
@@ -81,12 +88,12 @@ class RemixPanel(wx.Panel):
         # Nuclei
         wx.StaticText(self, -1, "Nuclei:", pos = (0, 125))
         self.colorButtonNucleiColor = ColorButton(self, -1,
-            color = self.nucleiColor, pos = (100, 125),
+            color = self.settings.GetRemixNucleiColor(), pos = (100, 125),
             size = (20, 20))
         wx.Button(self, -1, label = "+", pos = (125, 119), size = (25, 25))
         wx.StaticText(self, -1, "Spectrum:", pos = (170, 125))
         self.colorButtonNucleiSpectrum = ColorButton(self, -1,
-            color = self.nucleiSpectrum, pos = (250, 125),
+            color = self.settings.GetRemixNucleiSpectrum(), pos = (250, 125),
             size = (20, 20))
         wx.StaticText(self, -1, "Threshold:", pos = (0, 150))
         self.sliderNucleiThresh = wx.Slider(self, -1,
@@ -94,28 +101,28 @@ class RemixPanel(wx.Panel):
             size=(220, -1),
             style=wx.SL_HORIZONTAL)
         self.spinCtrlNucleiThresh = wx.SpinCtrl(self, -1,
-            "%.2f" % self.nucleiThresh,
-            initial = self.nucleiThresh, min = 0, max = 100,
+            "%.2f" % self.settings.GetRemixNucleiThresh(),
+            initial = self.settings.GetRemixNucleiThresh(), min = 0, max = 100,
             pos = (290, 150), size = (100, -1),
             style = wx.SP_ARROW_KEYS)
         wx.StaticText(self, -1, "Gain:", pos = (0, 175))
         self.sliderNucleiGain = wx.Slider(self, -1,
-            self.nucleiGainSetting, 0, 100, pos = (70, 175),
+            self.settings.GetRemixNucleiGainSetting(), 0, 100, pos = (70, 175),
             size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGain = wx.TextCtrl(self, -1,
-            value = "%.2f" % self.gainValues[self.nucleiGainSetting], 
+            value = "%.2f" % self.settings.GetRemixNucleiGain(),
             pos = (290, 175), size = (83, -1))
         self.spinButtonNucleiGain = wx.SpinButton(self, -1, 
             pos = (374, 175), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         wx.StaticText(self, -1, "Gamma:", pos = (0, 200))
         self.sliderNucleiGamma = wx.Slider(self, -1, 
-            self.nucleiGammaSetting, 0, 100, pos = (70, 200),
+            self.settings.GetRemixNucleiGammaSetting(), 0, 100, pos = (70, 200),
             size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGamma = wx.TextCtrl(self, -1,
-            value = "%.2f" % self.gammaValues[self.nucleiGammaSetting],
+            value = "%.2f" % self.settings.GetRemixNucleiGamma(),
             pos = (290, 200), size = (83, -1))
         self.spinButtonNucleiGamma = wx.SpinButton(self, -1,
             pos = (374, 200), size = (-1, -1),
@@ -127,19 +134,17 @@ class RemixPanel(wx.Panel):
                 "Brightfield (Beer-Lambert)",
                 "Brightfield (Invert-Multiply)",
                 "Fluorescence"))
-        self.choiceRemixMode.SetSelection(self.remixMode)
+        self.choiceRemixMode.SetSelection(self.settings.GetRemixRemixMode())
         
 
         # Event Handlers
+        ## Background
+        ### Colors
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonBackgroundColorClick,
             self.colorButtonBackgroundColor)
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonBackgroundSpectrumClick,
             self.colorButtonBackgroundSpectrum)
-        self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiColorClick,
-            self.colorButtonNucleiColor)
-        self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiSpectrumClick,
-            self.colorButtonNucleiSpectrum)      
-            
+        ### Thresh
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderBackgroundThreshScrollThumbtrack,
             self.sliderBackgroundThresh)
@@ -149,7 +154,7 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPINCTRL, 
             self.OnSpinCtrlBackgroundThreshSpinCtrl,
             self.spinCtrlBackgroundThresh)         
-            
+        ### Gain            
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderBackgroundGainScrollThumbtrack,
             self.sliderBackgroundGain)
@@ -162,7 +167,7 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPIN_DOWN,
             self.OnSpinButtonBackgroundGainSpinDown,
             self.spinButtonBackgroundGain)
-
+        ### Gamma            
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderBackgroundGammaScrollThumbtrack,
             self.sliderBackgroundGamma)
@@ -175,7 +180,13 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPIN_DOWN,
             self.OnSpinButtonBackgroundGammaSpinDown,
             self.spinButtonBackgroundGamma)
-            
+        ## Nuclei
+        ### Colors
+        self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiColorClick,
+            self.colorButtonNucleiColor)
+        self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiSpectrumClick,
+            self.colorButtonNucleiSpectrum)      
+        ### Thresh    
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderNucleiThreshScrollThumbtrack,
             self.sliderNucleiThresh)
@@ -185,7 +196,7 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPINCTRL, 
             self.OnSpinCtrlNucleiThreshSpinCtrl,
             self.spinCtrlNucleiThresh)              
-
+        ### Gain
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderNucleiGainScrollThumbtrack,
             self.sliderNucleiGain)
@@ -198,7 +209,7 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPIN_DOWN,
             self.OnSpinButtonNucleiGainSpinDown,
             self.spinButtonNucleiGain)
-
+        ### Gamma
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderNucleiGammaScrollThumbtrack,
             self.sliderNucleiGamma)
@@ -211,225 +222,174 @@ class RemixPanel(wx.Panel):
         self.Bind(wx.EVT_SPIN_DOWN,
             self.OnSpinButtonNucleiGammaSpinDown,
             self.spinButtonNucleiGamma)
-
+        ## Remix Mode
         self.Bind(wx.EVT_CHOICE,
             self.OnChoiceRemixModeChoice,
             self.choiceRemixMode)            
 
-    def OnSliderBackgroundGainScrollThumbtrack(self, event):
-        # Update Text Control
-        self.backgroundGainSetting = \
-            self.sliderBackgroundGain.GetValue()
-        self.backgroundGain = self.gainValues[self.backgroundGainSetting]
-        self.textCtrlBackgroundGain.SetValue("%.2f" % self.backgroundGain)
-        
-    def OnSliderBackgroundGainScrollThumbrelease(self, event):
-        # Update Unmix
-        self.recomputeRemix = True                    
-        
-    def OnSpinButtonBackgroundGainSpinUp(self, event):
-        if self.backgroundGainSetting < 100:
-            self.backgroundGainSetting += 1
-            self.backgroundGain = self.gainValues[self.backgroundGainSetting]
-            self.sliderBackgroundGain.SetValue(self.backgroundGainSetting)
-            self.textCtrlBackgroundGain.SetValue("%.2f" % self.backgroundGain)
-            self.recomputeRemix = True
-    
-    def OnSpinButtonBackgroundGainSpinDown(self, event):
-        if self.backgroundGainSetting > 0:
-            self.backgroundGainSetting -= 1
-            self.backgroundGain = self.gainValues[self.backgroundGainSetting]
-            self.sliderBackgroundGain.SetValue(self.backgroundGainSetting)
-            self.textCtrlBackgroundGain.SetValue("%.2f" % self.backgroundGain)
-            self.recomputeRemix = True            
-
-    def OnSliderBackgroundGammaScrollThumbtrack(self, event):
-        # Update Text Control
-        self.backgroundGammaSetting = \
-            self.sliderBackgroundGamma.GetValue()
-        self.backgroundGamma = self.gammaValues[self.backgroundGammaSetting]
-        self.textCtrlBackgroundGamma.SetValue("%.2f" % self.backgroundGamma)
-        
-    def OnSliderBackgroundGammaScrollThumbrelease(self, event):
-        # Update Unmix
-        self.recomputeRemix = True                    
-        
-    def OnSpinButtonBackgroundGammaSpinUp(self, event):
-        if self.backgroundGammaSetting < 100:
-            self.backgroundGammaSetting += 1
-            self.backgroundGamma = self.gammaValues[self.backgroundGammaSetting]
-            self.sliderBackgroundGamma.SetValue(self.backgroundGammaSetting)
-            self.textCtrlBackgroundGamma.SetValue("%.2f" % self.backgroundGamma)
-            self.recomputeRemix = True            
-    
-    def OnSpinButtonBackgroundGammaSpinDown(self, event):
-        if self.backgroundGammaSetting > 0:
-            self.backgroundGammaSetting -= 1
-            self.backgroundGamma = self.gammaValues[self.backgroundGammaSetting]
-            self.sliderBackgroundGamma.SetValue(self.backgroundGammaSetting)
-            self.textCtrlBackgroundGamma.SetValue("%.2f" % self.backgroundGamma)
-            self.recomputeRemix = True            
-
-    def OnSliderNucleiGainScrollThumbtrack(self, event):
-        # Update Text Control
-        self.nucleiGainSetting = \
-            self.sliderNucleiGain.GetValue()
-        self.nucleiGain = self.gainValues[self.nucleiGainSetting]
-        self.textCtrlNucleiGain.SetValue("%.2f" % self.nucleiGain)
-        
-    def OnSliderNucleiGainScrollThumbrelease(self, event):
-        # Update Unmix
-        self.recomputeRemix = True                    
-        
-    def OnSpinButtonNucleiGainSpinUp(self, event):
-        if self.nucleiGainSetting < 100:
-            self.nucleiGainSetting += 1
-            self.nucleiGain = self.gainValues[self.nucleiGainSetting]
-            self.sliderNucleiGain.SetValue(self.nucleiGainSetting)
-            self.textCtrlNucleiGain.SetValue("%.2f" % self.nucleiGain)
-            self.recomputeRemix = True            
-    
-    def OnSpinButtonNucleiGainSpinDown(self, event):
-        if self.nucleiGainSetting > 0:
-            self.nucleiGainSetting -= 1
-            self.nucleiGain = self.gainValues[self.nucleiGainSetting]
-            self.sliderNucleiGain.SetValue(self.nucleiGainSetting)
-            self.textCtrlNucleiGain.SetValue("%.2f" % self.nucleiGain)
-            self.recomputeRemix = True
-
-    def OnSliderNucleiGammaScrollThumbtrack(self, event):
-        # Update Text Control
-        self.nucleiGammaSetting = \
-            self.sliderNucleiGamma.GetValue()
-        self.nucleiGamma = self.gammaValues[self.nucleiGammaSetting]
-        self.textCtrlNucleiGamma.SetValue("%.2f" % self.nucleiGamma)
-        
-    def OnSliderNucleiGammaScrollThumbrelease(self, event):
-        # Update Unmix
-        self.recomputeRemix = True                    
-        
-    def OnSpinButtonNucleiGammaSpinUp(self, event):
-        if self.nucleiGammaSetting < 100:
-            self.nucleiGammaSetting += 1
-            self.nucleiGamma = self.gammaValues[self.nucleiGammaSetting]
-            self.sliderNucleiGamma.SetValue(self.nucleiGammaSetting)
-            self.textCtrlNucleiGamma.SetValue("%.2f" % self.nucleiGamma)
-            self.recomputeRemix = True            
-    
-    def OnSpinButtonNucleiGammaSpinDown(self, event):
-        if self.nucleiGammaSetting > 0:
-            self.nucleiGammaSetting -= 1
-            self.nucleiGamma = self.gammaValues[self.nucleiGammaSetting]
-            self.sliderNucleiGamma.SetValue(self.nucleiGammaSetting)
-            self.textCtrlNucleiGamma.SetValue("%.2f" % self.nucleiGamma)
-            self.recomputeRemix = True            
-
+    ## Background
+    ### Colors            
     def OnColorButtonBackgroundColorClick(self, event):
-        self.backgroundColor = \
-            self.colorButtonBackgroundColor.GetBackgroundColour()[0:3]
-        norm = self.backgroundColor[0] + self.backgroundColor[1] \
-            + self.backgroundColor[2]
-        self.backgroundSpectrum = (
-            int(round(255.0*self.backgroundColor[0]/norm)),
-            int(round(255.0*self.backgroundColor[1]/norm)),
-            int(round(255.0*self.backgroundColor[2]/norm)))
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour( \
-            self.backgroundSpectrum)
+        self.settings.SetRemixBackgroundColor(self.colorButtonBackgroundColor.GetBackgroundColour()[0:3])
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetRemixBackgroundSpectrum())
         self.colorButtonBackgroundSpectrum.Refresh()
         self.recomputeRemix = True
         
     def OnColorButtonBackgroundSpectrumClick(self, event):
-        self.colorButtonBackgroundColor.SetBackgroundColour(
-            self.colorButtonBackgroundSpectrum.GetBackgroundColour()[0:3])
-        self.colorButtonBackgroundColor.Refresh()
-        self.backgroundColor = \
-            self.colorButtonBackgroundColor.GetBackgroundColour()[0:3]
-        norm = self.backgroundColor[0] + self.backgroundColor[1] \
-            + self.backgroundColor[2]
-        self.backgroundSpectrum = (
-            int(round(255.0*self.backgroundColor[0]/norm)),
-            int(round(255.0*self.backgroundColor[1]/norm)),
-            int(round(255.0*self.backgroundColor[2]/norm)))
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour( \
-            self.backgroundSpectrum)
-        self.colorButtonBackgroundSpectrum.Refresh()
-        self.recomputeRemix = True
-
-    def OnColorButtonNucleiColorClick(self, event):
-        self.nucleiColor = \
-            self.colorButtonNucleiColor.GetBackgroundColour()[0:3]
-        norm = self.nucleiColor[0] + self.nucleiColor[1] \
-            + self.nucleiColor[2]
-        self.nucleiSpectrum = (
-            int(round(255.0*self.nucleiColor[0]/norm)),
-            int(round(255.0*self.nucleiColor[1]/norm)),
-            int(round(255.0*self.nucleiColor[2]/norm)))
-        self.colorButtonNucleiSpectrum.SetBackgroundColour( \
-            self.nucleiSpectrum)
-        self.colorButtonNucleiSpectrum.Refresh()
-        self.recomputeRemix = True
-        
-    def OnColorButtonNucleiSpectrumClick(self, event):
-        self.colorButtonNucleiColor.SetBackgroundColour(
-            self.colorButtonNucleiSpectrum.GetBackgroundColour()[0:3])
-        self.colorButtonNucleiColor.Refresh()            
-        self.nucleiColor = \
-            self.colorButtonNucleiColor.GetBackgroundColour()[0:3]
-        norm = self.nucleiColor[0] + self.nucleiColor[1] \
-            + self.nucleiColor[2]
-        self.nucleiSpectrum = (
-            int(round(255.0*self.nucleiColor[0]/norm)),
-            int(round(255.0*self.nucleiColor[1]/norm)),
-            int(round(255.0*self.nucleiColor[2]/norm)))
-        self.colorButtonNucleiSpectrum.SetBackgroundColour( \
-            self.nucleiSpectrum)
-        self.colorButtonNucleiSpectrum.Refresh()
-        self.recomputeRemix = True
-        
+        # Don't do anything, this just resets the color
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetRemixBackgroundSpectrum())
+            
+    ### Thresh
     def OnSliderBackgroundThreshScrollThumbtrack(self, event):
         # Update Spin Control
-        self.backgroundThresh = \
-            self.sliderBackgroundThresh.GetValue()
-        self.spinCtrlBackgroundThresh.SetValue(self.backgroundThresh)
+        self.settings.SetRemixBackgroundThresh(self.sliderBackgroundThresh.GetValue())
+        self.spinCtrlBackgroundThresh.SetValue(self.settings.GetRemixBackgroundThresh())
     
     def OnSliderBackgroundThreshScrollThumbrelease(self, event):
-        # Update Unmix
+        # Update Remix
         self.recomputeRemix = True
     
     def OnSpinCtrlBackgroundThreshSpinCtrl(self, event):
         # Update Slider
-        self.backgroundThresh = \
-            self.spinCtrlBackgroundThresh.GetValue()
-        self.sliderBackgroundThresh.SetValue(self.backgroundThresh)
+        self.settings.SetRemixBackgroundThresh(self.spinCtrlBackgroundThresh.GetValue())
+        self.sliderBackgroundThresh.SetValue(self.settings.GetRemixBackgroundThresh())
+        self.recomputeRemix = True
+
+    ### Gain
+    def OnSliderBackgroundGainScrollThumbtrack(self, event):
+        # Update Text Control
+        self.settings.SetRemixBackgroundGainSetting(self.sliderBackgroundGain.GetValue())
+        self.textCtrlBackgroundGain.SetValue("%.2f" % self.settings.GetRemixBackgroundGain())
+        
+    def OnSliderBackgroundGainScrollThumbrelease(self, event):
+        # Update Remix
+        self.recomputeRemix = True                    
+        
+    def OnSpinButtonBackgroundGainSpinUp(self, event):
+        if self.settings.GetRemixBackgroundGainSetting() < 100:
+            self.settings.SetRemixBackgroundGainSetting(self.settings.GetRemixBackgroundGainSetting() + 1)
+            self.sliderBackgroundGain.SetValue(self.settings.GetRemixBackgroundGainSetting())
+            self.textCtrlBackgroundGain.SetValue("%.2f" % self.settings.GetRemixBackgroundGain())
+            self.recomputeRemix = True
+    
+    def OnSpinButtonBackgroundGainSpinDown(self, event):
+        if self.backgroundGainSetting > 0:
+            self.settings.SetRemixBackgroundGainSetting(self.settings.GetRemixBackgroundGainSetting() - 1)
+            self.sliderBackgroundGain.SetValue(self.settings.GetRemixBackgroundGainSetting())
+            self.textCtrlBackgroundGain.SetValue("%.2f" % self.settings.GetRemixBackgroundGain())
+            self.recomputeRemix = True            
+
+    ### Gamma
+    def OnSliderBackgroundGammaScrollThumbtrack(self, event):
+        # Update Text Control
+        self.settings.SetRemixBackgroundGammaSetting(self.sliderBackgroundGamma.GetValue())
+        self.textCtrlBackgroundGamma.SetValue("%.2f" % self.settings.GetRemixBackgroundGamma())
+        
+    def OnSliderBackgroundGammaScrollThumbrelease(self, event):
+        # Update Remix
+        self.recomputeRemix = True                    
+        
+    def OnSpinButtonBackgroundGammaSpinUp(self, event):
+        if self.backgroundGammaSetting < 100:
+            self.settings.SetRemixBackgroundGammaSetting(self.settings.GetRemixBackgroundGammaSetting() + 1)
+            self.sliderBackgroundGamma.SetValue(self.settings.GetRemixBackgroundGammaSetting())
+            self.textCtrlBackgroundGamma.SetValue("%.2f" % self.settings.GetRemixBackgroundGamma())
+            self.recomputeRemix = True            
+    
+    def OnSpinButtonBackgroundGammaSpinDown(self, event):
+        if self.backgroundGammaSetting > 0:
+            self.settings.SetRemixBackgroundGammaSetting(self.settings.GetRemixBackgroundGammaSetting() - 1)
+            self.sliderBackgroundGamma.SetValue(self.settings.GetRemixBackgroundGammaSetting())
+            self.textCtrlBackgroundGamma.SetValue("%.2f" % self.settings.GetRemixBackgroundGamma())
+            self.recomputeRemix = True  
+
+    ## Nuclei
+    ### Colors
+    def OnColorButtonNucleiColorClick(self, event):
+        self.settings.SetRemixNucleiColor(self.colorButtonNucleiColor.GetBackgroundColour()[0:3])
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetRemixNucleiSpectrum())
+        self.colorButtonNucleiSpectrum.Refresh()
         self.recomputeRemix = True
         
+    def OnColorButtonNucleiSpectrumClick(self, event):
+        # Don't do anything, this just resets the color
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetRemixNucleiSpectrum())
+
+    ### Thresh        
     def OnSliderNucleiThreshScrollThumbtrack(self, event):
         # Update Spin Control
-        self.nucleiThresh = \
-            self.sliderNucleiThresh.GetValue()
-        self.spinCtrlNucleiThresh.SetValue(self.nucleiThresh)
+        self.settings.SetRemixNucleiThresh(self.sliderNucleiThresh.GetValue())
+        self.spinCtrlNucleiThresh.SetValue(self.settings.GetRemixNucleiThresh())
     
     def OnSliderNucleiThreshScrollThumbrelease(self, event):
-        # Update Unmix
+        # Update Remix
         self.recomputeRemix = True
     
     def OnSpinCtrlNucleiThreshSpinCtrl(self, event):
         # Update Slider
-        self.nucleiThresh = \
-            self.spinCtrlNucleiThresh.GetValue()
-        self.sliderNucleiThresh.SetValue(self.nucleiThresh)
+        self.settings.SetRemixNucleiThresh(self.spinCtrlNucleiThresh.GetValue())
+        self.sliderNucleiThresh.SetValue(self.settings.GetRemixNucleiThresh())
         self.recomputeRemix = True        
+
+    ### Gain
+    def OnSliderNucleiGainScrollThumbtrack(self, event):
+        # Update Text Control
+        self.settings.SetRemixNucleiGainSetting(self.sliderNucleiGain.GetValue())
+        self.textCtrlNucleiGain.SetValue("%.2f" % self.settings.GetRemixNucleiGain())
         
+    def OnSliderNucleiGainScrollThumbrelease(self, event):
+        # Update Remix
+        self.recomputeRemix = True                    
+        
+    def OnSpinButtonNucleiGainSpinUp(self, event):
+        if self.settings.GetRemixNucleiGainSetting() < 100:
+            self.settings.SetRemixNucleiGainSetting(self.settings.GetRemixNucleiGainSetting() + 1)
+            self.sliderNucleiGain.SetValue(self.settings.GetRemixNucleiGainSetting())
+            self.textCtrlNucleiGain.SetValue("%.2f" % self.settings.GetRemixNucleiGain())
+            self.recomputeRemix = True
+    
+    def OnSpinButtonNucleiGainSpinDown(self, event):
+        if self.backgroundGainSetting > 0:
+            self.settings.SetRemixNucleiGainSetting(self.settings.GetRemixNucleiGainSetting() - 1)
+            self.sliderNucleiGain.SetValue(self.settings.GetRemixNucleiGainSetting())
+            self.textCtrlNucleiGain.SetValue("%.2f" % self.settings.GetRemixNucleiGain())
+            self.recomputeRemix = True            
+
+    ### Gamma
+    def OnSliderNucleiGammaScrollThumbtrack(self, event):
+        # Update Text Control
+        self.settings.SetRemixNucleiGammaSetting(self.sliderNucleiGamma.GetValue())
+        self.textCtrlNucleiGamma.SetValue("%.2f" % self.settings.GetRemixNucleiGamma())
+        
+    def OnSliderNucleiGammaScrollThumbrelease(self, event):
+        # Update Remix
+        self.recomputeRemix = True                    
+        
+    def OnSpinButtonNucleiGammaSpinUp(self, event):
+        if self.backgroundGammaSetting < 100:
+            self.settings.SetRemixNucleiGammaSetting(self.settings.GetRemixNucleiGammaSetting() + 1)
+            self.sliderNucleiGamma.SetValue(self.settings.GetRemixNucleiGammaSetting())
+            self.textCtrlNucleiGamma.SetValue("%.2f" % self.settings.GetRemixNucleiGamma())
+            self.recomputeRemix = True            
+    
+    def OnSpinButtonNucleiGammaSpinDown(self, event):
+        if self.backgroundGammaSetting > 0:
+            self.settings.SetRemixNucleiGammaSetting(self.settings.GetRemixNucleiGammaSetting() - 1)
+            self.sliderNucleiGamma.SetValue(self.settings.GetRemixNucleiGammaSetting())
+            self.textCtrlNucleiGamma.SetValue("%.2f" % self.settings.GetRemixNucleiGamma())
+            self.recomputeRemix = True            
+        
+    ## Remix Mode        
     def OnChoiceRemixModeChoice(self, event):
-        if self.remixMode != self.choiceRemixMode.GetSelection():
-            self.remixMode = self.choiceRemixMode.GetSelection()
+        if self.settings.GetRemixRemixMode() != self.choiceRemixMode.GetSelection():
+            self.settings.SetRemixRemixMode(self.choiceRemixMode.GetSelection())
             self.recomputeRemix = True
 
     
 if __name__ == "__main__":
     app = wx.App()
     frame = wx.Frame(None,title = "Test Frame")
-    frame.SetSize((600,400))
+    frame.SetSize((600, 400))
     unmixPanel = RemixPanel(frame)
     frame.Show()
     app.MainLoop()
