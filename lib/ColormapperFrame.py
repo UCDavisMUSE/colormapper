@@ -5,7 +5,6 @@ import numpy as np
 import copy
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
-from ControlPanel import ControlPanel
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
 from colormappingMethods import remixImage, unmixParallelTileGradProjNNLS
@@ -288,26 +287,6 @@ class ColormapperFrame(wx.Frame):
             f.close()
             self.currentDirectory = os.path.split(self.filename)[0]
 
-    def GetInputOutputColors(self):
-        inputColors = [];
-        for color in range(len(self.controlPanel.inputColorButtons)):
-            inputColors += [self.controlPanel.inputColorButtons[color].GetBackgroundColour()[0:3]]
-        outputColors = [];
-        for color in range(len(self.controlPanel.outputColorButtons)):
-            outputColors += [self.controlPanel.outputColorButtons[color].GetBackgroundColour()[0:3]]
-        return (inputColors, outputColors)
-
-    def SetInputOutputColors(self,inputColors,outputColors):
-        self.controlPanel.Destroy()
-        self.controlPanel = ControlPanel(self,
-            inputColors = inputColors, inputImagePanel = self.inputImagePanel, 
-            outputColors = outputColors, outputImagePanel = self.outputImagePanel, 
-            label = "Control Panel", size = (800, 100))                       
-        self.verticalSizer.Add(self.controlPanel, flag=wx.EXPAND)
-        self.verticalSizer.Layout()
-        # Code for overriding button behavior to select colors from image
-        for button in self.controlPanel.inputColorButtons:
-            button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
 
     def ImportImage(self):
         # This code imports the image
