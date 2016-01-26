@@ -231,8 +231,7 @@ class RemixPanel(wx.Panel):
     ### Colors            
     def OnColorButtonBackgroundColorClick(self, event):
         self.settings.SetRemixBackgroundColor(self.colorButtonBackgroundColor.GetBackgroundColour()[0:3])
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetRemixBackgroundSpectrum())
-        self.colorButtonBackgroundSpectrum.Refresh()
+        self.RefreshBackgroundColorButtons()
         self.recomputeRemix = True
         
     def OnColorButtonBackgroundSpectrumClick(self, event):
@@ -307,8 +306,7 @@ class RemixPanel(wx.Panel):
     ### Colors
     def OnColorButtonNucleiColorClick(self, event):
         self.settings.SetRemixNucleiColor(self.colorButtonNucleiColor.GetBackgroundColour()[0:3])
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetRemixNucleiSpectrum())
-        self.colorButtonNucleiSpectrum.Refresh()
+        self.RefreshNucleiColorButtons()
         self.recomputeRemix = True
         
     def OnColorButtonNucleiSpectrumClick(self, event):
@@ -384,6 +382,18 @@ class RemixPanel(wx.Panel):
         if self.settings.GetRemixRemixMode() != self.choiceRemixMode.GetSelection():
             self.settings.SetRemixRemixMode(self.choiceRemixMode.GetSelection())
             self.recomputeRemix = True
+            
+    def RefreshBackgroundColorButtons(self):
+        self.colorButtonBackgroundColor.SetBackgroundColour(self.settings.GetRemixBackgroundColor())
+        self.colorButtonBackgroundColor.Refresh()
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetRemixBackgroundSpectrum())
+        self.colorButtonBackgroundSpectrum.Refresh()
+        
+    def RefreshNucleiColorButtons(self):
+        self.colorButtonNucleiColor.SetBackgroundColour(self.settings.GetRemixNucleiColor())
+        self.colorButtonNucleiColor.Refresh()
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetRemixNucleiSpectrum())
+        self.colorButtonNucleiSpectrum.Refresh()            
 
     
 if __name__ == "__main__":

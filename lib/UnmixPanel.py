@@ -79,8 +79,7 @@ class UnmixPanel(wx.Panel):
     ## Colors        
     def OnColorButtonBackgroundColorClick(self, event):
         self.settings.SetUnmixBackgroundColor(self.colorButtonBackgroundColor.GetBackgroundColour()[0:3])
-        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
-        self.colorButtonBackgroundSpectrum.Refresh()
+        self.RefreshBackgroundColorButtons()
         self.recomputeUnmix = True
         
     def OnColorButtonBackgroundSpectrumClick(self, event):
@@ -89,8 +88,7 @@ class UnmixPanel(wx.Panel):
 
     def OnColorButtonNucleiColorClick(self, event):
         self.settings.SetUnmixNucleiColor(self.colorButtonNucleiColor.GetBackgroundColour()[0:3])
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
-        self.colorButtonNucleiSpectrum.Refresh()
+        self.RefreshNucleiColorButtons()
         self.recomputeUnmix = True
         
     def OnColorButtonNucleiSpectrumClick(self, event):
@@ -107,7 +105,7 @@ class UnmixPanel(wx.Panel):
         self.settings.SetUnmixSubtractBackgroundAmount(self.sliderSubtractBackground.GetValue())
         self.spinCtrlSubtractBackground.SetValue(self.settings.GetUnmixSubtractBackgroundAmount())
         # Update Nuclei Spectrum
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
+        self.RefreshNucleiColorButtons()
         self.colorButtonNucleiSpectrum.Refresh()
 
     def OnSliderSubtractBackgroundScrollThumbrelease(self, event):
@@ -120,10 +118,24 @@ class UnmixPanel(wx.Panel):
         self.settings.SetUnmixSubtractBackgroundAmount(self.spinCtrlSubtractBackground.GetValue())
         self.sliderSubtractBackground.SetValue(self.settings.GetUnmixSubtractBackgroundAmount())
         # Update Nuclei Spectrum
-        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
-        self.colorButtonNucleiSpectrum.Refresh()
+        self.RefreshNucleiColorButtons()
         if self.settings.GetUnmixSubtractBackground():
             self.recomputeUnmix = True
+            
+    def RefreshBackgroundColorButtons(self):
+        self.colorButtonBackgroundColor.SetBackgroundColour(self.settings.GetUnmixBackgroundColor())
+        self.colorButtonBackgroundColor.Refresh()
+        self.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
+        self.colorButtonBackgroundSpectrum.Refresh()
+        
+    def RefreshNucleiColorButtons(self):
+        self.colorButtonNucleiColor.SetBackgroundColour(self.settings.GetUnmixNucleiColor())
+        self.colorButtonNucleiColor.Refresh()
+        self.colorButtonNucleiSpectrum.SetBackgroundColour(self.settings.GetUnmixNucleiSpectrum())
+        self.colorButtonNucleiSpectrum.Refresh()
+
+    
+                    
 
     
 if __name__ == "__main__":
