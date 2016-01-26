@@ -5,6 +5,7 @@ import numpy as np
 import copy
 from BlockWindow import BlockWindow
 from ImageViewerPanel import ImageViewerPanel
+from ColormapperSettings import ColormapperSettings
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
 from colormappingMethods import remixImage, unmixParallelTileGradProjNNLS
@@ -29,8 +30,7 @@ class ColormapperFrame(wx.Frame):
         self.filename = ""
         self.exportFilename = ""
         self.currentDirectory = ""
-        self.inputColors  = [ (228, 250, 166), (244, 205, 100)]
-        self.outputColors = [ ( 70,  30, 150), (230, 160, 200)]
+        self.settings = ColormapperSettings()
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -47,8 +47,8 @@ class ColormapperFrame(wx.Frame):
         # Create sub panels
         self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (300, 200))
         self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (300, 200))
-        self.unmixPanel = UnmixPanel(self)
-        self.remixPanel = RemixPanel(self)
+        self.unmixPanel = UnmixPanel(self, self.settings)
+        self.remixPanel = RemixPanel(self, self.settings)
         # Arrange the input and output images side-by-side
         self.horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.horizontalSizer.Add(self.inputImagePanel, 1, wx.EXPAND|wx.ALL, 2)
@@ -67,8 +67,6 @@ class ColormapperFrame(wx.Frame):
         
         self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
         self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
-        
-        # Add code to initialize input / output colors.
         
         # Add code for crosshair button click in Unmix and Remix Panels
         self.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons,
@@ -126,10 +124,14 @@ class ColormapperFrame(wx.Frame):
                     currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
                                     self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
                                     self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))
-                    self.colorButtonBackgroundColor.SetBackgroundColour(currentColor)
-                    self.Refresh()
+                    self.settings.SetUnmixBackgroundColor(currentColor)
+                    self.unmixPanel.colorButtonBackgroundColor.SetBackgroundColour(self.settings.GetUnmixBackgroundColor())
+                    self.unmixPanel.colorButtonBackgroundSpectrum.SetBackgroundColour(self.settings.GetUnmixBackgroundSpectrum())
+                    self.unmixPanel.colorButtonBackgroundColor.Refresh()
+                    self.unmixPanel.colorButtonBackgroundSpectrum.Refresh()
             self.ReleaseMouse()
             self.inputImagePanel.InitBuffer()
+            self.unmixPanel.recomputeUnmix = True
 
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
@@ -271,8 +273,14 @@ class ColormapperFrame(wx.Frame):
         if self.filename:
             try:
                 f = open(self.filename, 'r')
-                (inputColors, outputColors) = cPickle.load(f)
-                self.SetInputOutputColors(inputColors, outputColors)
+                (unmixSettings, remixSettings) = cPickle.load(f)
+                self.settings.SetSettings(unmixSettings, remixSettings)
+                # May need to refresh all the color boxes, perhaps by simply recreating the panels?
+                
+                self.Refresh()
+                self.remixPanel.recomputeRemix = True
+                self.unmixPanel.recomputeUnmix = True
+
                 self.currentDirectory = os.path.split(self.filename)[0]
             except cPickle.UnpicklingError:
                 wx.MessageBox("%s is not a colormapper file." % self.filename, "oops!",
@@ -281,9 +289,9 @@ class ColormapperFrame(wx.Frame):
     def SaveFile(self):
         # This code saves a colormapper file
         if self.filename:
-            (inputColors, outputColors) = self.GetInputOutputColors()
+            (unmixSettings, remixSettings) = self.settings.GetSettings()
             f = open(self.filename, 'w')
-            cPickle.dump((inputColors, outputColors), f)
+            cPickle.dump((unmixSettings, remixSettings), f)
             f.close()
             self.currentDirectory = os.path.split(self.filename)[0]
 
@@ -363,15 +371,8 @@ class ColormapperFrame(wx.Frame):
         
         # Do Unmixing
         A = np.zeros((3, 2), dtype = np.float64)
-        A[:,0] = self.unmixPanel.backgroundSpectrum
-        A[:,1] = self.unmixPanel.nucleiSpectrum
-        if self.unmixPanel.subtractBackground:
-            maxAmount = np.inf
-            for color in range(A.shape[0]):
-                if A[color,0] != 0:
-                    maxAmount = min(maxAmount, 1.0*A[color,1]/A[color,0])
-            A[:,1] = A[:,1] - 1.0*(self.unmixPanel.subtractBackgroundAmount/100.0)*maxAmount*A[:,0]
-            A[:,1] = 255.0*A[:,1]/np.sum(A[:,1])            
+        A[:,0] = self.settings.GetUnmixBackgroundSpectrum()
+        A[:,1] = self.settings.GetUnmixNucleiSpectrum()
             
         # Faster (Open CL-based) Method:
         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
@@ -388,12 +389,12 @@ class ColormapperFrame(wx.Frame):
     
         components = copy.copy(self.unmixComponents)
         B = np.zeros((3, 2), dtype = np.float64)
-        B[:,0] = self.remixPanel.backgroundColor
-        B[:,1] = self.remixPanel.nucleiColor
-        thresh = [self.remixPanel.backgroundThresh, self.remixPanel.nucleiThresh]
-        gain = [self.remixPanel.backgroundGain, self.remixPanel.nucleiGain]
-        gamma = [self.remixPanel.backgroundGamma, self.remixPanel.nucleiGamma]
-        method = self.remixPanel.remixMode
+        B[:,0] = self.settings.GetRemixBackgroundColor()
+        B[:,1] = self.settings.GetRemixNucleiColor()
+        thresh = [self.settings.GetRemixBackgroundThresh(), self.settings.GetRemixNucleiThresh()]
+        gain = [self.settings.GetRemixBackgroundGain(), self.settings.GetRemixNucleiGain()]
+        gamma = [self.settings.GetRemixBackgroundGamma(), self.settings.GetRemixNucleiGamma()]
+        method = self.settings.GetRemixRemixMode()
         
         # Do Remixing        
         self.outputImageArray = remixImage(components, B, thresh, gain, gamma, method)
