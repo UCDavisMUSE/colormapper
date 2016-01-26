@@ -392,6 +392,7 @@ class ColormapperFrame(wx.Frame):
                 if A[color,0] != 0:
                     maxAmount = min(maxAmount, 1.0*A[color,1]/A[color,0])
             A[:,1] = A[:,1] - 1.0*(self.unmixPanel.subtractBackgroundAmount/100.0)*maxAmount*A[:,0]
+            A[:,1] = 255.0*A[:,1]/np.sum(A[:,1])            
             
         # Faster (Open CL-based) Method:
         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
