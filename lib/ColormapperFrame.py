@@ -57,21 +57,20 @@ class ColormapperFrame(wx.Frame):
         self.horizontalControlSizer = wx.BoxSizer(wx.HORIZONTAL)
         self.horizontalControlSizer.Add(self.unmixPanel, 1, wx.EXPAND | wx.ALL, 2)
         self.horizontalControlSizer.Add(self.remixPanel, 1, wx.EXPAND | wx.ALL, 2)
-        
         # Arrange the controls below the images
         self.verticalSizer = wx.BoxSizer(wx.VERTICAL)
         self.verticalSizer.Add(self.horizontalSizer, 1, flag=wx.EXPAND)
         self.verticalSizer.Add(self.horizontalControlSizer, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
         self.SetSizer(self.verticalSizer)
-        
+
+        # Show RGB Values in Status Bar when hovering over image
         self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
         self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
         
         # Add code for crosshair button click in Unmix and Remix Panels
         self.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons,
             self.unmixPanel.buttonBackgroundCrosshair)
-        
 #         for button in self.controlPanel.inputColorButtons:
 #             button.Bind(wx.EVT_BUTTON, self.OverrideInputColorButtons)
             
@@ -90,17 +89,14 @@ class ColormapperFrame(wx.Frame):
                 self.Refresh()
         event.Skip()
                 
-        
     def OnIdle(self, event):
         # This is where we recompute the unmix and remix:
         if self.unmixPanel.recomputeUnmix:
-#            print("Unmixing...")
             self.UnmixImage()
             self.remixPanel.recomputeRemix = True
             self.unmixPanel.recomputeUnmix = False 
             
         if self.remixPanel.recomputeRemix:
-#            print("Remixing...")
             self.RemixImage()
             self.remixPanel.recomputeRemix = False       
         
@@ -275,12 +271,19 @@ class ColormapperFrame(wx.Frame):
                 f = open(self.filename, 'r')
                 (unmixSettings, remixSettings) = cPickle.load(f)
                 self.settings.SetSettings(unmixSettings, remixSettings)
-                # May need to refresh all the color boxes, perhaps by simply recreating the panels?
-                
-                self.Refresh()
+                # Take down and bring back the Unmix and Remix Panels
+                # This refreshes all controls to their correct states
+                self.unmixPanel.Destroy()
+                self.remixPanel.Destroy()
+                self.unmixPanel = UnmixPanel(self, self.settings)
+                self.remixPanel = RemixPanel(self, self.settings)
+                self.horizontalControlSizer.Add(self.unmixPanel, 1, wx.EXPAND | wx.ALL, 2)
+                self.horizontalControlSizer.Add(self.remixPanel, 1, wx.EXPAND | wx.ALL, 2)
+                self.horizontalControlSizer.Layout()
+                # Recompute
                 self.remixPanel.recomputeRemix = True
                 self.unmixPanel.recomputeUnmix = True
-
+                # Set Current Directory
                 self.currentDirectory = os.path.split(self.filename)[0]
             except cPickle.UnpicklingError:
                 wx.MessageBox("%s is not a colormapper file." % self.filename, "oops!",
