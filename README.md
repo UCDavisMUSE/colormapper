@@ -47,12 +47,12 @@ zharmany@gmail.com
 - If sticking with Open CL unmix, stop shuttling info to/from GPU
 - Fastest way to get image displayed onto screen (Do remix in wx.Image domain?)
 - Toolbar for zoom / pan controls on the images
-- Save / load settings (perhaps a separate settings class, add save / load settings methods)
+- [Done] Save / load settings (perhaps a separate settings class, add save / load settings methods)
 - Code to grab color from image using crosshairs. 
 - Way to launch colormapper importing a particular image (for Farzad command line).
 - Try to get working correctly on windows.
 - Get unmix and remix off the main thread.
-- Create a settings class:
+- [Done] Create a settings class:
     - Use a dictionary for the settings (so that they can be easily saved and loaded)
     - Create get and set methods, this is useful so that SetNucleiColor updates the spectrum automatically, and accounts for background subtraction.
-    - Perhaps use YAML as a saving format for the settings.
+- Perhaps use YAML as a saving format for the settings.
