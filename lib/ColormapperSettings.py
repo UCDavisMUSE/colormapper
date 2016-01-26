@@ -94,17 +94,21 @@ class ColormapperSettings:
 
     def SetUnmixNucleiColor(self, color):
         self.unmix["nucleiColor"] = color
-        if GetUnmixSubtractBackground():
+        if self.GetUnmixSubtractBackground():
             color = self.__SubtractBackground(color, 
                 self.GetUnmixBackgroundColor(), 
                 self.GetUnmixSubtractBackgroundAmount())
-        self.unmix["nucleiColor"] = self.__NormalizeSpectrum(color)
+        self.unmix["nucleiSpectrum"] = self.__NormalizeSpectrum(color)
     
     def SetUnmixSubtractBackground(self, subtractBackground):
         self.unmix["subtractBackground"] = subtractBackground
+        # Update the Nuclei Spectrum
+        self.SetUnmixNucleiColor(self.GetUnmixNucleiColor())
         
     def SetUnmixSubtractBackgroundAmount(self, subtractBackgroundAmount):
         self.unmix["subtractBackgroundAmount"] = subtractBackgroundAmount
+        # Update the Nuclei Spectrum
+        self.SetUnmixNucleiColor(self.GetUnmixNucleiColor())        
         
     ## Remix
     def SetRemixBackgroundColor(self, color):
