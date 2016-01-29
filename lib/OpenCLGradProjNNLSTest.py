@@ -8,8 +8,8 @@ if __name__ == "__main__":
     # unmixing matrix A is 3 x k, where k is the number of components,
     # unmixed results should be n1 x n2 x k.
     
-    showPlots = True
-    tolerance = 1e-1
+    showPlots = False
+    tolerance = 1e-8
     maxiter = 100;
     
     # Example unmixing matrix
@@ -46,7 +46,7 @@ if __name__ == "__main__":
             
     #   Method: unmixOpenCLGradProjNNLS
     start = time.time()
-    X_unmixOpenCLGradProjNNLS = OpenCLGradProjNNLS(image, A, tolerance = tolerance, maxiter = maxiter, context = 0)
+    X_unmixOpenCLGradProjNNLS = OpenCLGradProjNNLS(image, A, tolerance = tolerance, maxiter = maxiter, context = 1, lsize = (8,8))
     end = time.time()
     print("unmixOpenCLGradProjNNLS Time: " + str(end-start) + " seconds.")
     print("Result is an " + 

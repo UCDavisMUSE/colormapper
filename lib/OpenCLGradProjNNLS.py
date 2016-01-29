@@ -2,13 +2,23 @@ import pyopencl as cl
 import os
 import numpy as np
 
-def OpenCLGradProjNNLS(image, A, tolerance = 1e-4, maxiter = 100, context = 0):
+def OpenCLGradProjNNLS(image, A, tolerance = 1e-4, maxiter = 100, context = 0, lsize = (1,1)):
     # Create a compute context and define a command cue
     # I wish I could change this to 1 on the iMac (although it seems there's a bug).
     os.environ["PYOPENCL_CTX"] = str(context) 
     os.environ["PYOPENCL_COMPILER_OUTPUT"] = "0" # Suppress output
     ctx = cl.create_some_context()
     queue = cl.CommandQueue(ctx)
+    if context == 0:
+        # Override lsize if different than (1, 1).
+        lsize = (1,1)
+    n1 = image.shape[0]
+    n2 = image.shape[1]
+    # Resize image to fit integer number of lsize tiles:
+    pad1 = int(lsize[0]*np.ceil(1.0*n1/lsize[0])) - n1
+    pad2 = int(lsize[1]*np.ceil(1.0*n2/lsize[0])) - n2
+    image = np.pad(image, ((0,pad1),(0,pad2),(0,0)), mode = 'constant')
+
 
     # Define the OpenCL program
 #     f = open('GradProjNNLS.c','r')
@@ -154,8 +164,8 @@ def OpenCLGradProjNNLS(image, A, tolerance = 1e-4, maxiter = 100, context = 0):
     X_unmixOpenCLGradProjNNLS_g = cl.Buffer(ctx, mf.WRITE_ONLY, X_unmixOpenCLGradProjNNLS.nbytes)
 
     # Execute the program, not sure what the 2nd and 3rd args are, but last 3 are the args of the program
-    gsize = (image.shape[0],image.shape[1])
-    lsize = (1,1)
+    gsize = (n1+pad1, n2+pad2)
+
 
     prg.GradProjNNLS(queue, gsize, lsize, image_g, A_g, ATA_g, pinvA_g,
         n1_g, n2_g, n3_g, k_g, tolerance_g, maxiter_g, alpha_g,
@@ -163,6 +173,10 @@ def OpenCLGradProjNNLS(image, A, tolerance = 1e-4, maxiter = 100, context = 0):
 
     # Copy from graphics memory to host memory
     cl.enqueue_copy(queue, X_unmixOpenCLGradProjNNLS, X_unmixOpenCLGradProjNNLS_g)
+    
+    # Crop back to original dimensions
+    X_unmixOpenCLGradProjNNLS = X_unmixOpenCLGradProjNNLS[0:n1,0:n2,:]
+    
     
     return X_unmixOpenCLGradProjNNLS
 
