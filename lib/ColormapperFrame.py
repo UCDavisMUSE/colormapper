@@ -454,7 +454,7 @@ class ColormapperFrame(wx.Frame):
             
         # Faster (Open CL-based) Method:
         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
-            tolerance = 1e-1, maxiter = 100, context = 0)
+            tolerance = 1e-1, maxiter = 100, context = 1, lsize = (8,8))
         # Slower (Multithreaded) Method:
         #  self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
         #      tolerance = 1e-1, maxiter = 100)
