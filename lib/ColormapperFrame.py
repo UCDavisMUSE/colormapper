@@ -84,6 +84,8 @@ class ColormapperFrame(wx.Frame):
         self.outputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
 
+        
+        self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
         
         
@@ -185,7 +187,12 @@ class ColormapperFrame(wx.Frame):
                 self.outputImagePanel.InitBuffer()
             self.Refresh()
         event.Skip()
-                
+        
+    def OnSize(self, event):
+        # We need to recompute the unmix and remix
+        self.unmixPanel.recomputeUnmix = True
+        event.Skip()
+                    
     def OnIdle(self, event):
         # This is where we recompute the unmix and remix:
         if self.unmixPanel.recomputeUnmix:
@@ -400,6 +407,8 @@ class ColormapperFrame(wx.Frame):
                 self.filename = ""
                 self.inputImagePanel.newImageData = True
                 self.inputImagePanel.reInitBuffer = True
+                self.inputImagePanel.InitBuffer()
+                self.inputImagePanel.Refresh()
                 self.outputImagePanel.image = wx.EmptyImage()
                 self.outputImagePanel.newImageData = True
                 self.outputImagePanel.reInitBuffer = True
@@ -433,14 +442,16 @@ class ColormapperFrame(wx.Frame):
     def UnmixImage(self):
         if not self.inputImagePanel.image.Ok():
             return
+        if not self.inputImagePanel.displayedImage.Ok():
+            return
     
         # Convert wx.Image to numpy array
-        inputImageBuffer = self.inputImagePanel.image.GetDataBuffer()
+        inputImageBuffer = self.inputImagePanel.displayedImage.GetDataBuffer()
         inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
             
         # Reshape the input numpy array to a width X height X 3 RGB image
-        self.inputImageWidth = self.inputImagePanel.image.GetWidth()
-        self.inputImageHeight = self.inputImagePanel.image.GetHeight()
+        self.inputImageWidth = self.inputImagePanel.displayedImage.GetWidth()
+        self.inputImageHeight = self.inputImagePanel.displayedImage.GetHeight()
         self.inputImageSize = inputImageArray.size     
         self.inputImageArray = inputImageArray.reshape(self.inputImageWidth, self.inputImageHeight, 3)
         self.outputImageArray = copy.copy(self.inputImageArray)
@@ -464,7 +475,9 @@ class ColormapperFrame(wx.Frame):
     def RemixImage(self):
         if not self.inputImagePanel.image.Ok():
             return
-    
+        if not self.inputImagePanel.displayedImage.Ok():
+            return
+        
         components = copy.copy(self.unmixComponents)
         B = np.zeros((3, 2), dtype = np.float64)
         B[:,0] = self.settings.GetRemixBackgroundColor()

@@ -204,7 +204,8 @@ class ImageViewerPanel(wx.Panel):
         if self.dynamicResize:
             if self.reInitBuffer:
                   self.InitBuffer()
-                  self.Refresh()        
+                  self.Refresh()      
+        event.Skip()  
   
 
     def GetImageDisplaySize(self):
