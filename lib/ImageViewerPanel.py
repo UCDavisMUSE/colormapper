@@ -24,13 +24,15 @@ class ImageViewerPanel(wx.Panel):
         self.zoomFactorMin = 1.0/self.zoomFactorMax
         self.zoomFactorIncreaseMultiplier = 1.05
         self.zoomFactorDecreaseMultiplier = 1.0/self.zoomFactorIncreaseMultiplier
+        self.pos = (0,0)
+        self.oldTranslation = (0,0)
         self.translation = (0,0)
         self.viewModes = [
             'Actual Size - no interaction',
             'Zoom to Fit - no interaction',
             'Zoom',
             'Pan']
-        self.viewMode = 1
+        self.viewMode = 3
         self.SetBackgroundColour("Black")
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.displayedImage = wx.EmptyImage()
@@ -102,6 +104,18 @@ class ImageViewerPanel(wx.Panel):
                 newPos = event.GetPositionTuple()
                 delta = (newPos[0] - self.pos[0], newPos[1] - self.pos[1])
                 self.translation = (self.oldTranslation[0] + delta[0], self.oldTranslation[1] + delta[1])
+                (view_width, view_height) = self.GetClientSize()
+                if self.translation[0] > 0:
+                    self.translation = (0, self.translation[1])
+                if self.translation[0] < view_width - self.display_width:
+                    self.translation = \
+                        (view_width - self.display_width, self.translation[1])                    
+                    
+                if self.translation[1] > 0:
+                    self.translation = (self.translation[0], 0)
+                if self.translation[1] < view_height - self.display_height:
+                    self.translation = \
+                        (self.translation[0], view_height - self.display_height)
                 self.reInitBuffer = True
                 
         # Draw crosshairs if crosshairs are enabled
@@ -153,6 +167,13 @@ class ImageViewerPanel(wx.Panel):
                 self.bmp = wx.BitmapFromImage(self.displayedImage)
                 self.newImageData = False
             dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
+            subRect = wx.Rect(-self.translation[0], -self.translation[1],
+                view_width, view_height)
+            print(subRect.Get())
+            self.croppedDisplayedImage = \
+                self.displayedImage.GetSubImage(subRect)
+            
+            
             
         position = event.GetPositionTuple()            
         #dc.CrossHair(*position)        
@@ -184,6 +205,11 @@ class ImageViewerPanel(wx.Panel):
                 self.bmp = wx.BitmapFromImage(self.displayedImage)
                 self.newImageData = False
             dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
+            subRect = wx.Rect(-self.translation[0], -self.translation[1],
+                view_width, view_height)
+            self.croppedDisplayedImage = \
+                self.displayedImage.GetSubImage(subRect)
+
 
         self.reInitBuffer = False
         
@@ -312,16 +338,16 @@ class ImageViewerFrame(wx.Frame):
         dropTarget = MyFileDropTarget(self)
         self.SetDropTarget(dropTarget)
         
-    def OnOpen(self):
+    def OnOpen(self, event):
         pass
         
-    def OnCloseWindow(self):
+    def OnCloseWindow(self, event):
         pass
         
-    def OnCopy(self):
+    def OnCopy(self, event):
         pass
         
-    def OnPaste(self):
+    def OnPaste(self, event):
         pass
         
     def createStatusBar(self):

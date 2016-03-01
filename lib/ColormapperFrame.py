@@ -31,6 +31,9 @@ class ColormapperFrame(wx.Frame):
         self.exportFilename = ""
         self.currentDirectory = ""
         self.settings = ColormapperSettings()
+        
+        # Other variables
+        self.currentButtonClicked = None
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -82,6 +85,7 @@ class ColormapperFrame(wx.Frame):
         self.outputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.outputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        self.inputImagePanel.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
 
         
@@ -104,7 +108,7 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
             else:
                 self.statusbar.SetStatusText("", 1)
-        if self.inputImagePanel.HasCapture():
+        if self.inputImagePanel.HasCapture() and self.inputImagePanel.drawCrosshair:
             self.inputImagePanel.DrawCrosshair(event)
         event.Skip()
 
@@ -123,7 +127,7 @@ class ColormapperFrame(wx.Frame):
                 self.statusbar.SetStatusText("Color (R, G, B): %s" % str(currentColor), 1)
             else:
                 self.statusbar.SetStatusText("", 1)
-        if self.outputImagePanel.HasCapture():     
+        if self.outputImagePanel.HasCapture() and self.outputImagePanel.drawCrosshair:     
             self.outputImagePanel.DrawCrosshair(event)           
         event.Skip()
         
@@ -139,6 +143,7 @@ class ColormapperFrame(wx.Frame):
     def OnLeftDown(self, event):
         if self.inputImagePanel.HasCapture() or self.outputImagePanel.HasCapture():
             self.currentPosition = event.GetPositionTuple()
+        event.Skip()
     
     def OnLeftUp(self, event):
         if self.inputImagePanel.HasCapture():
@@ -148,15 +153,25 @@ class ColormapperFrame(wx.Frame):
                     self.settings.SetUnmixBackgroundColor(currentColor)
                     self.unmixPanel.RefreshBackgroundColorButtons()
                     self.unmixPanel.recomputeUnmix = True
+                self.currentButtonClicked = None
+                self.inputImagePanel.ReleaseMouse()                    
+                self.inputImagePanel.InitBuffer()
+                self.inputImagePanel.Refresh() 
+                   
             elif self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair and self.inputImagePanel.displayedImage.Ok():
                 currentColor = self.GetInputPanelClickedPixelColor()
                 if currentColor != None:               
                     self.settings.SetUnmixNucleiColor(currentColor)
                     self.unmixPanel.RefreshNucleiColorButtons()
-                    self.unmixPanel.recomputeUnmix = True                     
-            self.inputImagePanel.ReleaseMouse()                    
-            self.inputImagePanel.InitBuffer()
-            self.inputImagePanel.Refresh()      
+                    self.unmixPanel.recomputeUnmix = True
+                self.currentButtonClicked = None                                         
+                self.inputImagePanel.ReleaseMouse()                    
+                self.inputImagePanel.InitBuffer()
+                self.inputImagePanel.Refresh() 
+
+            else:
+                self.unmixPanel.recomputeUnmix = True
+                event.Skip()
         
         elif self.outputImagePanel.HasCapture():
             if self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair and self.outputImagePanel.displayedImage.Ok():
@@ -165,15 +180,32 @@ class ColormapperFrame(wx.Frame):
                     self.settings.SetRemixBackgroundColor(currentColor)
                     self.remixPanel.RefreshBackgroundColorButtons()
                     self.remixPanel.recomputeRemix = True
+                self.outputImagePanel.ReleaseMouse()                    
+                self.outputImagePanel.InitBuffer()                      
+                self.outputImagePanel.Refresh() 
+                    
             elif self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair and self.outputImagePanel.displayedImage.Ok():
                 currentColor = self.GetOutputPanelClickedPixelColor()
                 if currentColor != None:               
                     self.settings.SetRemixNucleiColor(currentColor)
                     self.remixPanel.RefreshNucleiColorButtons()
                     self.remixPanel.recomputeRemix = True                     
-            self.outputImagePanel.ReleaseMouse()                    
-            self.outputImagePanel.InitBuffer()                      
-            self.outputImagePanel.Refresh() 
+                self.outputImagePanel.ReleaseMouse()                    
+                self.outputImagePanel.InitBuffer()                      
+                self.outputImagePanel.Refresh() 
+                
+            else:
+                event.Skip()
+
+    def OnMouseWheel(self, event):
+        if self.inputImagePanel.viewMode == 0:
+            pass
+        elif self.inputImagePanel.viewMode == 1:
+            pass
+        elif self.inputImagePanel.viewMode == 2 or self.inputImagePanel.viewMode == 3:
+            self.unmixPanel.recomputeUnmix = True
+        event.Skip()
+
 
     def OnKey(self, event):
         if event.GetKeyCode() == wx.WXK_ESCAPE:
@@ -442,16 +474,17 @@ class ColormapperFrame(wx.Frame):
     def UnmixImage(self):
         if not self.inputImagePanel.image.Ok():
             return
-        if not self.inputImagePanel.displayedImage.Ok():
+        if not self.inputImagePanel.croppedDisplayedImage.Ok():
             return
     
+        print("Unmixing.")
         # Convert wx.Image to numpy array
-        inputImageBuffer = self.inputImagePanel.displayedImage.GetDataBuffer()
+        inputImageBuffer = self.inputImagePanel.croppedDisplayedImage.GetDataBuffer()
         inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
             
         # Reshape the input numpy array to a width X height X 3 RGB image
-        self.inputImageWidth = self.inputImagePanel.displayedImage.GetWidth()
-        self.inputImageHeight = self.inputImagePanel.displayedImage.GetHeight()
+        self.inputImageWidth = self.inputImagePanel.croppedDisplayedImage.GetWidth()
+        self.inputImageHeight = self.inputImagePanel.croppedDisplayedImage.GetHeight()
         self.inputImageSize = inputImageArray.size     
         self.inputImageArray = inputImageArray.reshape(self.inputImageWidth, self.inputImageHeight, 3)
         self.outputImageArray = copy.copy(self.inputImageArray)
