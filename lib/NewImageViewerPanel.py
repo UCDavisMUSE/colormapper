@@ -99,8 +99,31 @@ class ImageViewerPanel(wx.Panel):
 #        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
 
+    def OnIdle(self, event):
+        if self.reInitBuffer:
+            self.InitBuffer()
+            self.Refresh()
+        event.Skip()
+
 
     def InitBuffer(self):
+        if not self.image.Ok():
+            return
+        
+        # Setup display context equal to size of area to be painted
+        (self.displayWidth, self.displayHeight) = self.GetClientSize()
+        self.buffer = wx.EmptyBitmap(self.displayWidth, self.displayHeight)
+        dc = wx.BufferedDC(None, self.buffer)
+        
+        dc.DrawBitmap(self.bitmap)
+        self.reInitBuffer = False
+           
+            
+        
+    
+
+
+    def OldInitBuffer(self):
         # Setup Display Context equal to size of area to be painted
         (view_width, view_height) = self.GetClientSize()
         self.buffer = wx.EmptyBitmap(view_width,view_height)
@@ -249,11 +272,7 @@ class ImageViewerPanel(wx.Panel):
 
    
 
-    def OnIdle(self, event):
-        if self.reInitBuffer:
-            self.InitBuffer()
-            self.Refresh()
-        event.Skip()
+
         
 
     def OnPaint(self, event):
