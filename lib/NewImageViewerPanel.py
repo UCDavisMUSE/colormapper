@@ -4,21 +4,63 @@ import math
 
 
 class ImageViewerPanel(wx.Panel):
-    def __init__(self, parent, ID = -1, label = "",
-                pos = wx.DefaultPosition, size = wx.DefaultSize):
-        wx.Panel.__init__(self, parent, ID, pos, size,
-                            wx.NO_BORDER, label)
-                            
+
+
+    def __init__(self, parent, id = -1):
+        wx.Panel.__init__(self, parent, id)
+        
+        
+                                    
         # Default Parameters
         self.maintainAspectRatio = True
         self.dynamicResize = True
         self.resizeMethod = wx.IMAGE_QUALITY_HIGH
-        # wxIMAGE_QUALITY_NEAREST: Simplest and fastest algorithm.
-        # wxIMAGE_QUALITY_BILINEAR: Compromise between wxIMAGE_QUALITY_NEAREST and wxIMAGE_QUALITY_BICUBIC.
-        # wxIMAGE_QUALITY_BICUBIC: Highest quality but slowest execution time.
-        # wxIMAGE_QUALITY_BOX_AVERAGE: Use surrounding pixels to calculate an average that will be used for new pixels. This method is typically used when reducing the size of an image.
-        # wxIMAGE_QUALITY_NORMAL: Default image resizing algorithm used by wxImage::Scale(). Currently the same as wxIMAGE_QUALITY_NEAREST.
-        # wxIMAGE_QUALITY_HIGH: Best image resizing algorithm. Since version 2.9.2 this results in wxIMAGE_QUALITY_BOX_AVERAGE being used when reducing the size of the image (meaning that both the new width and height will be smaller than the original size). Otherwise wxIMAGE_QUALITY_BICUBIC is used.
+        # wxIMAGE_QUALITY_NEAREST: 
+        #   Simplest and fastest algorithm.
+        # wxIMAGE_QUALITY_BILINEAR: 
+        #   Compromise between wxIMAGE_QUALITY_NEAREST and
+        #   wxIMAGE_QUALITY_BICUBIC.
+        # wxIMAGE_QUALITY_BICUBIC: 
+        #   Highest quality but slowest execution time.
+        # wxIMAGE_QUALITY_BOX_AVERAGE: 
+        #   Use surrounding pixels to calculate an
+        #   average that will be used for new pixels. 
+        #   This method is typically used when reducing
+        #   the size of an image.
+        # wxIMAGE_QUALITY_NORMAL:
+        #   Default image resizing algorithm used 
+        #   by wxImage::Scale(). Currently the same 
+        #   as wxIMAGE_QUALITY_NEAREST.
+        # wxIMAGE_QUALITY_HIGH: 
+        #   Best image resizing algorithm. Since 
+        #   version 2.9.2 this results in 
+        #   wxIMAGE_QUALITY_BOX_AVERAGE being used when
+        #   reducing the size of the image (meaning that 
+        #   both the new width and height will be smaller 
+        #   than the original size). 
+        #   Otherwise wxIMAGE_QUALITY_BICUBIC is used.
+        
+        self.zoomToFit = False
+        self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
+            1.25, 1.5, 1.75, 2.0, 3.0, 4.0, 6.0, 8.0]
+        self.zoomIndex = 5
+        self.zoomValue = self.zoomValues[self.zoomIndex]
+        
+        
+        
+        
+        # Temporary values
+        self.resizedWidth = 1
+        self.resizedHeight = 1
+        self.displayWidth = 1
+        self.displayHeight = 1
+        
+        
+        
+        
+        
+        
+        
         self.display_width = 1      # This is a temporary parameter
         self.display_height = 1     # This is a temporary parameter
         self.zoomFactor = 1.0       # This is a temporary parameter
@@ -47,15 +89,47 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.OnSize)       
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+#        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
         # Mouse event handlers                
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-        self.Bind(wx.EVT_MOTION, self.OnMotion)
-        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+#        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+#        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+#        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+#        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
+#        self.Bind(wx.EVT_MOTION, self.OnMotion)
+#        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         
+
+
+    def InitBuffer(self):
+        # Setup Display Context equal to size of area to be painted
+        (view_width, view_height) = self.GetClientSize()
+        self.buffer = wx.EmptyBitmap(view_width,view_height)
+        dc = wx.BufferedDC(None, self.buffer)
+        
+        # Draw translated bitmap if it contains data
+        if self.image.Ok():
+            oldWidth = self.display_width
+            oldHeight = self.display_height
+            (self.display_width, self.display_height) = \
+                self.GetImageDisplaySize()
+    
+            if (self.newImageData or oldWidth != self.display_width
+                or oldHeight != self.display_height):
+                self.displayedImage = \
+                    self.image.Scale(self.display_width, self.display_height, 
+                    quality = self.resizeMethod)
+                self.bmp = wx.BitmapFromImage(self.displayedImage)
+                self.newImageData = False
+            dc.DrawBitmap(self.bmp, self.translation[0],
+                self.translation[1], True)
+        self.reInitBuffer = False
+        
+
+
+
+
+
+
     def OnLeaveWindow(self, event):
         self.InitBuffer()
         self.Refresh()
@@ -102,8 +176,10 @@ class ImageViewerPanel(wx.Panel):
         if self.viewMode == 3:
             if event.Dragging() and event.LeftIsDown():
                 newPos = event.GetPositionTuple()
-                delta = (newPos[0] - self.pos[0], newPos[1] - self.pos[1])
-                self.translation = (self.oldTranslation[0] + delta[0], self.oldTranslation[1] + delta[1])
+                delta = (newPos[0] - self.pos[0],
+                    newPos[1] - self.pos[1])
+                self.translation = (self.oldTranslation[0] + delta[0],
+                    self.oldTranslation[1] + delta[1])
                 self.reInitBuffer = True
                 
         # Draw crosshairs if crosshairs are enabled
@@ -147,17 +223,20 @@ class ImageViewerPanel(wx.Panel):
         if self.image.Ok():
             oldWidth = self.display_width
             oldHeight = self.display_height
-            (self.display_width, self.display_height) = self.GetImageDisplaySize()
+            (self.display_width, self.display_height) = \
+                self.GetImageDisplaySize()
     
-            if self.newImageData or oldWidth != self.display_width or oldHeight != self.display_height:
-                self.displayedImage = self.image.Scale(self.display_width, self.display_height, 
+            if (self.newImageData or oldWidth != self.display_width
+                or oldHeight != self.display_height):
+                self.displayedImage = \
+                    self.image.Scale(self.display_width, self.display_height, 
                     quality = self.resizeMethod)
                 self.bmp = wx.BitmapFromImage(self.displayedImage)
                 self.newImageData = False
-            dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
+            dc.DrawBitmap(self.bmp, self.translation[0],
+                self.translation[1], True)
             
         position = event.GetPositionTuple()            
-        #dc.CrossHair(*position)        
         dc.DrawLine(0, position[1], view_width, position[1])
         dc.DrawLine(position[0], 0, position[0], view_height)
         
@@ -168,27 +247,7 @@ class ImageViewerPanel(wx.Panel):
             
 
 
-    def InitBuffer(self):
-        # Setup Display Context equal to size of area to be painted
-        (view_width, view_height) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(view_width,view_height)
-        dc = wx.BufferedDC(None, self.buffer)
-        
-        # Draw translated bitmap if it contains data
-        if self.image.Ok():
-            oldWidth = self.display_width
-            oldHeight = self.display_height
-            (self.display_width, self.display_height) = self.GetImageDisplaySize()
-    
-            if self.newImageData or oldWidth != self.display_width or oldHeight != self.display_height:
-                self.displayedImage = self.image.Scale(self.display_width, self.display_height, 
-                    quality = self.resizeMethod)
-                self.bmp = wx.BitmapFromImage(self.displayedImage)
-                self.newImageData = False
-            dc.DrawBitmap(self.bmp, self.translation[0], self.translation[1], True)
-
-        self.reInitBuffer = False
-        
+   
 
     def OnIdle(self, event):
         if self.reInitBuffer:
@@ -238,12 +297,45 @@ class ImageViewerPanel(wx.Panel):
         return (display_width, display_height) 
 
 
+
+    
+    ## Get and Set Methods
+
     def SetImage(self, image):
         self.image = image
-        self.newImageData = True
-        self.Refresh()
+        self.reInitBuffer = True
+        
+    def GetImage(self):
+        return self.image
+        
+    def GetDisplayedImage(self):
+        # This should return the portion of the image
+        # that is actually displayed
+        return self.image
 
+    def SetZoomToFit(self, value):
+        if self.zoomToFit:
+            # Was on
+            if value:
+                # Is still on
+                pass # No need to do anything
+            else:
+                # Is now off
+                self.zoomToFit = value
+        else:
+            # Was off
+            if value:
+                # Is now on
+                self.zoomToFit = value
+                
+                # Recalculate the size of the image
+                # Resize appropriately
+                # Display
+                self.reInitBuffer = True
 
+    def GetZoomToFit(self):
+        return self.zoomToFit
+        
 
 
 
@@ -263,16 +355,20 @@ class ImageControlPanel(wx.Panel):
         self.imageViewerPanel = imageViewerPanel
 
         # Construct controls
-        self.checkBox = wx.CheckBox(self, -1, "Maintain Aspect Ratio", (0, 0), (200, 20))
-        self.checkBox.SetValue(self.imageViewerPanel.maintainAspectRatio)
+        self.checkBox = wx.CheckBox(self, -1, "Maintain Aspect Ratio",
+            (0, 0), (200, 20))
+        self.checkBox.SetValue(self.imageViewerPanel.GetZoomToFit())
 
-        self.checkBox2 = wx.CheckBox(self, -1, "Dynamic Resize", (0, 20), (200, 20))
+        self.checkBox2 = wx.CheckBox(self, -1, "Dynamic Resize", 
+            (0, 20), (200, 20))
         self.checkBox2.SetValue(self.imageViewerPanel.dynamicResize)
-
-        self.checkBox3 = wx.CheckBox(self, -1, "Show Image", (200, 0), (200, 20))
-        self.checkBox3.SetValue(False)
         
-        self.choice = wx.Choice(self, -1, (0, 40), choices=self.imageViewerPanel.viewModes)
+        self.checkBox3 = wx.CheckBox(self, -1, "Zoom to Fit",
+            (0, 40), (200, 20))
+        self.checkBox3.SetValue(self.imageViewerPanel.zoomToFit)
+        
+        self.choice = wx.Choice(self, -1, (0, 60),
+            choices=self.imageViewerPanel.viewModes)
         self.choice.SetSelection(self.imageViewerPanel.viewMode)
         
 
@@ -351,7 +447,8 @@ class ImageViewerFrame(wx.Frame):
         # This code imports the image
         if self.filename:
             try:
-                self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+                self.SetTitle(self.title + ' - ' +
+                    os.path.split(self.filename)[1])
                 self.currentDirectory = os.path.split(self.filename)[0]
                 fileExtension = os.path.splitext(self.filename)[1].lower()
                 if fileExtension == ".png":
