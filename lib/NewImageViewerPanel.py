@@ -1,5 +1,7 @@
 import wx
+import os
 import math
+
 
 class ImageViewerPanel(wx.Panel):
     def __init__(self, parent, ID = -1, label = "",
@@ -236,7 +238,10 @@ class ImageViewerPanel(wx.Panel):
         return (display_width, display_height) 
 
 
-
+    def SetImage(self, image):
+        self.image = image
+        self.newImageData = True
+        self.Refresh()
 
 
 
@@ -287,6 +292,9 @@ class ControlledImageViewerPanel(wx.Panel):
         boxSizer.Add(self.imageControlPanel, 0, wx.EXPAND)
         boxSizer.Add(self.imageViewerPanel, 1, wx.EXPAND)
         self.SetSizer(boxSizer)
+        
+    def SetImage(self, image):
+        self.imageViewerPanel.SetImage(image)
 
 
 class ImageViewerFrame(wx.Frame):
@@ -294,6 +302,12 @@ class ImageViewerFrame(wx.Frame):
     This is a basic frame containing functionality to use the
     ControlledImageViewerPanel class.
     """
+    # Class data
+    imageWildcard = "All Files (*.*)|*.*|" \
+                    "PNG (*.png)|*.png|" \
+                    "JPEG (*.jpg, *.jpeg)|*.jpg;*.jpeg|" \
+                    "TIFF (*.tif, *.tiff)|*.tif;*.tiff|" \
+                    "BMP (*.bmp)|*.bmp|"
 
     def __init__(self):
         self.title = "Image Viewer"
@@ -302,27 +316,89 @@ class ImageViewerFrame(wx.Frame):
         # High-level application data
         self.filename = ""
         self.currentDirectory = ""
+        self.image = wx.EmptyImage()
 
         # Attributes 
-        statusBar = self.createStatusBar()
-        menuBar = self.createMenuBar()
-        controlledImageViewerPanel = ControlledImageViewerPanel(self)
+        self.statusBar = self.createStatusBar()
+        self.menuBar = self.createMenuBar()
+        self.controlledImageViewerPanel = ControlledImageViewerPanel(self)
 
         # Add drop target
         dropTarget = MyFileDropTarget(self)
         self.SetDropTarget(dropTarget)
         
-    def OnOpen(self):
-        pass
+    # Get and Set Methods
+    
+    def SetImage(self, image):
+        self.image = image
+        # Set the image data of the Controlled Image ViewerPanel
+        self.controlledImageViewerPanel.SetImage(self.image)
+         
         
-    def OnCloseWindow(self):
-        pass
+    # Event Handlers        
+    def OnOpen(self, event):
+        dlg = wx.FileDialog(self, "Open image...",
+                os.getcwd(), style=wx.OPEN,
+                wildcard = self.imageWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)                
+        if dlg.ShowModal() == wx.ID_OK:
+            self.filename = dlg.GetPath()
+            self.OpenImage()
+        dlg.Destroy()
+
+    def OpenImage(self):        
+        # This code imports the image
+        if self.filename:
+            try:
+                self.SetTitle(self.title + ' - ' + os.path.split(self.filename)[1])
+                self.currentDirectory = os.path.split(self.filename)[0]
+                fileExtension = os.path.splitext(self.filename)[1].lower()
+                if fileExtension == ".png":
+                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
+                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
+                elif fileExtension == ".tif" or fileExtension == ".tiff":
+                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
+                elif fileExtension == ".bmp":
+                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
+                else:
+                    # nolog = wx.LogNull() # Uncommenting will not log errors
+                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
+                    #del nolog
+            except:
+                wx.MessageBox("Error importing %s." % self.filename, "oops!",
+                    stype=wx.OK|wx.ICON_EXCLAMATION)        
         
-    def OnCopy(self):
-        pass
+    def OnCloseWindow(self, event):
+        self.Destroy()        
         
-    def OnPaste(self):
+    def OnCopy(self, event):
         pass
+#         if self.outputImagePanel.image.IsOk():
+#             data = wx.BitmapDataObject()
+#             data.SetBitmap(wx.BitmapFromImage(self.outputImagePanel.image))
+#             if wx.TheClipboard.Open():
+#                 wx.TheClipboard.SetData(data)
+#                 wx.TheClipboard.Close()
+#             else:
+#                 wx.MessageBox("Unable to open the clipboard", "Error")
+        
+    def OnPaste(self, event):
+        pass
+#         success = False
+#         data = wx.BitmapDataObject()
+#         if wx.TheClipboard.Open():
+#             success = wx.TheClipboard.GetData(data)
+#             wx.TheClipboard.Close()
+#         if success:
+#             self.inputImagePanel.image = wx.ImageFromBitmap(data.GetBitmap())
+#             self.inputImagePanel.newImageData = True
+#             self.inputImagePanel.reInitBuffer = True
+#             self.outputImagePanel.image = wx.EmptyImage()
+#             self.outputImagePanel.newImageData = True
+#             self.outputImagePanel.reInitBuffer = True
+#             self.unmixPanel.recomputeUnmix = True
         
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
@@ -358,6 +434,7 @@ class ImageViewerFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, eachHandler, menuItem)
         return menu   
         
+
 class MyFileDropTarget(wx.FileDropTarget):
 
     def __init__(self, window):
@@ -370,9 +447,8 @@ class MyFileDropTarget(wx.FileDropTarget):
                 "This application only supports opening a single image.",
                 "Multiple images detected", wx.OK | wx.ICON_EXCLAMATION)
             return
-#         if os.path.splitext(filenames[0])[1].lower() == ".jpg":
-#             self.window.filename = filenames[0]
-#             self.window.ImportImage()
+        self.window.filename = filenames[0]
+        self.window.OpenImage()
         
 
 if __name__ == "__main__":
