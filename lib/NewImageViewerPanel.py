@@ -127,6 +127,7 @@ class ImageViewerPanel(wx.Panel):
         
     def OnMotion(self, event):
         if self.drawCrosshair:
+            print(dir(event))
             self.crosshairPosition = event.GetPositionTuple()
             self.ReInitBuffer() # Redraw with crosshair
             
@@ -419,10 +420,28 @@ class ImageControlPanel(wx.Panel):
             self.imageViewerPanel.GetDrawCrosshair())
         self.Bind(wx.EVT_CHECKBOX, self.OnDrawCrosshairChecked,
             self.drawCrosshairCheckBox)
-        
-#        self.choice = wx.Choice(self, -1, (0, 60),
-#            choices=self.imageViewerPanel.viewModes)
-#        self.choice.SetSelection(self.imageViewerPanel.viewMode)
+            
+        self.zoomInButton = \
+            wx.Button(self, -1, "Zoom In",
+            (0, 80), (100, 20))
+            
+        self.zoomOutButton = \
+            wx.Button(self, -1, "Zoom Out",
+            (100, 80), (100, 20))
+            
+        self.actualSizeButton = \
+            wx.Button(self, -1, "Actual Size",
+            (200, 80), (100, 20))
+            
+            
+        zoomChoices = [100*x for x in self.imageViewerPanel.zoomValues]
+        zoomChoices = map(str, zoomChoices)
+        zoomChoices = [x + "%" for x in zoomChoices]
+        self.zoomChoice = \
+            wx.Choice(self, -1, 
+            (320, 80), (100, 20),
+            choices = zoomChoices )
+        self.zoomChoice.SetSelection(self.imageViewerPanel.zoomIndex)
         
     # Event Handlers        
         
