@@ -12,8 +12,6 @@ class ImageViewerPanel(wx.Panel):
         
                                     
         # Default Parameters
-        self.maintainAspectRatio = True
-        self.dynamicResize = True
         self.resizeMethod = wx.IMAGE_QUALITY_HIGH
         # wxIMAGE_QUALITY_NEAREST: 
         #   Simplest and fastest algorithm.
@@ -40,20 +38,39 @@ class ImageViewerPanel(wx.Panel):
         #   than the original size). 
         #   Otherwise wxIMAGE_QUALITY_BICUBIC is used.
         
+
+        
+        
+        # Default Parameters
+        self.maintainAspectRatio = True
+        self.idleBuffer = True
         self.zoomToFit = False
+        self.drawCrosshair = True
+
+
+        # Working on these        
         self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
             1.25, 1.5, 1.75, 2.0, 3.0, 4.0, 6.0, 8.0]
         self.zoomIndex = 5
         self.zoomValue = self.zoomValues[self.zoomIndex]
-        
-        
-        
+                
+
         
         # Temporary values
+        self.displayWidth = 1
+        self.displayHeight = 1        
         self.resizedWidth = 1
         self.resizedHeight = 1
-        self.displayWidth = 1
-        self.displayHeight = 1
+        self.buffer = None # This is the entire dc buffer
+        self.image = wx.EmptyImage() # Initialize with an empty image
+        self.resizedImage = wx.EmptyImage()
+        self.bitmap = wx.EmptyBitmap(1,1) # This is a bitmap of the resized
+        self.crosshairPosition = (0,0)
+        
+        
+                
+        
+        
         
         
         
@@ -76,19 +93,21 @@ class ImageViewerPanel(wx.Panel):
             'Pan']
         self.viewMode = 1
         self.SetBackgroundColour("Black")
-        self.image = wx.EmptyImage() # Initialize with an empty image
-        self.displayedImage = wx.EmptyImage()
-        self.bmp = wx.EmptyBitmap(1,1)
+
         self.newImageData = False
-        self.drawCrosshair = False
+
         
         # Initialize Buffer
-        self.InitBuffer()
+        if self.idleBuffer:
+            self.InitBuffer()
         
         # Event handlers
         self.Bind(wx.EVT_SIZE, self.OnSize)       
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
+
+        
 #        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
         # Mouse event handlers                
 #        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -97,29 +116,153 @@ class ImageViewerPanel(wx.Panel):
 #        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
 #        self.Bind(wx.EVT_MOTION, self.OnMotion)
 #        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
-        
 
+     
+     
+    ## Event Handlers
+    
+    def OnSize(self, event):
+        self.ReInitBuffer()
+
+    def OnPaint(self, event):
+        dc = wx.BufferedPaintDC(self, self.buffer)  
+        
     def OnIdle(self, event):
-        if self.reInitBuffer:
+        # Essentially, self.idleBuffer determines whether
+        # the buffer is created when the program is idle. 
+        # If set True, the UI chrome is more responsive on slow
+        # systems, if set False, the content is more responsive
+        # on fast systems. 
+        if self.idleBuffer and self.reInitBuffer:
             self.InitBuffer()
             self.Refresh()
-        event.Skip()
-
-
-    def InitBuffer(self):
-        if not self.image.Ok():
-            return
+        self.reInitBuffer = False
         
-        # Setup display context equal to size of area to be painted
+    def OnMotion(self, event):
+        if self.drawCrosshair:
+            self.crosshairPosition = event.GetPositionTuple()
+            self.ReInitBuffer() # Redraw with crosshair
+       
+        
+    ## Helper Methods           
+        
+    def InitBuffer(self):
+        """
+        This is where all drawing should occur.
+        """
         (self.displayWidth, self.displayHeight) = self.GetClientSize()
         self.buffer = wx.EmptyBitmap(self.displayWidth, self.displayHeight)
-        dc = wx.BufferedDC(None, self.buffer)
+        dc = wx.MemoryDC(self.buffer)
         
-        dc.DrawBitmap(self.bitmap)
-        self.reInitBuffer = False
-           
+        if not self.image.Ok():
+            return
+            
+        self.ResizeImage()            
+        self.bitmap = wx.BitmapFromImage(self.resizedImage)
+        dc.DrawBitmap(self.bitmap, 0, 0, True)
+        
+        if self.drawCrosshair:
+            dc.DrawLine(0, self.crosshairPosition[1],
+                self.displayWidth, self.crosshairPosition[1])
+            dc.DrawLine(self.crosshairPosition[0], 0,
+                self.crosshairPosition[0], self.displayHeight)
+        
+    
+    def ReInitBuffer(self):
+        if self.idleBuffer:
+            self.reInitBuffer = True
+        else:
+            self.InitBuffer()
+            self.Refresh()   
+    
+    def ResizeImage(self):
+        # First determine resized width and height
+        if self.zoomToFit:
+            if self.maintainAspectRatio:
+                (imageWidth, imageHeight) = self.image.GetSize()
+                self.resizedWidth = min(self.displayWidth,
+                    math.floor(1.0*imageWidth*self.displayHeight/imageHeight))
+                self.resizedHeight = min(self.displayHeight,
+                    math.floor(1.0*imageHeight*self.displayWidth/imageWidth))
+                self.zoomValue = 1.0*self.displayWidth/imageWidth
+            else:
+                self.resizedWidth = self.displayWidth
+                self.resizedHeight = self.displayHeight
+                self.zoomValue = None
+        else:
+            # Actual size for now
+            (self.resizedWidth, self.resizedHeight) = self.image.GetSize()
+            self.zoomValue = 1.0
+        
+        # If empty image or different than current, or perform resizing
+        if self.resizedImage.IsOk():
+            if (self.resizedImage.GetWidth() != self.resizedWidth or
+                self.resizedImage.GetHeight() != self.resizedHeight):
+                self.resizedImage = \
+                    self.image.Scale(self.resizedWidth, self.resizedHeight,
+                        quality = self.resizeMethod)
+        else:
+            self.resizedImage = \
+                self.image.Scale(self.resizedWidth, self.resizedHeight,
+                    quality = self.resizeMethod)        
+        
+        
+
+
+
+
+        
+        
+        
+    
+        
+
+
+  
+
+    def GetImageDisplaySize(self):
+        # Should really clean this up!
+        if not self.image.Ok():
+            return (1,1)
+    
+        if self.viewMode == 0:
+            (display_width, display_height) = self.image.GetSize()
+            self.zoomFactor = 1.0
+        elif self.viewMode == 1:
+            self.translation = (0,0)
+            (view_width, view_height) = self.GetClientSize()
+            if self.maintainAspectRatio:
+                (img_width, img_height) = self.image.GetSize()
+                display_width  = min(view_width,
+                    math.floor(1.0*img_width*view_height/img_height))
+                display_height = min(view_height,
+                    math.floor(1.0*img_height*view_width/img_width))
+                self.zoomFactor = 1.0*display_width/img_width
+            else:
+                (display_width, display_height) = (view_width, view_height)
+        elif self.viewMode == 2 or self.viewMode == 3:
+            (img_width, img_height) = self.image.GetSize()
+            display_width = round(1.0*self.zoomFactor*img_width)
+            display_height = round(1.0*self.zoomFactor*img_height)
+                
+        return (display_width, display_height) 
+                
+                
+        
+        
+        # 
+#     
+#         
+#         self.reInitBuffer = True
+#         if self.dynamicResize:
+#             if self.reInitBuffer:
+#                   self.InitBuffer()
+#                   self.Refresh()      
+#         event.Skip()  
+#         
             
         
+      
     
 
 
@@ -195,7 +338,7 @@ class ImageViewerPanel(wx.Panel):
                 pass
             self.ReleaseMouse()
         
-    def OnMotion(self, event):
+    def OldOnMotion(self, event):
         if self.viewMode == 3:
             if event.Dragging() and event.LeftIsDown():
                 newPos = event.GetPositionTuple()
@@ -275,87 +418,48 @@ class ImageViewerPanel(wx.Panel):
 
         
 
-    def OnPaint(self, event):
-        dc = wx.BufferedPaintDC(self, self.buffer)
-                  
 
-    def OnSize(self, event):
-        self.reInitBuffer = True
-        if self.dynamicResize:
-            if self.reInitBuffer:
-                  self.InitBuffer()
-                  self.Refresh()      
-        event.Skip()  
-  
 
-    def GetImageDisplaySize(self):
-        # Should really clean this up!
-        if not self.image.Ok():
-            return (1,1)
-    
-        if self.viewMode == 0:
-            (display_width, display_height) = self.image.GetSize()
-            self.zoomFactor = 1.0
-        elif self.viewMode == 1:
-            self.translation = (0,0)
-            (view_width, view_height) = self.GetClientSize()
-            if self.maintainAspectRatio:
-                (img_width, img_height) = self.image.GetSize()
-                display_width  = min(view_width,
-                    math.floor(1.0*img_width*view_height/img_height))
-                display_height = min(view_height,
-                    math.floor(1.0*img_height*view_width/img_width))
-                self.zoomFactor = 1.0*display_width/img_width
-            else:
-                (display_width, display_height) = (view_width, view_height)
-        elif self.viewMode == 2 or self.viewMode == 3:
-            (img_width, img_height) = self.image.GetSize()
-            display_width = round(1.0*self.zoomFactor*img_width)
-            display_height = round(1.0*self.zoomFactor*img_height)
-                
-        return (display_width, display_height) 
+
 
 
 
     
     ## Get and Set Methods
+    
+    def GetImage(self):
+        return self.image    
 
     def SetImage(self, image):
         self.image = image
-        self.reInitBuffer = True
-        
-    def GetImage(self):
-        return self.image
+        self.resizedImage = wx.EmptyImage() # Clear old resized image
+        self.ReInitBuffer()
         
     def GetDisplayedImage(self):
         # This should return the portion of the image
         # that is actually displayed
         return self.image
 
-    def SetZoomToFit(self, value):
-        if self.zoomToFit:
-            # Was on
-            if value:
-                # Is still on
-                pass # No need to do anything
-            else:
-                # Is now off
-                self.zoomToFit = value
-        else:
-            # Was off
-            if value:
-                # Is now on
-                self.zoomToFit = value
-                
-                # Recalculate the size of the image
-                # Resize appropriately
-                # Display
-                self.reInitBuffer = True
-
     def GetZoomToFit(self):
         return self.zoomToFit
-        
 
+    def SetZoomToFit(self, value):
+        self.zoomToFit = value
+        self.ReInitBuffer()
+        
+    def GetIdleBuffer(self):
+        return self.idleBuffer
+        
+    def SetIdleBuffer(self, value):
+        self.idleBuffer = value
+
+    def GetMaintainAspectRatio(self):
+        return self.maintainAspectRatio        
+        
+    def SetMaintainAspectRatio(self, value):
+        self.maintainAspectRatio = value
+        self.ReInitBuffer()
+                
 
 
 
@@ -374,22 +478,47 @@ class ImageControlPanel(wx.Panel):
         self.imageViewerPanel = imageViewerPanel
 
         # Construct controls
-        self.checkBox = wx.CheckBox(self, -1, "Maintain Aspect Ratio",
+        self.maintainAspectRatioCheckBox = \
+            wx.CheckBox(self, -1, "Maintain Aspect Ratio",
             (0, 0), (200, 20))
-        self.checkBox.SetValue(self.imageViewerPanel.GetZoomToFit())
+        self.maintainAspectRatioCheckBox.SetValue(
+            self.imageViewerPanel.GetMaintainAspectRatio())
+        self.Bind(wx.EVT_CHECKBOX, self.OnMaintainAspectRatioChecked,
+            self.maintainAspectRatioCheckBox)
 
-        self.checkBox2 = wx.CheckBox(self, -1, "Dynamic Resize", 
+        self.idleBufferCheckBox = \
+            wx.CheckBox(self, -1, "Idle Buffer", 
             (0, 20), (200, 20))
-        self.checkBox2.SetValue(self.imageViewerPanel.dynamicResize)
-        
-        self.checkBox3 = wx.CheckBox(self, -1, "Zoom to Fit",
+        self.idleBufferCheckBox.SetValue(
+            self.imageViewerPanel.GetIdleBuffer())
+        self.Bind(wx.EVT_CHECKBOX, self.OnIdleBufferChecked,
+            self.idleBufferCheckBox)
+            
+        self.zoomToFitCheckBox = \
+            wx.CheckBox(self, -1, "Zoom to Fit",
             (0, 40), (200, 20))
-        self.checkBox3.SetValue(self.imageViewerPanel.zoomToFit)
+        self.zoomToFitCheckBox.SetValue(
+            self.imageViewerPanel.GetZoomToFit())
+        self.Bind(wx.EVT_CHECKBOX, self.OnZoomToFitChecked,
+            self.zoomToFitCheckBox)
         
-        self.choice = wx.Choice(self, -1, (0, 60),
-            choices=self.imageViewerPanel.viewModes)
-        self.choice.SetSelection(self.imageViewerPanel.viewMode)
+#        self.choice = wx.Choice(self, -1, (0, 60),
+#            choices=self.imageViewerPanel.viewModes)
+#        self.choice.SetSelection(self.imageViewerPanel.viewMode)
         
+    # Event Handlers        
+        
+    def OnMaintainAspectRatioChecked(self, event):
+        self.imageViewerPanel.SetMaintainAspectRatio(
+            self.maintainAspectRatioCheckBox.IsChecked())
+            
+    def OnIdleBufferChecked(self, event):
+        self.imageViewerPanel.SetIdleBuffer(
+            self.idleBufferCheckBox.IsChecked())
+
+    def OnZoomToFitChecked(self, event):
+        self.imageViewerPanel.SetZoomToFit(
+            self.zoomToFitCheckBox.IsChecked())        
 
 class ControlledImageViewerPanel(wx.Panel):
     """
@@ -465,26 +594,44 @@ class ImageViewerFrame(wx.Frame):
     def OpenImage(self):        
         # This code imports the image
         if self.filename:
-            try:
-                self.SetTitle(self.title + ' - ' +
-                    os.path.split(self.filename)[1])
-                self.currentDirectory = os.path.split(self.filename)[0]
-                fileExtension = os.path.splitext(self.filename)[1].lower()
-                if fileExtension == ".png":
-                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
-                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
-                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
-                elif fileExtension == ".tif" or fileExtension == ".tiff":
-                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
-                elif fileExtension == ".bmp":
-                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
-                else:
-                    # nolog = wx.LogNull() # Uncommenting will not log errors
-                    self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
-                    #del nolog
-            except:
-                wx.MessageBox("Error importing %s." % self.filename, "oops!",
-                    stype=wx.OK|wx.ICON_EXCLAMATION)        
+            self.SetTitle(self.title + ' - ' +
+                os.path.split(self.filename)[1])
+            self.currentDirectory = os.path.split(self.filename)[0]
+            fileExtension = os.path.splitext(self.filename)[1].lower()
+            if fileExtension == ".png":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
+            elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
+            elif fileExtension == ".tif" or fileExtension == ".tiff":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
+            elif fileExtension == ".bmp":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
+            else:
+                # nolog = wx.LogNull() # Uncommenting will not log errors
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
+                #del nolog
+                    
+#         if self.filename:
+#             try:
+#                 self.SetTitle(self.title + ' - ' +
+#                     os.path.split(self.filename)[1])
+#                 self.currentDirectory = os.path.split(self.filename)[0]
+#                 fileExtension = os.path.splitext(self.filename)[1].lower()
+#                 if fileExtension == ".png":
+#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
+#                 elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
+#                 elif fileExtension == ".tif" or fileExtension == ".tiff":
+#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
+#                 elif fileExtension == ".bmp":
+#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
+#                 else:
+#                     # nolog = wx.LogNull() # Uncommenting will not log errors
+#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
+#                     #del nolog
+#             except:
+#                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
+#                     stype=wx.OK|wx.ICON_EXCLAMATION)        
         
     def OnCloseWindow(self, event):
         self.Destroy()        

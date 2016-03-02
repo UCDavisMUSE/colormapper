@@ -1,4 +1,5 @@
 import wx
+import os
 import math
 
 class ImageViewerPanel(wx.Panel):
@@ -320,6 +321,12 @@ class ImageViewerFrame(wx.Frame):
     This is a basic frame containing functionality to use the
     ControlledImageViewerPanel class.
     """
+    # Class data
+    imageWildcard = "All Files (*.*)|*.*|" \
+                    "PNG (*.png)|*.png|" \
+                    "JPEG (*.jpg, *.jpeg)|*.jpg;*.jpeg|" \
+                    "TIFF (*.tif, *.tiff)|*.tif;*.tiff|" \
+                    "BMP (*.bmp)|*.bmp|"    
 
     def __init__(self):
         self.title = "Image Viewer"
@@ -332,14 +339,47 @@ class ImageViewerFrame(wx.Frame):
         # Attributes 
         statusBar = self.createStatusBar()
         menuBar = self.createMenuBar()
-        controlledImageViewerPanel = ControlledImageViewerPanel(self)
+        self.controlledImageViewerPanel = ControlledImageViewerPanel(self)
 
         # Add drop target
         dropTarget = MyFileDropTarget(self)
         self.SetDropTarget(dropTarget)
         
     def OnOpen(self, event):
-        pass
+        dlg = wx.FileDialog(self, "Open image...",
+                os.getcwd(), style=wx.OPEN,
+                wildcard = self.imageWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)                
+        if dlg.ShowModal() == wx.ID_OK:
+            self.filename = dlg.GetPath()
+            self.OpenImage()
+        dlg.Destroy()
+        
+    def OpenImage(self):        
+        # This code imports the image
+        if self.filename:
+            try:
+                self.SetTitle(self.title + ' - ' +
+                    os.path.split(self.filename)[1])
+                self.currentDirectory = os.path.split(self.filename)[0]
+                fileExtension = os.path.splitext(self.filename)[1].lower()
+                if fileExtension == ".png":
+                    self.controlledImageViewerPanel.imageViewerPanel.image = wx.Image(self.filename, wx.BITMAP_TYPE_PNG)
+                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                    self.controlledImageViewerPanel.imageViewerPanel.image = wx.Image(self.filename, wx.BITMAP_TYPE_JPEG)
+                elif fileExtension == ".tif" or fileExtension == ".tiff":
+                    self.controlledImageViewerPanel.imageViewerPanel.image = wx.Image(self.filename, wx.BITMAP_TYPE_TIF)
+                elif fileExtension == ".bmp":
+                    self.controlledImageViewerPanel.imageViewerPanel.image = wx.Image(self.filename, wx.BITMAP_TYPE_BMP)
+                else:
+                    # nolog = wx.LogNull() # Uncommenting will not log errors
+                    self.imageViewerPanel.image = wx.Image(self.filename, wx.BITMAP_TYPE_ANY)
+                    #del nolog
+                self.controlledImageViewerPanel.imageViewerPanel.newImageData = True
+            except:
+                wx.MessageBox("Error importing %s." % self.filename, "oops!",
+                    stype=wx.OK|wx.ICON_EXCLAMATION)          
         
     def OnCloseWindow(self, event):
         pass
