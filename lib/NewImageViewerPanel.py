@@ -10,6 +10,8 @@ import math
 #       more complicated with a zoom loupe)
 #   - Figure out how best to zoom in to large images, zooming
 #       out seems to work okay.
+#   - Maybe a mouse mode where one can adjust brightness
+#       and contrast by scrubbing along X and Y directions
 
 
 class ImageViewerPanel(wx.Panel):
