@@ -5,13 +5,11 @@ import math
 
 class ImageViewerPanel(wx.Panel):
 
-
     def __init__(self, parent, id = -1):
         wx.Panel.__init__(self, parent, id)
-        
-        
                                     
         # Default Parameters
+        self.SetBackgroundColour("Black")        
         self.resizeMethod = wx.IMAGE_QUALITY_HIGH
         # wxIMAGE_QUALITY_NEAREST: 
         #   Simplest and fastest algorithm.
@@ -38,14 +36,11 @@ class ImageViewerPanel(wx.Panel):
         #   than the original size). 
         #   Otherwise wxIMAGE_QUALITY_BICUBIC is used.
         
-
-        
-        
         # Default Parameters
         self.maintainAspectRatio = True
         self.idleBuffer = True
         self.zoomToFit = False
-        self.drawCrosshair = True
+        self.drawCrosshair = False
 
 
         # Working on these        
@@ -56,7 +51,7 @@ class ImageViewerPanel(wx.Panel):
                 
 
         
-        # Temporary values
+        # Temporary state variables
         self.displayWidth = 1
         self.displayHeight = 1        
         self.resizedWidth = 1
@@ -66,20 +61,12 @@ class ImageViewerPanel(wx.Panel):
         self.resizedImage = wx.EmptyImage()
         self.bitmap = wx.EmptyBitmap(1,1) # This is a bitmap of the resized
         self.crosshairPosition = (0,0)
+        self.cursorInWindow = True
         
         
-                
+
         
-        
-        
-        
-        
-        
-        
-        
-        
-        self.display_width = 1      # This is a temporary parameter
-        self.display_height = 1     # This is a temporary parameter
+        # Old values        
         self.zoomFactor = 1.0       # This is a temporary parameter
         self.zoomFactorMax = 8.0
         self.zoomFactorMin = 1.0/self.zoomFactorMax
@@ -92,9 +79,8 @@ class ImageViewerPanel(wx.Panel):
             'Zoom',
             'Pan']
         self.viewMode = 1
-        self.SetBackgroundColour("Black")
 
-        self.newImageData = False
+
 
         
         # Initialize Buffer
@@ -105,16 +91,17 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.OnSize)       
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
+        # Mouse events
         self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_ENTER_WINDOW, self.OnEnterWindow)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
 
-        
-#        self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+
         # Mouse event handlers                
 #        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
 #        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
 #        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
 #        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-#        self.Bind(wx.EVT_MOTION, self.OnMotion)
 #        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
 
      
@@ -142,8 +129,22 @@ class ImageViewerPanel(wx.Panel):
         if self.drawCrosshair:
             self.crosshairPosition = event.GetPositionTuple()
             self.ReInitBuffer() # Redraw with crosshair
+            
+    def OnLeaveWindow(self, event):
+        # If the mouse leaves the ImageViewerPanel, 
+        # refresh to remove the crosshair
+        self.cursorInWindow = False
+        if self.drawCrosshair:
+            self.ReInitBuffer()
+
+    def OnEnterWindow(self, event):
+        # If the mouse returns to the ImageViewerPanel,
+        # refresh to redraw the crosshair
+        self.cursorInWindow = True
+        if self.drawCrosshair:
+            self.ReInitBuffer()
+
        
-        
     ## Helper Methods           
         
     def InitBuffer(self):
@@ -161,13 +162,12 @@ class ImageViewerPanel(wx.Panel):
                  
         dc.DrawBitmap(self.bitmap, 0, 0, True)
         
-        if self.drawCrosshair:
+        if self.drawCrosshair and self.cursorInWindow:
             dc.DrawLine(0, self.crosshairPosition[1],
                 self.displayWidth, self.crosshairPosition[1])
             dc.DrawLine(self.crosshairPosition[0], 0,
                 self.crosshairPosition[0], self.displayHeight)
         
-    
     def ReInitBuffer(self):
         if self.idleBuffer:
             self.reInitBuffer = True
@@ -209,21 +209,16 @@ class ImageViewerPanel(wx.Panel):
                 self.image.Scale(self.resizedWidth, self.resizedHeight,
                     quality = self.resizeMethod)        
             self.bitmap = wx.BitmapFromImage(self.resizedImage)
-                    
-        
-        
 
 
-
-
-        
-        
-        
     
         
 
 
-  
+
+
+
+# VVV OLD CODE VVV  
 
     def GetImageDisplaySize(self):
         # Should really clean this up!
@@ -252,60 +247,6 @@ class ImageViewerPanel(wx.Panel):
                 
         return (display_width, display_height) 
                 
-                
-        
-        
-        # 
-#     
-#         
-#         self.reInitBuffer = True
-#         if self.dynamicResize:
-#             if self.reInitBuffer:
-#                   self.InitBuffer()
-#                   self.Refresh()      
-#         event.Skip()  
-#         
-            
-        
-      
-    
-
-
-    def OldInitBuffer(self):
-        # Setup Display Context equal to size of area to be painted
-        (view_width, view_height) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(view_width,view_height)
-        dc = wx.BufferedDC(None, self.buffer)
-        
-        # Draw translated bitmap if it contains data
-        if self.image.Ok():
-            oldWidth = self.display_width
-            oldHeight = self.display_height
-            (self.display_width, self.display_height) = \
-                self.GetImageDisplaySize()
-    
-            if (self.newImageData or oldWidth != self.display_width
-                or oldHeight != self.display_height):
-                self.displayedImage = \
-                    self.image.Scale(self.display_width, self.display_height, 
-                    quality = self.resizeMethod)
-                self.bmp = wx.BitmapFromImage(self.displayedImage)
-                self.newImageData = False
-            dc.DrawBitmap(self.bmp, self.translation[0],
-                self.translation[1], True)
-        self.reInitBuffer = False
-        
-
-
-
-
-
-
-    def OnLeaveWindow(self, event):
-        self.InitBuffer()
-        self.Refresh()
-        
-
     def OnLeftDown(self, event):
         if self.viewMode == 3:
             self.pos = event.GetPositionTuple()
@@ -385,48 +326,8 @@ class ImageViewerPanel(wx.Panel):
         if self.zoomFactor < self.zoomFactorMin:
             self.zoomFactor = self.zoomFactorMin
             
-    def DrawCrosshair(self, event):
-        (view_width, view_height) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(view_width,view_height)
-        dc = wx.BufferedDC(wx.ClientDC(self), self.buffer)
-
-        # Draw translated bitmap if it contains data
-        if self.image.Ok():
-            oldWidth = self.display_width
-            oldHeight = self.display_height
-            (self.display_width, self.display_height) = \
-                self.GetImageDisplaySize()
-    
-            if (self.newImageData or oldWidth != self.display_width
-                or oldHeight != self.display_height):
-                self.displayedImage = \
-                    self.image.Scale(self.display_width, self.display_height, 
-                    quality = self.resizeMethod)
-                self.bmp = wx.BitmapFromImage(self.displayedImage)
-                self.newImageData = False
-            dc.DrawBitmap(self.bmp, self.translation[0],
-                self.translation[1], True)
-            
-        position = event.GetPositionTuple()            
-        dc.DrawLine(0, position[1], view_width, position[1])
-        dc.DrawLine(position[0], 0, position[0], view_height)
         
-
-                                
-            
-            
-            
-
-
-   
-
-
-        
-
-
-
-
-
+## ^^ OLD CODE ^^^
 
 
     
@@ -437,7 +338,9 @@ class ImageViewerPanel(wx.Panel):
 
     def SetImage(self, image):
         self.image = image
-        self.resizedImage = wx.EmptyImage() # Clear old resized image
+        # Clear old resized image, this tells
+        # InitBuffer that there is new data
+        self.resizedImage = wx.EmptyImage() 
         self.ReInitBuffer()
         
     def GetDisplayedImage(self):
@@ -472,11 +375,6 @@ class ImageViewerPanel(wx.Panel):
         self.drawCrosshair = value
         self.ReInitBuffer()
                 
-
-
-
-
-
 
 class ImageControlPanel(wx.Panel):
     """
@@ -601,6 +499,9 @@ class ImageViewerFrame(wx.Frame):
         self.image = image
         # Set the image data of the Controlled Image ViewerPanel
         self.controlledImageViewerPanel.SetImage(self.image)
+        
+    def GetImage(self):
+        return self.image
          
         
     # Event Handlers        
@@ -661,44 +562,40 @@ class ImageViewerFrame(wx.Frame):
         self.Destroy()        
         
     def OnCopy(self, event):
-        pass
-#         if self.outputImagePanel.image.IsOk():
-#             data = wx.BitmapDataObject()
-#             data.SetBitmap(wx.BitmapFromImage(self.outputImagePanel.image))
-#             if wx.TheClipboard.Open():
-#                 wx.TheClipboard.SetData(data)
-#                 wx.TheClipboard.Close()
-#             else:
-#                 wx.MessageBox("Unable to open the clipboard", "Error")
+        if self.outputImagePanel.image.IsOk():
+            data = wx.BitmapDataObject()
+            data.SetBitmap(wx.BitmapFromImage(self.GetImage()))
+            if wx.TheClipboard.Open():
+                wx.TheClipboard.SetData(data)
+                wx.TheClipboard.Close()
+            else:
+                wx.MessageBox("Unable to open the clipboard", "Error")
         
     def OnPaste(self, event):
-        pass
-#         success = False
-#         data = wx.BitmapDataObject()
-#         if wx.TheClipboard.Open():
-#             success = wx.TheClipboard.GetData(data)
-#             wx.TheClipboard.Close()
-#         if success:
-#             self.inputImagePanel.image = wx.ImageFromBitmap(data.GetBitmap())
-#             self.inputImagePanel.newImageData = True
-#             self.inputImagePanel.reInitBuffer = True
-#             self.outputImagePanel.image = wx.EmptyImage()
-#             self.outputImagePanel.newImageData = True
-#             self.outputImagePanel.reInitBuffer = True
-#             self.unmixPanel.recomputeUnmix = True
+        success = False
+        data = wx.BitmapDataObject()
+        if wx.TheClipboard.Open():
+            success = wx.TheClipboard.GetData(data)
+            wx.TheClipboard.Close()
+        if success:
+            self.SetImage(wx.ImageFromBitmap(data.GetBitmap()))
         
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
-        self.statusbar.SetFieldsCount(3)
-        self.statusbar.SetStatusWidths([200, -2, -3])        
+        # self.statusbar.SetFieldsCount(3)
+        # self.statusbar.SetStatusWidths([200, -2, -3])        
 
     def menuData(self):
         return (("&File",
-                    ("&Open...\tCtrl-O",    "Open image",   self.OnOpen),
-                    ("&Quit\tCtrl-Q",       "Quit",         self.OnCloseWindow)),
+                    ("&Open...\tCtrl-O",    "Open image",
+                        self.OnOpen),
+                    ("&Quit\tCtrl-Q",       "Quit",
+                        self.OnCloseWindow)),
                 ("&Edit",
-                    ("&Copy\tCtrl-C",       "Copy image",   self.OnCopy),
-                    ("&Paste\tCtrl-V",      "Paste image",  self.OnPaste))
+                    ("&Copy\tCtrl-C",       "Copy image",   
+                        self.OnCopy),
+                    ("&Paste\tCtrl-V",      "Paste image",  
+                        self.OnPaste))
                 )
         
     def createMenuBar(self):
