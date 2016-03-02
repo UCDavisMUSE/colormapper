@@ -5,13 +5,16 @@ import math
 # To Do:
 #   - Finish GetDisplayedImage method
 #   - Constrain translation so the image stays on the page
-#   - Create a rectangular selection box for zoom controls
 #   - Create an eyedropper tool (simple crosshair first, then
 #       more complicated with a zoom loupe)
 #   - Figure out how best to zoom in to large images, zooming
 #       out seems to work okay.
-#   - Maybe a mouse mode where one can adjust brightness
+#   - A mouse mode where one can adjust brightness
 #       and contrast by scrubbing along X and Y directions
+#   - What is the best way to ignore accidental right-click while
+#       holding down left-click (and vice-versa)?
+#       Could introduce a flag, but I feel that there must
+#       be a better way.
 
 
 class ImageViewerPanel(wx.Panel):
@@ -52,6 +55,7 @@ class ImageViewerPanel(wx.Panel):
         self.idleBuffer = False
         self.zoomToFit = False
         self.drawCrosshair = False
+        self.drawRectangle = False
         self.mouseModes = [
             'Disabled',
             'Pan',
@@ -69,6 +73,8 @@ class ImageViewerPanel(wx.Panel):
         self.displayHeight = 1        
         self.resizedWidth = 1
         self.resizedHeight = 1
+        self.clickPosition = (0, 0)
+        self.dragPosition = (0, 0)
         self.translation = (0, 0)
         self.oldTranslation = (0, 0)
         self.buffer = None # This is the entire dc buffer
@@ -120,39 +126,54 @@ class ImageViewerPanel(wx.Panel):
             self.crosshairPosition = event.GetPositionTuple()
             self.ReInitBuffer() # Redraw with crosshair
         if self.mouseMode == 1:
-            if event.Dragging() and event.LeftIsDown():
+            if self.HasCapture() and event.Dragging() and event.LeftIsDown():
                 newPos = event.GetPositionTuple()
-                delta = (newPos[0] - self.clickLocation[0],
-                    newPos[1] - self.clickLocation[1])
+                delta = (newPos[0] - self.clickPosition[0],
+                    newPos[1] - self.clickPosition[1])
                 self.translation = (self.oldTranslation[0] + delta[0],
                     self.oldTranslation[1] + delta[1])
-                self.ReInitBuffer()                
+                self.ReInitBuffer()
+        if self.mouseMode == 2:
+            if self.HasCapture and event.Dragging() and event.LeftIsDown():
+                self.drawRectangle = True
+                self.dragPosition = event.GetPositionTuple()
+                self.ReInitBuffer()
+                
+                
                 
     def OnLeftDown(self, event):
+        self.CaptureMouse()    
         if self.mouseMode == 1:
-            self.clickLocation = event.GetPositionTuple()
+            self.clickPosition = event.GetPositionTuple()
             self.oldTranslation = self.translation
         if self.mouseMode == 2:
-            self.clickLocation = event.GetPositionTuple()
-        self.CaptureMouse()     
+            self.clickPosition = event.GetPositionTuple()
+     
         
     def OnLeftUp(self, event):
         if self.HasCapture():
             if self.mouseMode == 1:
-                self.ReInitBuffer() #Probably unneccessary
+                self.ReInitBuffer() #Probably unneccessary?
             if self.mouseMode == 2:
-                self.IncreaseZoomValue(self.clickLocation)
+                if self.drawRectangle:
+                    self.ZoomToRectangle()
+                    self.drawRectangle = False
+                    self.ReInitBuffer() # Needed to clear the rectangle
+                else:
+                    self.IncreaseZoomValue(self.clickPosition)
             self.ReleaseMouse()    
             
     def OnRightDown(self, event):
+        self.CaptureMouse()    
         if self.mouseMode == 2:
-            self.clickLocation = event.GetPositionTuple()
-        self.CaptureMouse()
+            self.clickPosition = event.GetPositionTuple()
+        
         
     def OnRightUp(self, event):
-        if self.mouseMode == 2:
-            self.DecreaseZoomValue(self.clickLocation)            
-        self.ReleaseMouse()
+        if self.HasCapture():
+            if self.mouseMode == 2:
+                self.DecreaseZoomValue(self.clickPosition)            
+            self.ReleaseMouse()
         
     def OnMouseWheel(self, event):
         if self.mouseMode == 1 or self.mouseMode == 2:
@@ -199,6 +220,17 @@ class ImageViewerPanel(wx.Panel):
                 self.displayWidth, self.crosshairPosition[1])
             dc.DrawLine(self.crosshairPosition[0], 0,
                 self.crosshairPosition[0], self.displayHeight)
+                
+        if self.drawRectangle:
+            # Draws a rectangle for zooming into an ROI
+            dc.DrawLine(self.clickPosition[0], self.clickPosition[1],
+                self.clickPosition[0], self.dragPosition[1])
+            dc.DrawLine(self.clickPosition[0], self.dragPosition[1],
+                self.dragPosition[0], self.dragPosition[1])
+            dc.DrawLine(self.dragPosition[0], self.dragPosition[1],
+                self.dragPosition[0], self.clickPosition[1])
+            dc.DrawLine(self.dragPosition[0], self.clickPosition[1],
+                self.clickPosition[0], self.clickPosition[1])
         
     def ReInitBuffer(self):
         if self.idleBuffer:
@@ -230,17 +262,9 @@ class ImageViewerPanel(wx.Panel):
                 self.resizedHeight = self.displayHeight
                 self.zoomValue = None
         else:
-            newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
-            newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
-            self.translation = (
-                self.clickLocation[0]
-                - 1.0*newResizedWidth*(self.clickLocation[0]
-                    - self.translation[0])/self.resizedWidth,
-                self.clickLocation[1]
-                - 1.0*newResizedHeight*(self.clickLocation[1]
-                    - self.translation[1])/self.resizedHeight)
-            self.resizedWidth = newResizedWidth
-            self.resizedHeight = newResizedHeight
+            # Draw image with current width, height, and translation
+            # As calculated in zoom methods
+            pass
 
         # If empty image or different than current, or perform resizing
         # and create bitmap
@@ -261,9 +285,20 @@ class ImageViewerPanel(wx.Panel):
         self.translation = (
             0.5*(self.displayWidth - self.resizedWidth),
             0.5*(self.displayHeight - self.resizedHeight))
-        self.clickLocation = (
+        self.clickPosition = (
             0.5*self.displayWidth,
             0.5*self.displayHeight)
+        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
+        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
+        self.translation = (
+            self.clickPosition[0]
+            - 1.0*newResizedWidth*(self.clickPosition[0]
+                - self.translation[0])/self.resizedWidth,
+            self.clickPosition[1]
+            - 1.0*newResizedHeight*(self.clickPosition[1]
+                - self.translation[1])/self.resizedHeight)
+        self.resizedWidth = newResizedWidth
+        self.resizedHeight = newResizedHeight            
         self.ReInitBuffer()
 
     ## Get and Set Methods
@@ -277,7 +312,6 @@ class ImageViewerPanel(wx.Panel):
         # InitBuffer that there is new data
         self.resizedImage = wx.EmptyImage() 
         self.CenterImage()
-        self.ReInitBuffer()
         
     def GetDisplayedImage(self):
         # This should return the portion of the image
@@ -297,7 +331,7 @@ class ImageViewerPanel(wx.Panel):
 
     def SetZoomToFit(self, value):
         self.zoomToFit = value
-        self.clickLocation = (0.5*self.displayWidth,
+        self.clickPosition = (0.5*self.displayWidth,
             0.5*self.displayHeight)
         self.ReInitBuffer()
         
@@ -324,12 +358,7 @@ class ImageViewerPanel(wx.Panel):
         self.drawCrosshair = value
         self.ReInitBuffer()
         
-    def IncreaseZoomValue(self, clickLocation = None):
-        if clickLocation is None:
-            self.clickLocation = (0.5*self.displayWidth,
-                0.5*self.displayHeight)
-        else:
-            self.clickLocation = clickLocation
+    def IncreaseZoomValue(self, clickPosition = None):
         # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
         self.zoomToFit = False
         self.maintainAspectRatio = True
@@ -338,15 +367,11 @@ class ImageViewerPanel(wx.Panel):
             (x for x in self.zoomValues if x > self.zoomValue),
             self.zoomValues[-1])
         self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.ZoomToClick(clickPosition)        
         # Redraw
         self.ReInitBuffer()
         
-    def DecreaseZoomValue(self, clickLocation = None):
-        if clickLocation is None:
-            self.clickLocation = (0.5*self.displayWidth,
-                0.5*self.displayHeight)
-        else:
-            self.clickLocation = clickLocation
+    def DecreaseZoomValue(self, clickPosition = None):
         # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
         self.zoomToFit = False
         self.maintainAspectRatio = True
@@ -355,27 +380,74 @@ class ImageViewerPanel(wx.Panel):
             (x for x in reversed(self.zoomValues) if x < self.zoomValue),
             self.zoomValues[0])
         self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.ZoomToClick(clickPosition)        
         # Redraw
         self.ReInitBuffer()
         
-    def ActualSizeZoomValue(self, clickLocation = None):
-        if clickLocation is None:
-            self.clickLocation = (0.5*self.displayWidth,
-                0.5*self.displayHeight)
-        else:
-            self.clickLocation = clickLocation
+    def ActualSizeZoomValue(self, clickPosition = None):
         # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
         self.zoomToFit = False
         self.maintainAspectRatio = True
         # Set zoomValue at 1.0
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.ZoomToClick(clickPosition)
         # Redraw
         self.ReInitBuffer()
+        
+    def ZoomToClick(self, clickPosition = None):
+        if clickPosition is None:
+            self.clickPosition = (0.5*self.displayWidth,
+                0.5*self.displayHeight)
+        else:
+            self.clickPosition = clickPosition
+        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
+        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
+        self.translation = (
+            self.clickPosition[0]
+            - 1.0*newResizedWidth*(self.clickPosition[0]
+                - self.translation[0])/self.resizedWidth,
+            self.clickPosition[1]
+            - 1.0*newResizedHeight*(self.clickPosition[1]
+                - self.translation[1])/self.resizedHeight)
+        self.resizedWidth = newResizedWidth
+        self.resizedHeight = newResizedHeight
         
     def SetZoomIndex(self, index):
         self.zoomIndex = index
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        # Redraw
+        self.ReInitBuffer()
+        
+    def ZoomToRectangle(self):
+        """
+        This zooms to a rectangle defined by self.clickPosition and
+        self.dragPosition
+        """
+        rectWidth = abs(self.clickPosition[0] - self.dragPosition[0])
+        rectHeight = abs(self.clickPosition[1] - self.dragPosition[1])
+        rectCenterPosition = (
+            0.5*(self.clickPosition[0] + self.dragPosition[0]),
+            0.5*(self.clickPosition[1] + self.dragPosition[1]))
+        # Note: we are calculating the increase/decrease in the zoomValue
+        self.zoomValue = self.zoomValue*min(
+            1.0*self.displayWidth/rectWidth,
+            1.0*self.displayHeight/rectHeight)
+        # If we zoom in too far, we crash due to resizing the image,
+        # so clamp at a maximum until we figure out how to fix
+        self.zoomValue = min(self.zoomValue, self.zoomValues[-1])
+            
+        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
+        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())            
+        self.translation = (
+            0.5*self.displayWidth 
+            - 1.0*newResizedWidth*(rectCenterPosition[0]
+                - self.translation[0])/self.resizedWidth,
+            0.5*self.displayHeight
+            - 1.0*newResizedHeight*(rectCenterPosition[1]
+                - self.translation[1])/self.resizedHeight)
+        self.resizedWidth = newResizedWidth
+        self.resizedHeight = newResizedHeight
         # Redraw
         self.ReInitBuffer()
         
