@@ -2,6 +2,7 @@ import wx
 import os
 import math
 
+# ToDo: Need to constrain translation so that the image stays on the page
 
 class ImageViewerPanel(wx.Panel):
 
@@ -47,50 +48,31 @@ class ImageViewerPanel(wx.Panel):
             'Zoom',
             'Eyedropper']
         self.mouseMode = 1
-        
-
-
-        # Working on these        
         self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
-            1.25, 1.5, 1.75, 2.0, 3.0, 4.0, 6.0, 8.0]
+            1.25, 1.5, 1.75, 2.0, 3.0, 4.0]
         self.actualSizeZoomIndex = 5
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
-                
-
         
         # Temporary state variables
         self.displayWidth = 1
         self.displayHeight = 1        
         self.resizedWidth = 1
         self.resizedHeight = 1
-        self.translation = (0,0)
+        self.translation = (0, 0)
+        self.oldTranslation = (0, 0)
         self.buffer = None # This is the entire dc buffer
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.resizedImage = wx.EmptyImage()
-        self.bitmap = wx.EmptyBitmap(1,1) # This is a bitmap of the resized
-        self.crosshairPosition = (0,0)
+        self.bitmap = wx.EmptyBitmap(1, 1) # This is a bitmap of the resized
+        self.crosshairPosition = (0, 0)
         self.cursorInWindow = True
-        
-        
-
-        
-        # Old values        
-        self.zoomFactor = 1.0       # This is a temporary parameter
-        self.zoomFactorMax = 8.0
-        self.zoomFactorMin = 1.0/self.zoomFactorMax
-        self.zoomFactorIncreaseMultiplier = 1.05
-        self.zoomFactorDecreaseMultiplier = 1.0/self.zoomFactorIncreaseMultiplier
-
-
-
-
         
         # Initialize Buffer
         if self.idleBuffer:
             self.InitBuffer()
         
-        # Event handlers
+        # Bind event handlers
         self.Bind(wx.EVT_SIZE, self.OnSize)       
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
@@ -98,18 +80,13 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_ENTER_WINDOW, self.OnEnterWindow)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveWindow)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
 
-
-        # Mouse event handlers                
-#        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-#        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-#        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-#        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-#        self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
-
-     
-     
-    ## Event Handlers
+    ## Event handlers
     
     def OnSize(self, event):
         self.ReInitBuffer()
@@ -132,6 +109,48 @@ class ImageViewerPanel(wx.Panel):
         if self.drawCrosshair:
             self.crosshairPosition = event.GetPositionTuple()
             self.ReInitBuffer() # Redraw with crosshair
+        if self.mouseMode == 1:
+            if event.Dragging() and event.LeftIsDown():
+                newPos = event.GetPositionTuple()
+                delta = (newPos[0] - self.clickLocation[0],
+                    newPos[1] - self.clickLocation[1])
+                self.translation = (self.oldTranslation[0] + delta[0],
+                    self.oldTranslation[1] + delta[1])
+                self.ReInitBuffer()                
+                
+    def OnLeftDown(self, event):
+        if self.mouseMode == 1:
+            self.clickLocation = event.GetPositionTuple()
+            self.oldTranslation = self.translation
+        if self.mouseMode == 2:
+            self.clickLocation = event.GetPositionTuple()
+        self.CaptureMouse()     
+        
+    def OnLeftUp(self, event):
+        if self.HasCapture():
+            if self.mouseMode == 1:
+                self.ReInitBuffer()
+            if self.mouseMode == 2:
+                self.IncreaseZoomValue(self.clickLocation)
+            self.ReleaseMouse()    
+            
+    def OnRightDown(self, event):
+        if self.mouseMode == 2:
+            self.clickLocation = event.GetPositionTuple()
+        self.CaptureMouse()
+        
+    def OnRightUp(self, event):
+        if self.mouseMode == 2:
+            self.DecreaseZoomValue(self.clickLocation)            
+        self.ReleaseMouse()
+        
+    def OnMouseWheel(self, event):
+        if self.mouseMode == 2:
+            x = event.GetWheelRotation()
+            if x > 0:
+                self.DecreaseZoomValue(event.GetPositionTuple())
+            elif x < 0:
+                self.IncreaseZoomValue(event.GetPositionTuple())
             
     def OnLeaveWindow(self, event):
         # If the mouse leaves the ImageViewerPanel, 
@@ -147,7 +166,6 @@ class ImageViewerPanel(wx.Panel):
         if self.drawCrosshair:
             self.ReInitBuffer()
 
-       
     ## Helper Methods           
         
     def InitBuffer(self):
@@ -213,9 +231,7 @@ class ImageViewerPanel(wx.Panel):
                     - self.translation[1])/self.resizedHeight)
             self.resizedWidth = newResizedWidth
             self.resizedHeight = newResizedHeight
-                    
 
-        
         # If empty image or different than current, or perform resizing
         # and create bitmap
         if self.resizedImage.IsOk():
@@ -225,7 +241,6 @@ class ImageViewerPanel(wx.Panel):
                     self.image.Scale(self.resizedWidth, self.resizedHeight,
                         quality = self.resizeMethod)
                 self.bitmap = wx.BitmapFromImage(self.resizedImage)
-                        
         else:
             self.resizedImage = \
                 self.image.Scale(self.resizedWidth, self.resizedHeight,
@@ -239,118 +254,8 @@ class ImageViewerPanel(wx.Panel):
         self.clickLocation = (
             0.5*self.displayWidth,
             0.5*self.displayHeight)
+        self.ReInitBuffer()
 
-    
-        
-
-
-
-
-
-# VVV OLD CODE VVV  
-
-    def GetImageDisplaySize(self):
-        # Should really clean this up!
-        if not self.image.Ok():
-            return (1,1)
-    
-        if self.viewMode == 0:
-            (display_width, display_height) = self.image.GetSize()
-            self.zoomFactor = 1.0
-        elif self.viewMode == 1:
-            self.translation = (0,0)
-            (view_width, view_height) = self.GetClientSize()
-            if self.maintainAspectRatio:
-                (img_width, img_height) = self.image.GetSize()
-                display_width  = min(view_width,
-                    math.floor(1.0*img_width*view_height/img_height))
-                display_height = min(view_height,
-                    math.floor(1.0*img_height*view_width/img_width))
-                self.zoomFactor = 1.0*display_width/img_width
-            else:
-                (display_width, display_height) = (view_width, view_height)
-        elif self.viewMode == 2 or self.viewMode == 3:
-            (img_width, img_height) = self.image.GetSize()
-            display_width = round(1.0*self.zoomFactor*img_width)
-            display_height = round(1.0*self.zoomFactor*img_height)
-                
-        return (display_width, display_height) 
-                
-    def OnLeftDown(self, event):
-        if self.viewMode == 3:
-            self.pos = event.GetPositionTuple()
-            self.oldTranslation = self.translation
-        self.CaptureMouse()     
-        
-    def OnLeftUp(self, event):
-        if self.HasCapture():
-            if self.viewMode == 0: 
-                pass
-            elif self.viewMode == 1: 
-                pass
-            elif self.viewMode == 2: 
-                self.IncreaseZoomFactor()
-                self.reInitBuffer = True
-            elif self.viewMode == 3:
-                self.reInitBuffer = True
-            self.ReleaseMouse()
-    
-
-    def OnRightDown(self, event):
-        self.CaptureMouse()
-
-        
-    def OnRightUp(self, event):
-        if self.HasCapture():
-            if self.viewMode == 0:
-                pass
-            elif self.viewMode == 1:
-                pass
-            elif self.viewMode == 2:
-                self.DecreaseZoomFactor()
-                self.reInitBuffer = True
-            elif self.viewMode == 3:
-                pass
-            self.ReleaseMouse()
-        
-    def OldOnMotion(self, event):
-        if self.viewMode == 3:
-            if event.Dragging() and event.LeftIsDown():
-                newPos = event.GetPositionTuple()
-                delta = (newPos[0] - self.pos[0],
-                    newPos[1] - self.pos[1])
-                self.translation = (self.oldTranslation[0] + delta[0],
-                    self.oldTranslation[1] + delta[1])
-                self.reInitBuffer = True
-                
-        # Draw crosshairs if crosshairs are enabled
-        if self.drawCrosshair:
-            self.DrawCrosshair(event)
-        event.Skip()
-        
-        
-    def OnMouseWheel(self, event):
-        if self.viewMode == 0:
-            pass
-        elif self.viewMode == 1:
-            pass
-        elif self.viewMode == 2 or self.viewMode == 3:
-            x = event.GetWheelRotation()
-            if x > 0:
-                self.DecreaseZoomFactor()
-                self.reInitBuffer = True
-            elif x < 0:
-                self.IncreaseZoomFactor()
-                self.reInitBuffer = True
-    
-
-
-            
-        
-## ^^ OLD CODE ^^^
-
-
-    
     ## Get and Set Methods
     
     def GetImage(self):
@@ -454,12 +359,11 @@ class ImageViewerPanel(wx.Panel):
         self.zoomIndex = index
         self.zoomValue = self.zoomValues[self.zoomIndex]
         # Redraw
-        self.ReInitBuffer()        
+        self.ReInitBuffer()
         
-  
-        
+    def SetMouseMode(self, value):
+        self.mouseMode = value
 
-                
 
 class ImageControlPanel(wx.Panel):
     """
@@ -508,17 +412,20 @@ class ImageControlPanel(wx.Panel):
         self.zoomInButton = \
             wx.Button(self, -1, "Zoom In",
             (0, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, self.zoomInButton)
+        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, 
+            self.zoomInButton)
             
         self.zoomOutButton = \
             wx.Button(self, -1, "Zoom Out",
             (100, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, self.zoomOutButton)
+        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, 
+            self.zoomOutButton)
             
         self.actualSizeButton = \
             wx.Button(self, -1, "Actual Size",
             (200, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, self.actualSizeButton)
+        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, 
+            self.actualSizeButton)
             
 
 #         wx.ComboBox(parent, id, value="", pos=wx.DefaultPosition,
@@ -530,7 +437,7 @@ class ImageControlPanel(wx.Panel):
         zoomChoices = [x + "%" for x in zoomChoices]
         self.zoomComboBox = \
             wx.ComboBox(self, -1,
-            str(100.0*self.imageViewerPanel.zoomFactor)+"%",
+            str(100.0*self.imageViewerPanel.zoomValue)+"%",
             (320, 82), (100, 26),
             choices = zoomChoices,
             style = wx.CB_DROPDOWN | wx.CB_READONLY)
@@ -540,8 +447,14 @@ class ImageControlPanel(wx.Panel):
             wx.Choice(self, -1,
             (0, 112), (100, 20),
             choices = self.imageViewerPanel.mouseModes)
+        self.Bind(wx.EVT_CHOICE, self.OnMouseChoice, self.mouseChoice)
         
-        
+        self.centerImageButton = \
+            wx.Button(self, -1, "Center Image",
+            (0, 140), (100, 20))
+        self.Bind(wx.EVT_BUTTON, self.OnCenterImageButton,
+            self.centerImageButton)
+            
     # Event Handlers        
         
     def OnMaintainAspectRatioChecked(self, event):
@@ -562,9 +475,6 @@ class ImageControlPanel(wx.Panel):
 #         self.zoomComboBox.SetLabel(
 #              "%.2f" % (100.0*self.imageViewerPanel.zoomValue) + "%")
         self.zoomComboBox.Enable(not self.imageViewerPanel.GetZoomToFit())
-            
-            
-
             
     def OnDrawCrosshairChecked(self, event):
         self.imageViewerPanel.SetDrawCrosshair(
@@ -593,7 +503,11 @@ class ImageControlPanel(wx.Panel):
         self.zoomToFitCheckBox.SetValue(False)
         self.zoomComboBox.Enable(True)        
         
+    def OnMouseChoice(self, event):
+        self.imageViewerPanel.SetMouseMode(self.mouseChoice.GetSelection())
         
+    def OnCenterImageButton(self, event):
+        self.imageViewerPanel.CenterImage()
         
 
 class ControlledImageViewerPanel(wx.Panel):
@@ -647,18 +561,8 @@ class ImageViewerFrame(wx.Frame):
         dropTarget = MyFileDropTarget(self)
         self.SetDropTarget(dropTarget)
         
-    # Get and Set Methods
-    
-    def SetImage(self, image):
-        self.image = image
-        # Set the image data of the Controlled Image ViewerPanel
-        self.controlledImageViewerPanel.SetImage(self.image)
-        
-    def GetImage(self):
-        return self.image
-         
-        
     # Event Handlers        
+
     def OnOpen(self, event):
         dlg = wx.FileDialog(self, "Open image...",
                 os.getcwd(), style=wx.OPEN,
@@ -670,26 +574,6 @@ class ImageViewerFrame(wx.Frame):
             self.OpenImage()
         dlg.Destroy()
 
-    def OpenImage(self):        
-        # This code imports the image
-        if self.filename:
-            self.SetTitle(self.title + ' - ' +
-                os.path.split(self.filename)[1])
-            self.currentDirectory = os.path.split(self.filename)[0]
-            fileExtension = os.path.splitext(self.filename)[1].lower()
-            if fileExtension == ".png":
-                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
-            elif fileExtension == ".jpg" or fileExtension == ".jpeg":
-                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
-            elif fileExtension == ".tif" or fileExtension == ".tiff":
-                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
-            elif fileExtension == ".bmp":
-                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
-            else:
-                # nolog = wx.LogNull() # Uncommenting will not log errors
-                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
-                #del nolog
-                            
     def OnCloseWindow(self, event):
         self.Destroy()        
         
@@ -712,6 +596,26 @@ class ImageViewerFrame(wx.Frame):
         if success:
             self.SetImage(wx.ImageFromBitmap(data.GetBitmap()))
         
+    def OpenImage(self):        
+        # This code imports the image
+        if self.filename:
+            self.SetTitle(self.title + ' - ' +
+                os.path.split(self.filename)[1])
+            self.currentDirectory = os.path.split(self.filename)[0]
+            fileExtension = os.path.splitext(self.filename)[1].lower()
+            if fileExtension == ".png":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
+            elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
+            elif fileExtension == ".tif" or fileExtension == ".tiff":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
+            elif fileExtension == ".bmp":
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
+            else:
+                # nolog = wx.LogNull() # Uncommenting will not log errors
+                self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
+                #del nolog
+
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         # self.statusbar.SetFieldsCount(3)
@@ -750,6 +654,15 @@ class ImageViewerFrame(wx.Frame):
             self.Bind(wx.EVT_MENU, eachHandler, menuItem)
         return menu   
         
+    # Get and Set Methods
+    
+    def SetImage(self, image):
+        self.image = image
+        # Set the image data of the Controlled Image ViewerPanel
+        self.controlledImageViewerPanel.SetImage(self.image)
+        
+    def GetImage(self):
+        return self.image
 
 class MyFileDropTarget(wx.FileDropTarget):
 
@@ -765,7 +678,7 @@ class MyFileDropTarget(wx.FileDropTarget):
             return
         self.window.filename = filenames[0]
         self.window.OpenImage()
-        
+
 
 if __name__ == "__main__":
     app = wx.App()
