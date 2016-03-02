@@ -20,23 +20,23 @@ class ImageViewerPanel(wx.Panel):
         # Default Parameters
         self.SetBackgroundColour("Black")        
         self.resizeMethod = wx.IMAGE_QUALITY_NEAREST
-        # wxIMAGE_QUALITY_NEAREST: 
+        # wx.IMAGE_QUALITY_NEAREST: 
         #   Simplest and fastest algorithm.
-        # wxIMAGE_QUALITY_BILINEAR: 
+        # wx.IMAGE_QUALITY_BILINEAR: 
         #   Compromise between wxIMAGE_QUALITY_NEAREST and
         #   wxIMAGE_QUALITY_BICUBIC.
-        # wxIMAGE_QUALITY_BICUBIC: 
+        # wx.IMAGE_QUALITY_BICUBIC: 
         #   Highest quality but slowest execution time.
-        # wxIMAGE_QUALITY_BOX_AVERAGE: 
+        # wx.IMAGE_QUALITY_BOX_AVERAGE: 
         #   Use surrounding pixels to calculate an
         #   average that will be used for new pixels. 
         #   This method is typically used when reducing
         #   the size of an image.
-        # wxIMAGE_QUALITY_NORMAL:
+        # wx.IMAGE_QUALITY_NORMAL:
         #   Default image resizing algorithm used 
         #   by wxImage::Scale(). Currently the same 
         #   as wxIMAGE_QUALITY_NEAREST.
-        # wxIMAGE_QUALITY_HIGH: 
+        # wx.IMAGE_QUALITY_HIGH: 
         #   Best image resizing algorithm. Since 
         #   version 2.9.2 this results in 
         #   wxIMAGE_QUALITY_BOX_AVERAGE being used when
@@ -279,8 +279,16 @@ class ImageViewerPanel(wx.Panel):
         
     def GetDisplayedImage(self):
         # This should return the portion of the image
-        # that is actually displayed
-        return self.image
+        # that is actually displayed if the image
+        # is larger than the display area
+#         subRect = wx.Rect(-self.translation[0],
+#             -self.translation[1],
+#             view_width, view_height)
+#             print(subRect.Get())
+#         self.croppedDisplayedImage = \
+#             self.displayedImage.GetSubImage(subRect)
+
+        return self.displayedImage
 
     def GetZoomToFit(self):
         return self.zoomToFit
