@@ -10,7 +10,7 @@ class ImageViewerPanel(wx.Panel):
                                     
         # Default Parameters
         self.SetBackgroundColour("Black")        
-        self.resizeMethod = wx.IMAGE_QUALITY_HIGH
+        self.resizeMethod = wx.IMAGE_QUALITY_NEAREST
         # wxIMAGE_QUALITY_NEAREST: 
         #   Simplest and fastest algorithm.
         # wxIMAGE_QUALITY_BILINEAR: 
@@ -38,15 +38,23 @@ class ImageViewerPanel(wx.Panel):
         
         # Default Parameters
         self.maintainAspectRatio = True
-        self.idleBuffer = True
+        self.idleBuffer = False
         self.zoomToFit = False
         self.drawCrosshair = False
+        self.mouseModes = [
+            'Disabled',
+            'Pan',
+            'Zoom',
+            'Eyedropper']
+        self.mouseMode = 1
+        
 
 
         # Working on these        
         self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
             1.25, 1.5, 1.75, 2.0, 3.0, 4.0, 6.0, 8.0]
-        self.zoomIndex = 5
+        self.actualSizeZoomIndex = 5
+        self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
                 
 
@@ -56,6 +64,7 @@ class ImageViewerPanel(wx.Panel):
         self.displayHeight = 1        
         self.resizedWidth = 1
         self.resizedHeight = 1
+        self.translation = (0,0)
         self.buffer = None # This is the entire dc buffer
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.resizedImage = wx.EmptyImage()
@@ -72,13 +81,7 @@ class ImageViewerPanel(wx.Panel):
         self.zoomFactorMin = 1.0/self.zoomFactorMax
         self.zoomFactorIncreaseMultiplier = 1.05
         self.zoomFactorDecreaseMultiplier = 1.0/self.zoomFactorIncreaseMultiplier
-        self.translation = (0,0)
-        self.viewModes = [
-            'Actual Size - no interaction',
-            'Zoom to Fit - no interaction',
-            'Zoom',
-            'Pan']
-        self.viewMode = 1
+
 
 
 
@@ -127,7 +130,6 @@ class ImageViewerPanel(wx.Panel):
         
     def OnMotion(self, event):
         if self.drawCrosshair:
-            print(dir(event))
             self.crosshairPosition = event.GetPositionTuple()
             self.ReInitBuffer() # Redraw with crosshair
             
@@ -161,7 +163,8 @@ class ImageViewerPanel(wx.Panel):
             
         self.ResizeImageAndCreateBitmap()
                  
-        dc.DrawBitmap(self.bitmap, 0, 0, True)
+        dc.DrawBitmap(self.bitmap, 
+            self.translation[0], self.translation[1], True)
         
         if self.drawCrosshair and self.cursorInWindow:
             dc.DrawLine(0, self.crosshairPosition[1],
@@ -180,20 +183,38 @@ class ImageViewerPanel(wx.Panel):
         # First determine resized width and height
         if self.zoomToFit:
             if self.maintainAspectRatio:
+                # Calculate image size
                 (imageWidth, imageHeight) = self.image.GetSize()
                 self.resizedWidth = min(self.displayWidth,
                     math.floor(1.0*imageWidth*self.displayHeight/imageHeight))
                 self.resizedHeight = min(self.displayHeight,
                     math.floor(1.0*imageHeight*self.displayWidth/imageWidth))
-                self.zoomValue = 1.0*self.displayWidth/imageWidth
+                # Calculate translation to keep image centered
+                self.translation = \
+                    (0.5*(self.displayWidth - self.resizedWidth),
+                    0.5*(self.displayHeight - self.resizedHeight))
+                # Calculate derived zoomValue
+                self.zoomValue = (
+                    0.5*self.resizedWidth/imageWidth +
+                    0.5*self.resizedHeight/imageHeight)
             else:
                 self.resizedWidth = self.displayWidth
                 self.resizedHeight = self.displayHeight
                 self.zoomValue = None
         else:
-            # Actual size for now
-            (self.resizedWidth, self.resizedHeight) = self.image.GetSize()
-            self.zoomValue = 1.0
+            newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
+            newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
+            self.translation = (
+                self.clickLocation[0]
+                - 1.0*newResizedWidth*(self.clickLocation[0]
+                    - self.translation[0])/self.resizedWidth,
+                self.clickLocation[1]
+                - 1.0*newResizedHeight*(self.clickLocation[1]
+                    - self.translation[1])/self.resizedHeight)
+            self.resizedWidth = newResizedWidth
+            self.resizedHeight = newResizedHeight
+                    
+
         
         # If empty image or different than current, or perform resizing
         # and create bitmap
@@ -211,6 +232,13 @@ class ImageViewerPanel(wx.Panel):
                     quality = self.resizeMethod)        
             self.bitmap = wx.BitmapFromImage(self.resizedImage)
 
+    def CenterImage(self):
+        self.translation = (
+            0.5*(self.displayWidth - self.resizedWidth),
+            0.5*(self.displayHeight - self.resizedHeight))
+        self.clickLocation = (
+            0.5*self.displayWidth,
+            0.5*self.displayHeight)
 
     
         
@@ -316,16 +344,7 @@ class ImageViewerPanel(wx.Panel):
                 self.reInitBuffer = True
     
 
-    def IncreaseZoomFactor(self):
-        self.zoomFactor = self.zoomFactorIncreaseMultiplier*self.zoomFactor
-        if self.zoomFactor > self.zoomFactorMax:
-            self.zoomFactor = self.zoomFactorMax
 
-    
-    def DecreaseZoomFactor(self):
-        self.zoomFactor = self.zoomFactorDecreaseMultiplier*self.zoomFactor
-        if self.zoomFactor < self.zoomFactorMin:
-            self.zoomFactor = self.zoomFactorMin
             
         
 ## ^^ OLD CODE ^^^
@@ -342,6 +361,7 @@ class ImageViewerPanel(wx.Panel):
         # Clear old resized image, this tells
         # InitBuffer that there is new data
         self.resizedImage = wx.EmptyImage() 
+        self.CenterImage()
         self.ReInitBuffer()
         
     def GetDisplayedImage(self):
@@ -354,7 +374,12 @@ class ImageViewerPanel(wx.Panel):
 
     def SetZoomToFit(self, value):
         self.zoomToFit = value
+        self.clickLocation = (0.5*self.displayWidth,
+            0.5*self.displayHeight)
         self.ReInitBuffer()
+        
+    def GetZoomIndex(self):
+        return self.zoomIndex
         
     def GetIdleBuffer(self):
         return self.idleBuffer
@@ -375,6 +400,65 @@ class ImageViewerPanel(wx.Panel):
     def SetDrawCrosshair(self, value):
         self.drawCrosshair = value
         self.ReInitBuffer()
+        
+    def IncreaseZoomValue(self, clickLocation = None):
+        if clickLocation is None:
+            self.clickLocation = (0.5*self.displayWidth,
+                0.5*self.displayHeight)
+        else:
+            self.clickLocation = clickLocation
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # First find the next highest zoom level
+        self.zoomValue = next(
+            (x for x in self.zoomValues if x > self.zoomValue),
+            self.zoomValues[-1])
+        self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        # Redraw
+        self.ReInitBuffer()
+        
+    def DecreaseZoomValue(self, clickLocation = None):
+        if clickLocation is None:
+            self.clickLocation = (0.5*self.displayWidth,
+                0.5*self.displayHeight)
+        else:
+            self.clickLocation = clickLocation
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # First find the next lowest zoom level
+        self.zoomValue = next(
+            (x for x in reversed(self.zoomValues) if x < self.zoomValue),
+            self.zoomValues[0])
+        self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        # Redraw
+        self.ReInitBuffer()
+        
+    def ActualSizeZoomValue(self, clickLocation = None):
+        if clickLocation is None:
+            self.clickLocation = (0.5*self.displayWidth,
+                0.5*self.displayHeight)
+        else:
+            self.clickLocation = clickLocation
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # Set zoomValue at 1.0
+        self.zoomIndex = self.actualSizeZoomIndex
+        self.zoomValue = self.zoomValues[self.zoomIndex]
+        # Redraw
+        self.ReInitBuffer()
+        
+    def SetZoomIndex(self, index):
+        self.zoomIndex = index
+        self.zoomValue = self.zoomValues[self.zoomIndex]
+        # Redraw
+        self.ReInitBuffer()        
+        
+  
+        
+
                 
 
 class ImageControlPanel(wx.Panel):
@@ -424,24 +508,39 @@ class ImageControlPanel(wx.Panel):
         self.zoomInButton = \
             wx.Button(self, -1, "Zoom In",
             (0, 80), (100, 20))
+        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, self.zoomInButton)
             
         self.zoomOutButton = \
             wx.Button(self, -1, "Zoom Out",
             (100, 80), (100, 20))
+        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, self.zoomOutButton)
             
         self.actualSizeButton = \
             wx.Button(self, -1, "Actual Size",
             (200, 80), (100, 20))
+        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, self.actualSizeButton)
             
+
+#         wx.ComboBox(parent, id, value="", pos=wx.DefaultPosition,
+#                 size=wx.DefaultSize, choices, style=0,
+#                 validator=wx.DefaultValidator, name="comboBox")            
             
-        zoomChoices = [100*x for x in self.imageViewerPanel.zoomValues]
+        zoomChoices = [100.0*x for x in self.imageViewerPanel.zoomValues]
         zoomChoices = map(str, zoomChoices)
         zoomChoices = [x + "%" for x in zoomChoices]
-        self.zoomChoice = \
-            wx.Choice(self, -1, 
-            (320, 80), (100, 20),
-            choices = zoomChoices )
-        self.zoomChoice.SetSelection(self.imageViewerPanel.zoomIndex)
+        self.zoomComboBox = \
+            wx.ComboBox(self, -1,
+            str(100.0*self.imageViewerPanel.zoomFactor)+"%",
+            (320, 82), (100, 26),
+            choices = zoomChoices,
+            style = wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.Bind(wx.EVT_COMBOBOX, self.OnZoomComboBoxChoice, self.zoomComboBox)
+        
+        self.mouseChoice = \
+            wx.Choice(self, -1,
+            (0, 112), (100, 20),
+            choices = self.imageViewerPanel.mouseModes)
+        
         
     # Event Handlers        
         
@@ -455,11 +554,47 @@ class ImageControlPanel(wx.Panel):
 
     def OnZoomToFitChecked(self, event):
         self.imageViewerPanel.SetZoomToFit(
-            self.zoomToFitCheckBox.IsChecked())        
+            self.zoomToFitCheckBox.IsChecked())
+#        This update needs to hapen after the zoomValue is updated, 
+#          could move the calculation of the zoom, but then
+#       how do I update this if the aspect ratio isn't maintained?
+#       I suppose just disabling it for now should be fine.            
+#         self.zoomComboBox.SetLabel(
+#              "%.2f" % (100.0*self.imageViewerPanel.zoomValue) + "%")
+        self.zoomComboBox.Enable(not self.imageViewerPanel.GetZoomToFit())
+            
+            
+
             
     def OnDrawCrosshairChecked(self, event):
         self.imageViewerPanel.SetDrawCrosshair(
             self.drawCrosshairCheckBox.IsChecked())
+            
+    def OnZoomInButton(self, event):
+        self.imageViewerPanel.IncreaseZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)
+        
+    def OnZoomOutButton(self, event):
+        self.imageViewerPanel.DecreaseZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)        
+                
+    def OnActualSizeButton(self, event):
+        self.imageViewerPanel.ActualSizeZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)
+                
+    def OnZoomComboBoxChoice(self, event):
+        self.imageViewerPanel.SetZoomIndex(self.zoomComboBox.GetSelection())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)        
+        
+        
+        
 
 class ControlledImageViewerPanel(wx.Panel):
     """
@@ -554,29 +689,7 @@ class ImageViewerFrame(wx.Frame):
                 # nolog = wx.LogNull() # Uncommenting will not log errors
                 self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
                 #del nolog
-                    
-#         if self.filename:
-#             try:
-#                 self.SetTitle(self.title + ' - ' +
-#                     os.path.split(self.filename)[1])
-#                 self.currentDirectory = os.path.split(self.filename)[0]
-#                 fileExtension = os.path.splitext(self.filename)[1].lower()
-#                 if fileExtension == ".png":
-#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_PNG))
-#                 elif fileExtension == ".jpg" or fileExtension == ".jpeg":
-#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_JPEG))
-#                 elif fileExtension == ".tif" or fileExtension == ".tiff":
-#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_TIF))
-#                 elif fileExtension == ".bmp":
-#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_BMP))
-#                 else:
-#                     # nolog = wx.LogNull() # Uncommenting will not log errors
-#                     self.SetImage(wx.Image(self.filename, wx.BITMAP_TYPE_ANY))
-#                     #del nolog
-#             except:
-#                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
-#                     stype=wx.OK|wx.ICON_EXCLAMATION)        
-        
+                            
     def OnCloseWindow(self, event):
         self.Destroy()        
         
