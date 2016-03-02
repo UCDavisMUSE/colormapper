@@ -2,7 +2,15 @@ import wx
 import os
 import math
 
-# ToDo: Need to constrain translation so that the image stays on the page
+# To Do:
+#   - Finish GetDisplayedImage method
+#   - Constrain translation so the image stays on the page
+#   - Create a rectangular selection box for zoom controls
+#   - Create an eyedropper tool (simple crosshair first, then
+#       more complicated with a zoom loupe)
+#   - Figure out how best to zoom in to large images, zooming
+#       out seems to work okay.
+
 
 class ImageViewerPanel(wx.Panel):
 
@@ -49,7 +57,7 @@ class ImageViewerPanel(wx.Panel):
             'Eyedropper']
         self.mouseMode = 1
         self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
-            1.25, 1.5, 1.75, 2.0, 3.0, 4.0]
+            1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
         self.actualSizeZoomIndex = 5
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
@@ -129,7 +137,7 @@ class ImageViewerPanel(wx.Panel):
     def OnLeftUp(self, event):
         if self.HasCapture():
             if self.mouseMode == 1:
-                self.ReInitBuffer()
+                self.ReInitBuffer() #Probably unneccessary
             if self.mouseMode == 2:
                 self.IncreaseZoomValue(self.clickLocation)
             self.ReleaseMouse()    
@@ -145,7 +153,7 @@ class ImageViewerPanel(wx.Panel):
         self.ReleaseMouse()
         
     def OnMouseWheel(self, event):
-        if self.mouseMode == 2:
+        if self.mouseMode == 1 or self.mouseMode == 2:
             x = event.GetWheelRotation()
             if x > 0:
                 self.DecreaseZoomValue(event.GetPositionTuple())
@@ -447,6 +455,7 @@ class ImageControlPanel(wx.Panel):
             wx.Choice(self, -1,
             (0, 112), (100, 20),
             choices = self.imageViewerPanel.mouseModes)
+        self.mouseChoice.SetSelection(self.imageViewerPanel.mouseMode)
         self.Bind(wx.EVT_CHOICE, self.OnMouseChoice, self.mouseChoice)
         
         self.centerImageButton = \
@@ -686,20 +695,3 @@ if __name__ == "__main__":
     frame.Show()
     app.MainLoop()
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-            
-        
-        
-        
-     
