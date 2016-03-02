@@ -464,6 +464,13 @@ class ImageViewerPanel(wx.Panel):
     def SetMaintainAspectRatio(self, value):
         self.maintainAspectRatio = value
         self.ReInitBuffer()
+        
+    def GetDrawCrosshair(self):
+        return self.drawCrosshair
+        
+    def SetDrawCrosshair(self, value):
+        self.drawCrosshair = value
+        self.ReInitBuffer()
                 
 
 
@@ -506,6 +513,14 @@ class ImageControlPanel(wx.Panel):
             self.imageViewerPanel.GetZoomToFit())
         self.Bind(wx.EVT_CHECKBOX, self.OnZoomToFitChecked,
             self.zoomToFitCheckBox)
+            
+        self.drawCrosshairCheckBox = \
+            wx.CheckBox(self, -1, "Draw Crosshair",
+            (0, 60), (200, 20))
+        self.drawCrosshairCheckBox.SetValue(
+            self.imageViewerPanel.GetDrawCrosshair())
+        self.Bind(wx.EVT_CHECKBOX, self.OnDrawCrosshairChecked,
+            self.drawCrosshairCheckBox)
         
 #        self.choice = wx.Choice(self, -1, (0, 60),
 #            choices=self.imageViewerPanel.viewModes)
@@ -524,6 +539,10 @@ class ImageControlPanel(wx.Panel):
     def OnZoomToFitChecked(self, event):
         self.imageViewerPanel.SetZoomToFit(
             self.zoomToFitCheckBox.IsChecked())        
+            
+    def OnDrawCrosshairChecked(self, event):
+        self.imageViewerPanel.SetDrawCrosshair(
+            self.drawCrosshairCheckBox.IsChecked())
 
 class ControlledImageViewerPanel(wx.Panel):
     """
