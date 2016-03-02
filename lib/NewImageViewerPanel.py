@@ -157,8 +157,8 @@ class ImageViewerPanel(wx.Panel):
         if not self.image.Ok():
             return
             
-        self.ResizeImage()            
-        self.bitmap = wx.BitmapFromImage(self.resizedImage)
+        self.ResizeImageAndCreateBitmap()
+                 
         dc.DrawBitmap(self.bitmap, 0, 0, True)
         
         if self.drawCrosshair:
@@ -175,7 +175,7 @@ class ImageViewerPanel(wx.Panel):
             self.InitBuffer()
             self.Refresh()   
     
-    def ResizeImage(self):
+    def ResizeImageAndCreateBitmap(self):
         # First determine resized width and height
         if self.zoomToFit:
             if self.maintainAspectRatio:
@@ -195,16 +195,21 @@ class ImageViewerPanel(wx.Panel):
             self.zoomValue = 1.0
         
         # If empty image or different than current, or perform resizing
+        # and create bitmap
         if self.resizedImage.IsOk():
             if (self.resizedImage.GetWidth() != self.resizedWidth or
                 self.resizedImage.GetHeight() != self.resizedHeight):
                 self.resizedImage = \
                     self.image.Scale(self.resizedWidth, self.resizedHeight,
                         quality = self.resizeMethod)
+                self.bitmap = wx.BitmapFromImage(self.resizedImage)
+                        
         else:
             self.resizedImage = \
                 self.image.Scale(self.resizedWidth, self.resizedHeight,
                     quality = self.resizeMethod)        
+            self.bitmap = wx.BitmapFromImage(self.resizedImage)
+                    
         
         
 
