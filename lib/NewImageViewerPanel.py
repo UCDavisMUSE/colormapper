@@ -156,9 +156,6 @@ class ImageViewerPanel(wx.Panel):
                 self.ReInitBuffer()
                 
 
-                
-                
-                
     def OnLeftDown(self, event):
         self.CaptureMouse()    
         if self.mouseMode == 1:
@@ -235,18 +232,14 @@ class ImageViewerPanel(wx.Panel):
                     1.0*self.displayWidth/imageWidth,
                     1.0*self.displayHeight/imageHeight)
                 self.userScale = (self.zoomValue, self.zoomValue)
-                self.translation = (
-                0.5*self.displayWidth - 0.5*self.userScale[0]*imageWidth,
-                0.5*self.displayHeight - 0.5*self.userScale[1]*imageHeight)
-                    
-            
+                # Set translation to center
+                self.CenterImage()                
             else:
-                self.translation = (0, 0)
                 self.userScale = (
                     1.0*self.displayWidth/imageWidth,
                     1.0*self.displayHeight/imageHeight)
                 self.zoomValue = None
-                
+                self.translation = (0, 0)                
         else:
             # Draw image with current width, height, and
             # translation as calculated in zoom methods
@@ -286,52 +279,12 @@ class ImageViewerPanel(wx.Panel):
             self.InitBuffer()
             self.Refresh()   
     
-#     def ResizeImageAndCreateBitmap(self):
-#         # First determine resized width and height
-#         if self.zoomToFit:
-#             if self.maintainAspectRatio:
-# 
-#             else:
-#                 self.resizedWidth = self.displayWidth
-#                 self.resizedHeight = self.displayHeight
-#                 self.translation = (0,0)
-#                 self.zoomValue = None
-#         else:
-#             # Draw image with current width, height, and translation
-#             # As calculated in zoom methods
-#             pass
-# 
-#         # If empty image or different than current, or perform resizing
-#         # and create bitmap
-#         if (self.resizedImage.IsOk() and 
-#             self.resizedImage.GetWidth() == self.resizedWidth and
-#             self.resizedImage.GetHeight() == self.resizedHeight):
-#             return
-#         else:
-#             self.resizedImage = \
-#                 self.image.Scale(self.resizedWidth, self.resizedHeight,
-#                     quality = self.resizeMethod)
-#             self.bitmap = wx.BitmapFromImage(self.resizedImage)
-
     def CenterImage(self):
+        (imageWidth, imageHeight) = self.image.GetSize()    
         self.translation = (
-            0.5*(self.displayWidth - self.resizedWidth),
-            0.5*(self.displayHeight - self.resizedHeight))
-        self.clickPosition = (
-            0.5*self.displayWidth,
-            0.5*self.displayHeight)
-        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
-        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
-        self.translation = (
-            self.clickPosition[0]
-            - 1.0*newResizedWidth*(self.clickPosition[0]
-                - self.translation[0])/self.resizedWidth,
-            self.clickPosition[1]
-            - 1.0*newResizedHeight*(self.clickPosition[1]
-                - self.translation[1])/self.resizedHeight)
-        self.resizedWidth = newResizedWidth
-        self.resizedHeight = newResizedHeight            
-        self.ReInitBuffer()
+            0.5*self.displayWidth - 0.5*self.userScale[0]*imageWidth,
+            0.5*self.displayHeight - 0.5*self.userScale[1]*imageHeight) 
+
 
     ## Get and Set Methods
     
@@ -345,12 +298,14 @@ class ImageViewerPanel(wx.Panel):
         self.bitmap = wx.BitmapFromImage(self.image)
         self.resizedImage = wx.EmptyImage() 
         self.CenterImage()
+        self.ReInitBuffer()        
         
     def GetDisplayedBitmap(self):
         self.copyDisplayedBitmap = True
         # Always force InitBuffer (versus calling ReInitBuffer())
         self.InitBuffer()
         self.Refresh()
+        self.displayedBitmap.SaveFile('Temp.png', wx.BITMAP_TYPE_PNG)
         return self.displayedBitmap
 
     def GetZoomToFit(self):
