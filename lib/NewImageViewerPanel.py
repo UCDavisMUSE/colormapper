@@ -24,7 +24,7 @@ class ImageViewerPanel(wx.Panel):
                                     
         # Default Parameters
         self.SetBackgroundColour("Black")        
-        self.resizeMethod = wx.IMAGE_QUALITY_NEAREST
+        self.resizeMethod = wx.IMAGE_QUALITY_BOX_AVERAGE
         # wx.IMAGE_QUALITY_NEAREST: 
         #   Simplest and fastest algorithm.
         # wx.IMAGE_QUALITY_BILINEAR: 
@@ -260,6 +260,7 @@ class ImageViewerPanel(wx.Panel):
             else:
                 self.resizedWidth = self.displayWidth
                 self.resizedHeight = self.displayHeight
+                self.translation = (0,0)
                 self.zoomValue = None
         else:
             # Draw image with current width, height, and translation
@@ -268,17 +269,14 @@ class ImageViewerPanel(wx.Panel):
 
         # If empty image or different than current, or perform resizing
         # and create bitmap
-        if self.resizedImage.IsOk():
-            if (self.resizedImage.GetWidth() != self.resizedWidth or
-                self.resizedImage.GetHeight() != self.resizedHeight):
-                self.resizedImage = \
-                    self.image.Scale(self.resizedWidth, self.resizedHeight,
-                        quality = self.resizeMethod)
-                self.bitmap = wx.BitmapFromImage(self.resizedImage)
+        if (self.resizedImage.IsOk() and 
+            self.resizedImage.GetWidth() == self.resizedWidth and
+            self.resizedImage.GetHeight() == self.resizedHeight):
+            return
         else:
             self.resizedImage = \
                 self.image.Scale(self.resizedWidth, self.resizedHeight,
-                    quality = self.resizeMethod)        
+                    quality = self.resizeMethod)
             self.bitmap = wx.BitmapFromImage(self.resizedImage)
 
     def CenterImage(self):
@@ -323,7 +321,6 @@ class ImageViewerPanel(wx.Panel):
 #             print(subRect.Get())
 #         self.croppedDisplayedImage = \
 #             self.displayedImage.GetSubImage(subRect)
-
         return self.displayedImage
 
     def GetZoomToFit(self):
