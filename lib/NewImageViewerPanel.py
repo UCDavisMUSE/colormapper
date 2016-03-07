@@ -65,6 +65,8 @@ class ImageViewerPanel(wx.Panel):
         self.actualSizeZoomIndex = 5
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        # Zoom in x and y directions        
+        self.userScale = (self.zoomValue, self.zoomValue)
         self.panBorder = 50
         
         # Temporary state variables
@@ -139,11 +141,11 @@ class ImageViewerPanel(wx.Panel):
                 # leave the frame
                 self.translation = (
                     max(
-                        min(self.translation[0], 
+                        min(1.0*self.translation[0], 
                         self.displayWidth - self.panBorder),
                         self.panBorder - self.resizedWidth),
                     max(
-                        min(self.translation[1],
+                        min(1.0*self.translation[1],
                         self.displayHeight - self.panBorder),
                         self.panBorder - self.resizedHeight))                    
                 self.ReInitBuffer()
@@ -226,16 +228,35 @@ class ImageViewerPanel(wx.Panel):
         if not self.image.Ok():
             return
             
-#        self.ResizeImageAndCreateBitmap()
-
-        self.translation = (0,0)
-        
-        dc.SetUserScale(self.zoomValue, self.zoomValue)                 
-        dc.DrawBitmap(self.bitmap, 
-            self.translation[0], self.translation[1], True)
+        if self.zoomToFit:
+            (imageWidth, imageHeight) = self.image.GetSize()
+            if self.maintainAspectRatio:
+                self.zoomValue = min(
+                    1.0*self.displayWidth/imageWidth,
+                    1.0*self.displayHeight/imageHeight)
+                self.userScale = (self.zoomValue, self.zoomValue)
+                self.translation = (
+                0.5*self.displayWidth - 0.5*self.userScale[0]*imageWidth,
+                0.5*self.displayHeight - 0.5*self.userScale[1]*imageHeight)
+                    
             
-
-        print(self.zoomValue)
+            else:
+                self.translation = (0, 0)
+                self.userScale = (
+                    1.0*self.displayWidth/imageWidth,
+                    1.0*self.displayHeight/imageHeight)
+                self.zoomValue = None
+                
+        else:
+            # Draw image with current width, height, and
+            # translation as calculated in zoom methods
+            pass
+                            
+        dc.SetUserScale(self.userScale[0], self.userScale[1])
+        dc.DrawBitmap(self.bitmap, 
+            1.0*self.translation[0]/self.userScale[0],
+            1.0*self.translation[1]/self.userScale[1], True)
+            
             
         if self.copyDisplayedBitmap:
             self.displayedBitmap = dc.GetAsBitmap()
@@ -265,45 +286,32 @@ class ImageViewerPanel(wx.Panel):
             self.InitBuffer()
             self.Refresh()   
     
-    def ResizeImageAndCreateBitmap(self):
-        # First determine resized width and height
-        if self.zoomToFit:
-            if self.maintainAspectRatio:
-                # Calculate image size
-                (imageWidth, imageHeight) = self.image.GetSize()
-                self.resizedWidth = min(self.displayWidth,
-                    math.floor(1.0*imageWidth*self.displayHeight/imageHeight))
-                self.resizedHeight = min(self.displayHeight,
-                    math.floor(1.0*imageHeight*self.displayWidth/imageWidth))
-                # Calculate translation to keep image centered
-                self.translation = \
-                    (0.5*(self.displayWidth - self.resizedWidth),
-                    0.5*(self.displayHeight - self.resizedHeight))
-                # Calculate derived zoomValue
-                self.zoomValue = (
-                    0.5*self.resizedWidth/imageWidth +
-                    0.5*self.resizedHeight/imageHeight)
-            else:
-                self.resizedWidth = self.displayWidth
-                self.resizedHeight = self.displayHeight
-                self.translation = (0,0)
-                self.zoomValue = None
-        else:
-            # Draw image with current width, height, and translation
-            # As calculated in zoom methods
-            pass
-
-        # If empty image or different than current, or perform resizing
-        # and create bitmap
-        if (self.resizedImage.IsOk() and 
-            self.resizedImage.GetWidth() == self.resizedWidth and
-            self.resizedImage.GetHeight() == self.resizedHeight):
-            return
-        else:
-            self.resizedImage = \
-                self.image.Scale(self.resizedWidth, self.resizedHeight,
-                    quality = self.resizeMethod)
-            self.bitmap = wx.BitmapFromImage(self.resizedImage)
+#     def ResizeImageAndCreateBitmap(self):
+#         # First determine resized width and height
+#         if self.zoomToFit:
+#             if self.maintainAspectRatio:
+# 
+#             else:
+#                 self.resizedWidth = self.displayWidth
+#                 self.resizedHeight = self.displayHeight
+#                 self.translation = (0,0)
+#                 self.zoomValue = None
+#         else:
+#             # Draw image with current width, height, and translation
+#             # As calculated in zoom methods
+#             pass
+# 
+#         # If empty image or different than current, or perform resizing
+#         # and create bitmap
+#         if (self.resizedImage.IsOk() and 
+#             self.resizedImage.GetWidth() == self.resizedWidth and
+#             self.resizedImage.GetHeight() == self.resizedHeight):
+#             return
+#         else:
+#             self.resizedImage = \
+#                 self.image.Scale(self.resizedWidth, self.resizedHeight,
+#                     quality = self.resizeMethod)
+#             self.bitmap = wx.BitmapFromImage(self.resizedImage)
 
     def CenterImage(self):
         self.translation = (
@@ -386,6 +394,7 @@ class ImageViewerPanel(wx.Panel):
             (x for x in self.zoomValues if x > self.zoomValue),
             self.zoomValues[-1])
         self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.userScale = (self.zoomValue, self.zoomValue)
         self.ZoomToClick(clickPosition)        
         # Redraw
         self.ReInitBuffer()
@@ -399,6 +408,7 @@ class ImageViewerPanel(wx.Panel):
             (x for x in reversed(self.zoomValues) if x < self.zoomValue),
             self.zoomValues[0])
         self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.userScale = (self.zoomValue, self.zoomValue)        
         self.ZoomToClick(clickPosition)        
         # Redraw
         self.ReInitBuffer()
@@ -410,6 +420,7 @@ class ImageViewerPanel(wx.Panel):
         # Set zoomValue at 1.0
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.userScale = (self.zoomValue, self.zoomValue)
         self.ZoomToClick(clickPosition)
         # Redraw
         self.ReInitBuffer()
@@ -435,6 +446,7 @@ class ImageViewerPanel(wx.Panel):
     def SetZoomIndex(self, index):
         self.zoomIndex = index
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.userScale = (self.zoomValue, self.zoomValue)        
         # Redraw
         self.ReInitBuffer()
         
@@ -455,6 +467,7 @@ class ImageViewerPanel(wx.Panel):
         # If we zoom in too far, we crash due to resizing the image,
         # so clamp at a maximum until we figure out how to fix
         self.zoomValue = min(self.zoomValue, self.zoomValues[-1])
+        self.userScale = (self.zoomValue, self.zoomValue)        
             
         newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
         newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())            
