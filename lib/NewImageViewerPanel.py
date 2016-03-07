@@ -3,8 +3,6 @@ import os
 import math
 
 # To Do:
-#   - Finish GetDisplayedImage method
-#   - Constrain translation so the image stays on the page
 #   - Create an eyedropper tool (simple crosshair first, then
 #       more complicated with a zoom loupe)
 #   - Figure out how best to zoom in to large images, zooming
@@ -67,6 +65,7 @@ class ImageViewerPanel(wx.Panel):
         self.actualSizeZoomIndex = 5
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.panBorder = 50
         
         # Temporary state variables
         self.displayWidth = 1
@@ -81,6 +80,8 @@ class ImageViewerPanel(wx.Panel):
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.resizedImage = wx.EmptyImage()
         self.bitmap = wx.EmptyBitmap(1, 1) # This is a bitmap of the resized
+        self.copyDisplayedBitmap = False
+        self.displayedBitmap = wx.EmptyBitmap(1, 1)
         self.crosshairPosition = (0, 0)
         self.cursorInWindow = True
         
@@ -128,16 +129,31 @@ class ImageViewerPanel(wx.Panel):
         if self.mouseMode == 1:
             if self.HasCapture() and event.Dragging() and event.LeftIsDown():
                 newPos = event.GetPositionTuple()
-                delta = (newPos[0] - self.clickPosition[0],
+                delta = (
+                    newPos[0] - self.clickPosition[0],
                     newPos[1] - self.clickPosition[1])
-                self.translation = (self.oldTranslation[0] + delta[0],
+                self.translation = (
+                    self.oldTranslation[0] + delta[0],
                     self.oldTranslation[1] + delta[1])
+                # Constrain translation so the image does not
+                # leave the frame
+                self.translation = (
+                    max(
+                        min(self.translation[0], 
+                        self.displayWidth - self.panBorder),
+                        self.panBorder - self.resizedWidth),
+                    max(
+                        min(self.translation[1],
+                        self.displayHeight - self.panBorder),
+                        self.panBorder - self.resizedHeight))                    
                 self.ReInitBuffer()
         if self.mouseMode == 2:
             if self.HasCapture and event.Dragging() and event.LeftIsDown():
                 self.drawRectangle = True
                 self.dragPosition = event.GetPositionTuple()
                 self.ReInitBuffer()
+                
+
                 
                 
                 
@@ -214,6 +230,10 @@ class ImageViewerPanel(wx.Panel):
                  
         dc.DrawBitmap(self.bitmap, 
             self.translation[0], self.translation[1], True)
+            
+        if self.copyDisplayedBitmap:
+            self.displayedBitmap = dc.GetAsBitmap()
+            self.copyDisplayedBitmap = False
         
         if self.drawCrosshair and self.cursorInWindow:
             dc.DrawLine(0, self.crosshairPosition[1],
@@ -311,17 +331,12 @@ class ImageViewerPanel(wx.Panel):
         self.resizedImage = wx.EmptyImage() 
         self.CenterImage()
         
-    def GetDisplayedImage(self):
-        # This should return the portion of the image
-        # that is actually displayed if the image
-        # is larger than the display area
-#         subRect = wx.Rect(-self.translation[0],
-#             -self.translation[1],
-#             view_width, view_height)
-#             print(subRect.Get())
-#         self.croppedDisplayedImage = \
-#             self.displayedImage.GetSubImage(subRect)
-        return self.displayedImage
+    def GetDisplayedBitmap(self):
+        self.copyDisplayedBitmap = True
+        # Always force InitBuffer (versus calling ReInitBuffer())
+        self.InitBuffer()
+        self.Refresh()   
+        return self.displayedBitmap
 
     def GetZoomToFit(self):
         return self.zoomToFit
@@ -543,6 +558,12 @@ class ImageControlPanel(wx.Panel):
         self.Bind(wx.EVT_BUTTON, self.OnCenterImageButton,
             self.centerImageButton)
             
+        self.getDisplayedBitmapButton = \
+            wx.Button(self, -1, "Get Displayed Bitmap",
+            (0, 160), (100, 20))
+        self.Bind(wx.EVT_BUTTON, self.OnGetDisplayedBitmapButton,
+            self.getDisplayedBitmapButton)
+            
     # Event Handlers        
         
     def OnMaintainAspectRatioChecked(self, event):
@@ -596,6 +617,9 @@ class ImageControlPanel(wx.Panel):
         
     def OnCenterImageButton(self, event):
         self.imageViewerPanel.CenterImage()
+        
+    def OnGetDisplayedBitmapButton(self, event):
+        self.imageViewerPanel.GetDisplayedBitmap()
         
 
 class ControlledImageViewerPanel(wx.Panel):
