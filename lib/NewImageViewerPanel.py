@@ -226,10 +226,16 @@ class ImageViewerPanel(wx.Panel):
         if not self.image.Ok():
             return
             
-        self.ResizeImageAndCreateBitmap()
-                 
+#        self.ResizeImageAndCreateBitmap()
+
+        self.translation = (0,0)
+        
+        dc.SetUserScale(self.zoomValue, self.zoomValue)                 
         dc.DrawBitmap(self.bitmap, 
             self.translation[0], self.translation[1], True)
+            
+
+        print(self.zoomValue)
             
         if self.copyDisplayedBitmap:
             self.displayedBitmap = dc.GetAsBitmap()
@@ -328,6 +334,7 @@ class ImageViewerPanel(wx.Panel):
         self.image = image
         # Clear old resized image, this tells
         # InitBuffer that there is new data
+        self.bitmap = wx.BitmapFromImage(self.image)
         self.resizedImage = wx.EmptyImage() 
         self.CenterImage()
         
@@ -335,7 +342,7 @@ class ImageViewerPanel(wx.Panel):
         self.copyDisplayedBitmap = True
         # Always force InitBuffer (versus calling ReInitBuffer())
         self.InitBuffer()
-        self.Refresh()   
+        self.Refresh()
         return self.displayedBitmap
 
     def GetZoomToFit(self):
