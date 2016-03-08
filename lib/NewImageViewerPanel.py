@@ -5,13 +5,11 @@ import math
 # To Do:
 #   - Create an eyedropper tool (simple crosshair first, then
 #       more complicated with a zoom loupe)
-#   - Figure out how best to zoom in to large images, zooming
-#       out seems to work okay.
 #   - A mouse mode where one can adjust brightness
 #       and contrast by scrubbing along X and Y directions
 #   - What is the best way to ignore accidental right-click while
 #       holding down left-click (and vice-versa)?
-#       Could introduce a flag, but I feel that there must
+#       Could introduce a flag, but I feel th0at there must
 #       be a better way.
 
 
@@ -60,27 +58,28 @@ class ImageViewerPanel(wx.Panel):
             'Zoom',
             'Eyedropper']
         self.mouseMode = 1
-        self.zoomValues = [0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
-            1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0]
-        self.actualSizeZoomIndex = 5
+        self.zoomValues = [0.03125, 0.0625, 0.125, 0.25, 0.5, 0.75, 1.0, 
+            1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0]
+        self.actualSizeZoomIndex = 6
         self.zoomIndex = self.actualSizeZoomIndex
         self.zoomValue = self.zoomValues[self.zoomIndex]
         # Zoom in x and y directions        
         self.userScale = (self.zoomValue, self.zoomValue)
+        # Used in ZoomToClick calculation
+        self.oldUserScale = (self.zoomValue, self.zoomValue)
         self.panBorder = 50
         
         # Temporary state variables
         self.displayWidth = 1
-        self.displayHeight = 1        
-        self.resizedWidth = 1
-        self.resizedHeight = 1
+        self.displayHeight = 1
+        self.imageWidth = 1
+        self.imageHeight = 1        
         self.clickPosition = (0, 0)
         self.dragPosition = (0, 0)
-        self.translation = (0, 0)
+        self.translation = (0, 0) # Prior to userScale (screen coordinates)
         self.oldTranslation = (0, 0)
         self.buffer = None # This is the entire dc buffer
         self.image = wx.EmptyImage() # Initialize with an empty image
-        self.resizedImage = wx.EmptyImage()
         self.bitmap = wx.EmptyBitmap(1, 1) # This is a bitmap of the resized
         self.copyDisplayedBitmap = False
         self.displayedBitmap = wx.EmptyBitmap(1, 1)
@@ -105,6 +104,7 @@ class ImageViewerPanel(wx.Panel):
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         self.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
 
+
     ## Event handlers
     
     def OnSize(self, event):
@@ -122,7 +122,7 @@ class ImageViewerPanel(wx.Panel):
         if self.idleBuffer and self.reInitBuffer:
             self.InitBuffer()
             self.Refresh()
-        self.reInitBuffer = False
+            self.reInitBuffer = False
         
     def OnMotion(self, event):
         if self.drawCrosshair:
@@ -134,20 +134,9 @@ class ImageViewerPanel(wx.Panel):
                 delta = (
                     newPos[0] - self.clickPosition[0],
                     newPos[1] - self.clickPosition[1])
-                self.translation = (
+                self.SetTranslation((
                     self.oldTranslation[0] + delta[0],
-                    self.oldTranslation[1] + delta[1])
-                # Constrain translation so the image does not
-                # leave the frame
-                self.translation = (
-                    max(
-                        min(1.0*self.translation[0], 
-                        self.displayWidth - self.panBorder),
-                        self.panBorder - self.resizedWidth),
-                    max(
-                        min(1.0*self.translation[1],
-                        self.displayHeight - self.panBorder),
-                        self.panBorder - self.resizedHeight))                    
+                    self.oldTranslation[1] + delta[1]))
                 self.ReInitBuffer()
         if self.mouseMode == 2:
             if self.HasCapture and event.Dragging() and event.LeftIsDown():
@@ -155,15 +144,27 @@ class ImageViewerPanel(wx.Panel):
                 self.dragPosition = event.GetPositionTuple()
                 self.ReInitBuffer()
                 
+    def OnLeaveWindow(self, event):
+        # If the mouse leaves the ImageViewerPanel, 
+        # refresh to remove the crosshair
+        self.cursorInWindow = False
+        if self.drawCrosshair:
+            self.ReInitBuffer()
+
+    def OnEnterWindow(self, event):
+        # If the mouse returns to the ImageViewerPanel,
+        # refresh to redraw the crosshair
+        self.cursorInWindow = True
+        if self.drawCrosshair:
+            self.ReInitBuffer()
 
     def OnLeftDown(self, event):
         self.CaptureMouse()    
         if self.mouseMode == 1:
             self.clickPosition = event.GetPositionTuple()
-            self.oldTranslation = self.translation
+            self.oldTranslation = self.GetTranslation()
         if self.mouseMode == 2:
             self.clickPosition = event.GetPositionTuple()
-     
         
     def OnLeftUp(self, event):
         if self.HasCapture():
@@ -183,7 +184,6 @@ class ImageViewerPanel(wx.Panel):
         if self.mouseMode == 2:
             self.clickPosition = event.GetPositionTuple()
         
-        
     def OnRightUp(self, event):
         if self.HasCapture():
             if self.mouseMode == 2:
@@ -197,21 +197,7 @@ class ImageViewerPanel(wx.Panel):
                 self.DecreaseZoomValue(event.GetPositionTuple())
             elif x < 0:
                 self.IncreaseZoomValue(event.GetPositionTuple())
-            
-    def OnLeaveWindow(self, event):
-        # If the mouse leaves the ImageViewerPanel, 
-        # refresh to remove the crosshair
-        self.cursorInWindow = False
-        if self.drawCrosshair:
-            self.ReInitBuffer()
-
-    def OnEnterWindow(self, event):
-        # If the mouse returns to the ImageViewerPanel,
-        # refresh to redraw the crosshair
-        self.cursorInWindow = True
-        if self.drawCrosshair:
-            self.ReInitBuffer()
-
+                
     ## Helper Methods           
         
     def InitBuffer(self):
@@ -226,20 +212,19 @@ class ImageViewerPanel(wx.Panel):
             return
             
         if self.zoomToFit:
-            (imageWidth, imageHeight) = self.image.GetSize()
             if self.maintainAspectRatio:
                 self.zoomValue = min(
-                    1.0*self.displayWidth/imageWidth,
-                    1.0*self.displayHeight/imageHeight)
+                    1.0*self.displayWidth/self.imageWidth,
+                    1.0*self.displayHeight/self.imageHeight)
                 self.userScale = (self.zoomValue, self.zoomValue)
                 # Set translation to center
                 self.CenterImage()                
             else:
                 self.userScale = (
-                    1.0*self.displayWidth/imageWidth,
-                    1.0*self.displayHeight/imageHeight)
+                    1.0*self.displayWidth/self.imageWidth,
+                    1.0*self.displayHeight/self.imageHeight)
                 self.zoomValue = None
-                self.translation = (0, 0)                
+                self.SetTranslation((0, 0))
         else:
             # Draw image with current width, height, and
             # translation as calculated in zoom methods
@@ -250,42 +235,156 @@ class ImageViewerPanel(wx.Panel):
             1.0*self.translation[0]/self.userScale[0],
             1.0*self.translation[1]/self.userScale[1], True)
             
-            
         if self.copyDisplayedBitmap:
             self.displayedBitmap = dc.GetAsBitmap()
             self.copyDisplayedBitmap = False
-        
+
+        # Draw all lines at user scale (1, 1)            
+        dc.SetUserScale(1, 1)
+      
         if self.drawCrosshair and self.cursorInWindow:
-            dc.DrawLine(0, self.crosshairPosition[1],
-                self.displayWidth, self.crosshairPosition[1])
-            dc.DrawLine(self.crosshairPosition[0], 0,
-                self.crosshairPosition[0], self.displayHeight)
+            # Draws crosshair
+            dc.DrawLine(
+                0, 
+                self.crosshairPosition[1],
+                self.displayWidth,
+                self.crosshairPosition[1])
+            dc.DrawLine(
+                self.crosshairPosition[0],
+                0,
+                self.crosshairPosition[0],
+                self.displayHeight)
                 
         if self.drawRectangle:
             # Draws a rectangle for zooming into an ROI
-            dc.DrawLine(self.clickPosition[0], self.clickPosition[1],
-                self.clickPosition[0], self.dragPosition[1])
-            dc.DrawLine(self.clickPosition[0], self.dragPosition[1],
-                self.dragPosition[0], self.dragPosition[1])
-            dc.DrawLine(self.dragPosition[0], self.dragPosition[1],
-                self.dragPosition[0], self.clickPosition[1])
-            dc.DrawLine(self.dragPosition[0], self.clickPosition[1],
-                self.clickPosition[0], self.clickPosition[1])
+            dc.DrawLine(
+                self.clickPosition[0],
+                self.clickPosition[1],
+                self.clickPosition[0],
+                self.dragPosition[1])
+            dc.DrawLine(
+                self.clickPosition[0],
+                self.dragPosition[1],
+                self.dragPosition[0],
+                self.dragPosition[1])
+            dc.DrawLine(
+                self.dragPosition[0],
+                self.dragPosition[1],
+                self.dragPosition[0],
+                self.clickPosition[1])
+            dc.DrawLine(
+                self.dragPosition[0],
+                self.clickPosition[1],
+                self.clickPosition[0],
+                self.clickPosition[1])
         
     def ReInitBuffer(self):
         if self.idleBuffer:
             self.reInitBuffer = True
         else:
             self.InitBuffer()
-            self.Refresh()   
-    
+            self.Refresh()
+               
     def CenterImage(self):
-        (imageWidth, imageHeight) = self.image.GetSize()    
-        self.translation = (
-            0.5*self.displayWidth - 0.5*self.userScale[0]*imageWidth,
-            0.5*self.displayHeight - 0.5*self.userScale[1]*imageHeight) 
+        self.SetTranslation((
+            0.5*self.displayWidth - 0.5*self.userScale[0]*self.imageWidth,
+            0.5*self.displayHeight - 0.5*self.userScale[1]*self.imageHeight))
+            
+    def CenterImageAndReInitBuffer(self):
+        self.CenterImage()
+        self.ReInitBuffer()
+        
+    def IncreaseZoomValue(self, clickPosition = None):
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # First find the next highest zoom level
+        self.zoomValue = next(
+            (x for x in self.zoomValues if x > self.zoomValue),
+            self.zoomValues[-1])
+        self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.SetUserScale((self.zoomValue, self.zoomValue))
+        self.ZoomToClick(clickPosition)        
+        # Redraw
+        self.ReInitBuffer()
+        
+    def DecreaseZoomValue(self, clickPosition = None):
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # First find the next lowest zoom level
+        self.zoomValue = next(
+            (x for x in reversed(self.zoomValues) if x < self.zoomValue),
+            self.zoomValues[0])
+        self.zoomIndex = self.zoomValues.index(self.zoomValue)
+        self.SetUserScale((self.zoomValue, self.zoomValue))  
+        self.ZoomToClick(clickPosition)        
+        # Redraw
+        self.ReInitBuffer()
+        
+    def ActualSizeZoomValue(self, clickPosition = None):
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # Set zoomValue at 1.0
+        self.zoomIndex = self.actualSizeZoomIndex
+        self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.SetUserScale((self.zoomValue, self.zoomValue))
+        self.ZoomToClick(clickPosition)
+        # Redraw
+        self.ReInitBuffer()
+        
+    def ZoomToClick(self, clickPosition = None):
+        if clickPosition is None:
+            self.clickPosition = (0.5*self.displayWidth,
+                0.5*self.displayHeight)
+        else:
+            self.clickPosition = clickPosition
+        self.SetTranslation((
+            self.clickPosition[0]
+            - 1.0*self.userScale[0]*(self.clickPosition[0]
+                - self.translation[0])/self.oldUserScale[0],
+            self.clickPosition[1]
+            - 1.0*self.userScale[1]*(self.clickPosition[1]
+                - self.translation[1])/self.oldUserScale[1]))
 
+    def ZoomToRectangle(self):
+        """
+        This zooms to a rectangle defined by self.clickPosition and
+        self.dragPosition
+        """
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # Calculate rectangle size and center position               
+        rectWidth = abs(self.clickPosition[0] - self.dragPosition[0])
+        rectHeight = abs(self.clickPosition[1] - self.dragPosition[1])
+        rectCenterPosition = (
+            0.5*(self.clickPosition[0] + self.dragPosition[0]),
+            0.5*(self.clickPosition[1] + self.dragPosition[1]))
+        # Note: we are calculating the increase/decrease in the zoomValue
+        self.zoomValue = self.zoomValue*min(
+            1.0*self.displayWidth/rectWidth,
+            1.0*self.displayHeight/rectHeight)
+        self.zoomIndex = None # Indicate not a valid zoom index
+        # If zoomValue goes beyond maximum allowed zoom, set to maximum
+        if self.zoomValue > self.zoomValues[-1]:
+            self.zoomValue = self.zoomValues[-1]
+            self.zoomIndex = self.zoomValues.index(self.zoomValue)
 
+            
+        self.zoomValue = min(self.zoomValue, self.zoomValues[-1])
+        self.SetUserScale((self.zoomValue, self.zoomValue))
+        self.SetTranslation((
+            0.5*self.displayWidth 
+            - 1.0*self.userScale[0]*(rectCenterPosition[0]
+                - self.translation[0])/self.oldUserScale[0],
+            0.5*self.displayHeight
+            - 1.0*self.userScale[1]*(rectCenterPosition[1]
+                - self.translation[1])/self.oldUserScale[1]))
+        # Redraw
+        self.ReInitBuffer()
+        
     ## Get and Set Methods
     
     def GetImage(self):
@@ -293,10 +392,8 @@ class ImageViewerPanel(wx.Panel):
 
     def SetImage(self, image):
         self.image = image
-        # Clear old resized image, this tells
-        # InitBuffer that there is new data
         self.bitmap = wx.BitmapFromImage(self.image)
-        self.resizedImage = wx.EmptyImage() 
+        (self.imageWidth, self.imageHeight) = self.image.GetSize()
         self.CenterImage()
         self.ReInitBuffer()        
         
@@ -305,20 +402,54 @@ class ImageViewerPanel(wx.Panel):
         # Always force InitBuffer (versus calling ReInitBuffer())
         self.InitBuffer()
         self.Refresh()
-        self.displayedBitmap.SaveFile('Temp.png', wx.BITMAP_TYPE_PNG)
         return self.displayedBitmap
-
+        
+    def SetUserScale(self, scale = (1, 1)):
+        self.oldUserScale = self.userScale
+        self.userScale = scale
+        
+    def GetUserScale(self):
+        return self.userScale
+        
+    def GetTranslation(self):
+        return self.translation        
+        
+    def SetTranslation(self, translation = (0, 0)):
+        self.translation = translation
+        # Constrain translation so the image does not
+        # leave the frame
+        self.translation = (
+            max(
+                min(1.0*self.translation[0], 
+                self.displayWidth - self.panBorder),
+                self.panBorder - 
+                    1.0*self.userScale[0]*self.imageWidth),
+            max(
+                min(1.0*self.translation[1],
+                self.displayHeight - self.panBorder),
+                self.panBorder - 
+                    1.0*self.userScale[1]*self.imageHeight))                    
+        
     def GetZoomToFit(self):
         return self.zoomToFit
 
     def SetZoomToFit(self, value):
         self.zoomToFit = value
-        self.clickPosition = (0.5*self.displayWidth,
-            0.5*self.displayHeight)
+        self.zoomIndex = None
         self.ReInitBuffer()
+        
+    def GetZoomValue(self):
+        return self.zoomValue
         
     def GetZoomIndex(self):
         return self.zoomIndex
+        
+    def SetZoomIndex(self, index):
+        self.zoomIndex = index
+        self.zoomValue = self.zoomValues[self.zoomIndex]
+        self.SetUserScale((self.zoomValue, self.zoomValue))
+        # Redraw
+        self.ReInitBuffer()
         
     def GetIdleBuffer(self):
         return self.idleBuffer
@@ -339,107 +470,12 @@ class ImageViewerPanel(wx.Panel):
     def SetDrawCrosshair(self, value):
         self.drawCrosshair = value
         self.ReInitBuffer()
-        
-    def IncreaseZoomValue(self, clickPosition = None):
-        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
-        self.zoomToFit = False
-        self.maintainAspectRatio = True
-        # First find the next highest zoom level
-        self.zoomValue = next(
-            (x for x in self.zoomValues if x > self.zoomValue),
-            self.zoomValues[-1])
-        self.zoomIndex = self.zoomValues.index(self.zoomValue)
-        self.userScale = (self.zoomValue, self.zoomValue)
-        self.ZoomToClick(clickPosition)        
-        # Redraw
-        self.ReInitBuffer()
-        
-    def DecreaseZoomValue(self, clickPosition = None):
-        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
-        self.zoomToFit = False
-        self.maintainAspectRatio = True
-        # First find the next lowest zoom level
-        self.zoomValue = next(
-            (x for x in reversed(self.zoomValues) if x < self.zoomValue),
-            self.zoomValues[0])
-        self.zoomIndex = self.zoomValues.index(self.zoomValue)
-        self.userScale = (self.zoomValue, self.zoomValue)        
-        self.ZoomToClick(clickPosition)        
-        # Redraw
-        self.ReInitBuffer()
-        
-    def ActualSizeZoomValue(self, clickPosition = None):
-        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
-        self.zoomToFit = False
-        self.maintainAspectRatio = True
-        # Set zoomValue at 1.0
-        self.zoomIndex = self.actualSizeZoomIndex
-        self.zoomValue = self.zoomValues[self.zoomIndex]
-        self.userScale = (self.zoomValue, self.zoomValue)
-        self.ZoomToClick(clickPosition)
-        # Redraw
-        self.ReInitBuffer()
-        
-    def ZoomToClick(self, clickPosition = None):
-        if clickPosition is None:
-            self.clickPosition = (0.5*self.displayWidth,
-                0.5*self.displayHeight)
-        else:
-            self.clickPosition = clickPosition
-        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
-        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())
-        self.translation = (
-            self.clickPosition[0]
-            - 1.0*newResizedWidth*(self.clickPosition[0]
-                - self.translation[0])/self.resizedWidth,
-            self.clickPosition[1]
-            - 1.0*newResizedHeight*(self.clickPosition[1]
-                - self.translation[1])/self.resizedHeight)
-        self.resizedWidth = newResizedWidth
-        self.resizedHeight = newResizedHeight
-        
-    def SetZoomIndex(self, index):
-        self.zoomIndex = index
-        self.zoomValue = self.zoomValues[self.zoomIndex]
-        self.userScale = (self.zoomValue, self.zoomValue)        
-        # Redraw
-        self.ReInitBuffer()
-        
-    def ZoomToRectangle(self):
-        """
-        This zooms to a rectangle defined by self.clickPosition and
-        self.dragPosition
-        """
-        rectWidth = abs(self.clickPosition[0] - self.dragPosition[0])
-        rectHeight = abs(self.clickPosition[1] - self.dragPosition[1])
-        rectCenterPosition = (
-            0.5*(self.clickPosition[0] + self.dragPosition[0]),
-            0.5*(self.clickPosition[1] + self.dragPosition[1]))
-        # Note: we are calculating the increase/decrease in the zoomValue
-        self.zoomValue = self.zoomValue*min(
-            1.0*self.displayWidth/rectWidth,
-            1.0*self.displayHeight/rectHeight)
-        # If we zoom in too far, we crash due to resizing the image,
-        # so clamp at a maximum until we figure out how to fix
-        self.zoomValue = min(self.zoomValue, self.zoomValues[-1])
-        self.userScale = (self.zoomValue, self.zoomValue)        
-            
-        newResizedWidth = round(1.0*self.zoomValue*self.image.GetWidth())
-        newResizedHeight = round(1.0*self.zoomValue*self.image.GetHeight())            
-        self.translation = (
-            0.5*self.displayWidth 
-            - 1.0*newResizedWidth*(rectCenterPosition[0]
-                - self.translation[0])/self.resizedWidth,
-            0.5*self.displayHeight
-            - 1.0*newResizedHeight*(rectCenterPosition[1]
-                - self.translation[1])/self.resizedHeight)
-        self.resizedWidth = newResizedWidth
-        self.resizedHeight = newResizedHeight
-        # Redraw
-        self.ReInitBuffer()
-        
+ 
     def SetMouseMode(self, value):
         self.mouseMode = value
+        
+    def GetMouseMode(self):
+        return self.mouseMode
 
 
 class ImageControlPanel(wx.Panel):
@@ -459,91 +495,124 @@ class ImageControlPanel(wx.Panel):
             (0, 0), (200, 20))
         self.maintainAspectRatioCheckBox.SetValue(
             self.imageViewerPanel.GetMaintainAspectRatio())
-        self.Bind(wx.EVT_CHECKBOX, self.OnMaintainAspectRatioChecked,
-            self.maintainAspectRatioCheckBox)
 
         self.idleBufferCheckBox = \
             wx.CheckBox(self, -1, "Idle Buffer", 
             (0, 20), (200, 20))
         self.idleBufferCheckBox.SetValue(
             self.imageViewerPanel.GetIdleBuffer())
-        self.Bind(wx.EVT_CHECKBOX, self.OnIdleBufferChecked,
-            self.idleBufferCheckBox)
             
         self.zoomToFitCheckBox = \
             wx.CheckBox(self, -1, "Zoom to Fit",
             (0, 40), (200, 20))
         self.zoomToFitCheckBox.SetValue(
             self.imageViewerPanel.GetZoomToFit())
-        self.Bind(wx.EVT_CHECKBOX, self.OnZoomToFitChecked,
-            self.zoomToFitCheckBox)
             
         self.drawCrosshairCheckBox = \
             wx.CheckBox(self, -1, "Draw Crosshair",
             (0, 60), (200, 20))
         self.drawCrosshairCheckBox.SetValue(
             self.imageViewerPanel.GetDrawCrosshair())
-        self.Bind(wx.EVT_CHECKBOX, self.OnDrawCrosshairChecked,
-            self.drawCrosshairCheckBox)
-            
-        self.zoomInButton = \
-            wx.Button(self, -1, "Zoom In",
-            (0, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, 
-            self.zoomInButton)
             
         self.zoomOutButton = \
             wx.Button(self, -1, "Zoom Out",
+            (0, 80), (100, 20))
+
+        self.zoomInButton = \
+            wx.Button(self, -1, "Zoom In",
             (100, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, 
-            self.zoomOutButton)
-            
+
         self.actualSizeButton = \
             wx.Button(self, -1, "Actual Size",
             (200, 80), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, 
-            self.actualSizeButton)
-            
-
-#         wx.ComboBox(parent, id, value="", pos=wx.DefaultPosition,
-#                 size=wx.DefaultSize, choices, style=0,
-#                 validator=wx.DefaultValidator, name="comboBox")            
             
         zoomChoices = [100.0*x for x in self.imageViewerPanel.zoomValues]
         zoomChoices = map(str, zoomChoices)
         zoomChoices = [x + "%" for x in zoomChoices]
         self.zoomComboBox = \
             wx.ComboBox(self, -1,
-            str(100.0*self.imageViewerPanel.zoomValue)+"%",
+            ("%.1f" % (100.0*self.imageViewerPanel.GetZoomValue())) + "%",
             (320, 82), (100, 26),
             choices = zoomChoices,
-            style = wx.CB_DROPDOWN | wx.CB_READONLY)
-        self.Bind(wx.EVT_COMBOBOX, self.OnZoomComboBoxChoice, self.zoomComboBox)
-        
+            style = wx.CB_DROPDOWN)
+        self.zoomComboBox.SetEditable(False)
+
         self.mouseChoice = \
             wx.Choice(self, -1,
             (0, 112), (100, 20),
             choices = self.imageViewerPanel.mouseModes)
-        self.mouseChoice.SetSelection(self.imageViewerPanel.mouseMode)
+        self.mouseChoice.SetSelection(self.imageViewerPanel.GetMouseMode())
         self.Bind(wx.EVT_CHOICE, self.OnMouseChoice, self.mouseChoice)
         
         self.centerImageButton = \
             wx.Button(self, -1, "Center Image",
             (0, 140), (100, 20))
+            
+        # Initialie UI State
+        self.InitUIState()
+        self.reInitUIState = False            
+            
+        # Bind event handlers
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind(wx.EVT_IDLE, self.OnIdle)        
+        # Controls
+        self.Bind(wx.EVT_CHECKBOX, self.OnMaintainAspectRatioChecked,
+            self.maintainAspectRatioCheckBox)
+        self.Bind(wx.EVT_CHECKBOX, self.OnIdleBufferChecked,
+            self.idleBufferCheckBox)
+        self.Bind(wx.EVT_CHECKBOX, self.OnZoomToFitChecked,
+            self.zoomToFitCheckBox)
+        self.Bind(wx.EVT_CHECKBOX, self.OnDrawCrosshairChecked,
+            self.drawCrosshairCheckBox)
+        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, 
+            self.zoomOutButton)
+        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, 
+            self.zoomInButton)
+        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, 
+            self.actualSizeButton)
+        self.Bind(wx.EVT_COMBOBOX, self.OnZoomComboBoxChoice,
+            self.zoomComboBox)
         self.Bind(wx.EVT_BUTTON, self.OnCenterImageButton,
             self.centerImageButton)
-            
-        self.getDisplayedBitmapButton = \
-            wx.Button(self, -1, "Get Displayed Bitmap",
-            (0, 160), (100, 20))
-        self.Bind(wx.EVT_BUTTON, self.OnGetDisplayedBitmapButton,
-            self.getDisplayedBitmapButton)
-            
-    # Event Handlers        
+        # Mouse events
+        self.imageViewerPanel.Bind(wx.EVT_LEFT_UP, self.OnLeftOrRightUp)
+        self.imageViewerPanel.Bind(wx.EVT_RIGHT_UP, self.OnLeftOrRightUp)
+        self.imageViewerPanel.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+
+    # Event Handlers
+    
+    def OnSize(self, event):
+        if self.imageViewerPanel.GetZoomToFit():
+            self.reInitUIState = True
+    
+    def OnIdle(self, event):
+        if self.reInitUIState:
+            self.InitUIState()
+            self.reInitUIState = False
+#         if self.idleBuffer and self.reInitBuffer:
+#             self.InitBuffer()
+#             self.Refresh()
+#         self.reInitBuffer = False
+    
+    
+    def InitUIState(self):
+        """
+        This sets the Control Panel UI State to reflect
+        that of the ImageViewerPanel
+        """
+        if self.imageViewerPanel.GetZoomIndex() is None:
+            # Set explicitly to zoom level
+            self.zoomComboBox.SetValue(
+                ("%.1f" % (100.0*self.imageViewerPanel.GetZoomValue())) + "%")
+        else:
+            self.zoomComboBox.SetSelection(
+                self.imageViewerPanel.GetZoomIndex())          
         
     def OnMaintainAspectRatioChecked(self, event):
         self.imageViewerPanel.SetMaintainAspectRatio(
             self.maintainAspectRatioCheckBox.IsChecked())
+        self.zoomComboBox.Enable(
+            self.imageViewerPanel.GetMaintainAspectRatio())
             
     def OnIdleBufferChecked(self, event):
         self.imageViewerPanel.SetIdleBuffer(
@@ -552,30 +621,26 @@ class ImageControlPanel(wx.Panel):
     def OnZoomToFitChecked(self, event):
         self.imageViewerPanel.SetZoomToFit(
             self.zoomToFitCheckBox.IsChecked())
-#        This update needs to hapen after the zoomValue is updated, 
-#          could move the calculation of the zoom, but then
-#       how do I update this if the aspect ratio isn't maintained?
-#       I suppose just disabling it for now should be fine.            
-#         self.zoomComboBox.SetLabel(
-#              "%.2f" % (100.0*self.imageViewerPanel.zoomValue) + "%")
-        self.zoomComboBox.Enable(not self.imageViewerPanel.GetZoomToFit())
+        self.zoomComboBox.Enable(
+            self.imageViewerPanel.GetMaintainAspectRatio())
+        self.reInitUIState = True
             
     def OnDrawCrosshairChecked(self, event):
         self.imageViewerPanel.SetDrawCrosshair(
             self.drawCrosshairCheckBox.IsChecked())
             
-    def OnZoomInButton(self, event):
-        self.imageViewerPanel.IncreaseZoomValue()
-        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
-        self.zoomToFitCheckBox.SetValue(False)
-        self.zoomComboBox.Enable(True)
-        
     def OnZoomOutButton(self, event):
         self.imageViewerPanel.DecreaseZoomValue()
         self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
         self.zoomToFitCheckBox.SetValue(False)
         self.zoomComboBox.Enable(True)        
                 
+    def OnZoomInButton(self, event):
+        self.imageViewerPanel.IncreaseZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)
+        
     def OnActualSizeButton(self, event):
         self.imageViewerPanel.ActualSizeZoomValue()
         self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
@@ -584,17 +649,29 @@ class ImageControlPanel(wx.Panel):
                 
     def OnZoomComboBoxChoice(self, event):
         self.imageViewerPanel.SetZoomIndex(self.zoomComboBox.GetSelection())
+        self.imageViewerPanel.SetZoomToFit(False)
         self.zoomToFitCheckBox.SetValue(False)
-        self.zoomComboBox.Enable(True)        
         
     def OnMouseChoice(self, event):
         self.imageViewerPanel.SetMouseMode(self.mouseChoice.GetSelection())
         
     def OnCenterImageButton(self, event):
-        self.imageViewerPanel.CenterImage()
+        self.imageViewerPanel.CenterImageAndReInitBuffer()
         
-    def OnGetDisplayedBitmapButton(self, event):
-        self.imageViewerPanel.GetDisplayedBitmap()
+    # Mouse event handlers
+    
+    def OnLeftOrRightUp(self, event):
+        if self.imageViewerPanel.GetMouseMode() == 2:
+            self.reInitUIState = True
+        event.Skip()
+
+    def OnMouseWheel(self, event):
+        # The zoom level may change upon mouse wheel
+        if (self.imageViewerPanel.GetMouseMode() == 1 or
+            self.imageViewerPanel.GetMouseMode() == 2):
+            self.reInitUIState = True
+        event.Skip() 
+
         
 
 class ControlledImageViewerPanel(wx.Panel):
