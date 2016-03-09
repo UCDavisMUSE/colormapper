@@ -445,12 +445,17 @@ class ImageViewerPanel(wx.Panel):
         return self.zoomIndex
         
     def SetZoomIndex(self, index):
+        # Ensure zoomToFit is off, maintainAspectRatio is on (for now)
+        self.zoomToFit = False
+        self.maintainAspectRatio = True
+        # Set zoomValue at 1.0
         self.zoomIndex = index
         self.zoomValue = self.zoomValues[self.zoomIndex]
         self.SetUserScale((self.zoomValue, self.zoomValue))
+        self.ZoomToClick()
         # Redraw
-        self.ReInitBuffer()
-        
+        self.ReInitBuffer()    
+
     def GetIdleBuffer(self):
         return self.idleBuffer
         
@@ -648,8 +653,8 @@ class ImageControlPanel(wx.Panel):
         self.zoomComboBox.Enable(True)
                 
     def OnZoomComboBoxChoice(self, event):
+        self.imageViewerPanel.SetZoomToFit(False)    
         self.imageViewerPanel.SetZoomIndex(self.zoomComboBox.GetSelection())
-        self.imageViewerPanel.SetZoomToFit(False)
         self.zoomToFitCheckBox.SetValue(False)
         
     def OnMouseChoice(self, event):
