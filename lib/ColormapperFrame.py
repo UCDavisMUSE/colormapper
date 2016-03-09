@@ -4,7 +4,7 @@ import cPickle
 import numpy as np
 import copy
 from BlockWindow import BlockWindow
-from ImageViewerPanel import ImageViewerPanel
+from NewImageViewerPanel import ImageViewerPanel, ImageControlToolbar
 from ColormapperSettings import ColormapperSettings
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
@@ -48,8 +48,12 @@ class ColormapperFrame(wx.Frame):
     def createMainInterfaceWindow(self):
       
         # Create sub panels
-        self.inputImagePanel = ImageViewerPanel(self, label = "Input Image", size = (300, 200))
-        self.outputImagePanel = ImageViewerPanel(self, label = "Output Image", size = (300, 200))
+        self.inputImagePanel = ImageViewerPanel(self)
+        self.inputImagePanel.SetZoomToFit(True)
+        self.outputImagePanel = ImageViewerPanel(self)
+        self.outputImagePanel.SetMouseMode(0)
+        self.imageControlToolbar = ImageControlToolbar(self,
+            self.inputImagePanel)
         self.unmixPanel = UnmixPanel(self, self.settings)
         self.remixPanel = RemixPanel(self, self.settings)
         # Arrange the input and output images side-by-side
@@ -62,15 +66,38 @@ class ColormapperFrame(wx.Frame):
         self.horizontalControlSizer.Add(self.remixPanel, 1, wx.EXPAND | wx.ALL, 2)
         # Arrange the controls below the images
         self.verticalSizer = wx.BoxSizer(wx.VERTICAL)
+        self.verticalSizer.Add(self.imageControlToolbar, flag = wx.EXPAND)
         self.verticalSizer.Add(self.horizontalSizer, 1, flag=wx.EXPAND)
         self.verticalSizer.Add(self.horizontalControlSizer, flag=wx.EXPAND)
         # Set the sizer to be the main verticalSizer
         self.SetSizer(self.verticalSizer)
 
         # Show RGB Values in Status Bar when hovering over image
-        self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
-        self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
+#        self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
+#        self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
+
+
+        # Add code to recompute unmix upon control toolbar or viewer events
+        self.imageControlToolbar.Bind(wx.EVT_CHOICE, self.OnControlToolbarEvent,
+            self.imageControlToolbar.mouseChoice)            
+        self.imageControlToolbar.Bind(wx.EVT_BUTTON, self.OnControlToolbarEvent,
+            self.imageControlToolbar.zoomInButton)
+        self.imageControlToolbar.Bind(wx.EVT_BUTTON, self.OnControlToolbarEvent,
+            self.imageControlToolbar.actualSizeButton)
+        self.imageControlToolbar.Bind(wx.EVT_BUTTON, self.OnControlToolbarEvent,
+            self.imageControlToolbar.zoomOutButton)
+        self.imageControlToolbar.Bind(wx.EVT_COMBOBOX, self.OnControlToolbarEvent,
+            self.imageControlToolbar.zoomComboBox)
+        self.imageControlToolbar.Bind(wx.EVT_CHECKBOX, self.OnControlToolbarEvent,
+            self.imageControlToolbar.zoomToFitCheckBox)   
+        self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnControlToolbarEvent)
+        self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnControlToolbarEvent)
+        self.inputImagePanel.Bind(wx.EVT_RIGHT_DOWN, self.OnControlToolbarEvent)
+        self.inputImagePanel.Bind(wx.EVT_RIGHT_UP, self.OnControlToolbarEvent)
+        self.inputImagePanel.Bind(wx.EVT_MOUSEWHEEL, self.OnControlToolbarEvent)
         
+        
+                 
         # Add code for crosshair button click in Unmix and Remix Panels
         self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
             self.unmixPanel.buttonBackgroundCrosshair)
@@ -81,16 +108,20 @@ class ColormapperFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
             self.remixPanel.buttonNucleiCrosshair)                                    
             
-        self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.outputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.outputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.inputImagePanel.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+#        self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+#        self.outputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+#        self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+#        self.outputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+#        self.inputImagePanel.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
         self.Bind(wx.EVT_CHAR_HOOK, self.OnKey)
 
         
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind(wx.EVT_IDLE, self.OnIdle)
+        
+    def OnControlToolbarEvent(self, event):
+        self.unmixPanel.recomputeUnmix = True
+        event.Skip()
         
         
     def OnInputMotion(self, event):
@@ -371,12 +402,8 @@ class ColormapperFrame(wx.Frame):
             success = wx.TheClipboard.GetData(data)
             wx.TheClipboard.Close()
         if success:
-            self.inputImagePanel.image = wx.ImageFromBitmap(data.GetBitmap())
-            self.inputImagePanel.newImageData = True
-            self.inputImagePanel.reInitBuffer = True
-            self.outputImagePanel.image = wx.EmptyImage()
-            self.outputImagePanel.newImageData = True
-            self.outputImagePanel.reInitBuffer = True
+            self.inputImagePanel.SetImage(
+                wx.ImageFromBitmap(data.GetBitmap()))
             self.unmixPanel.recomputeUnmix = True
 
     def ReadFile(self):
@@ -419,16 +446,16 @@ class ColormapperFrame(wx.Frame):
             try:
                 fileExtension = os.path.splitext(self.imageFilename)[1]
                 if fileExtension == ".png":
-                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_PNG)
+                    self.inputImagePanel.SetImage(wx.Image(self.imageFilename, wx.BITMAP_TYPE_PNG))
                 elif fileExtension == ".jpg" or fileExtension == ".jpeg":
-                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_JPEG)
+                    self.inputImagePanel.SetImage(wx.Image(self.imageFilename, wx.BITMAP_TYPE_JPEG))
                 elif fileExtension == ".tif" or fileExtension == ".tiff":
-                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_TIF)
+                    self.inputImagePanel.SetImage(wx.Image(self.imageFilename, wx.BITMAP_TYPE_TIF))
                 elif fileExtension == ".bmp":
-                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_BMP)
+                    self.inputImagePanel.SetImage(wx.Image(self.imageFilename, wx.BITMAP_TYPE_BMP))
                 else:
                     # nolog = wx.LogNull() # Uncommenting will not log errors 
-                    self.inputImagePanel.image = wx.Image(self.imageFilename, wx.BITMAP_TYPE_ANY)
+                    self.inputImagePanel.SetImage(wx.Image(self.imageFilename, wx.BITMAP_TYPE_ANY))
                     #del nolog
                 self.SetTitle(self.title + ' - ' + os.path.split(self.imageFilename)[1])
                 self.currentDirectory = os.path.split(self.imageFilename)[0]            
@@ -437,13 +464,6 @@ class ColormapperFrame(wx.Frame):
                 # prevent overwrites on the save command, as well as reinitialize the buffer
                 # and clear the output image
                 self.filename = ""
-                self.inputImagePanel.newImageData = True
-                self.inputImagePanel.reInitBuffer = True
-                self.inputImagePanel.InitBuffer()
-                self.inputImagePanel.Refresh()
-                self.outputImagePanel.image = wx.EmptyImage()
-                self.outputImagePanel.newImageData = True
-                self.outputImagePanel.reInitBuffer = True
                 self.unmixPanel.recomputeUnmix = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
@@ -474,17 +494,15 @@ class ColormapperFrame(wx.Frame):
     def UnmixImage(self):
         if not self.inputImagePanel.image.Ok():
             return
-        if not self.inputImagePanel.croppedDisplayedImage.Ok():
-            return
     
-        print("Unmixing.")
         # Convert wx.Image to numpy array
-        inputImageBuffer = self.inputImagePanel.croppedDisplayedImage.GetDataBuffer()
+        image = self.inputImagePanel.GetDisplayedImage()
+        inputImageBuffer = image.GetDataBuffer()
         inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
             
         # Reshape the input numpy array to a width X height X 3 RGB image
-        self.inputImageWidth = self.inputImagePanel.croppedDisplayedImage.GetWidth()
-        self.inputImageHeight = self.inputImagePanel.croppedDisplayedImage.GetHeight()
+        self.inputImageWidth = image.GetWidth()
+        self.inputImageHeight = image.GetHeight()
         self.inputImageSize = inputImageArray.size     
         self.inputImageArray = inputImageArray.reshape(self.inputImageWidth, self.inputImageHeight, 3)
         self.outputImageArray = copy.copy(self.inputImageArray)
@@ -507,8 +525,6 @@ class ColormapperFrame(wx.Frame):
 
     def RemixImage(self):
         if not self.inputImagePanel.image.Ok():
-            return
-        if not self.inputImagePanel.displayedImage.Ok():
             return
         
         components = copy.copy(self.unmixComponents)
@@ -533,12 +549,9 @@ class ColormapperFrame(wx.Frame):
 
         # Convert the output numpy array to a wx.Image
         # First initialize with an empty image
-        self.outputImagePanel.image = wx.EmptyImage(outputImageWidth, outputImageHeight)
-        self.outputImagePanel.image.SetData(self.outputImageArray.tostring())
-
-        # Tell the outputImagePanel to refresh the display    
-        self.outputImagePanel.newImageData = True        
-        self.outputImagePanel.reInitBuffer = True
+        image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+        image.SetData(self.outputImageArray.tostring())
+        self.outputImagePanel.SetImage(image)
             
     def OnCloseWindow(self, event):
         self.Destroy()        
