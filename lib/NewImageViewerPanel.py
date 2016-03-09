@@ -12,7 +12,6 @@ import math
 #       Could introduce a flag, but I feel th0at there must
 #       be a better way.
 
-
 class ImageViewerPanel(wx.Panel):
 
     def __init__(self, parent, id = -1):
@@ -599,9 +598,6 @@ class ImageControlPanel(wx.Panel):
         else:
             self.InitUIState()
             self.Refresh
-
-
-            
     
     def InitUIState(self):
         """
@@ -631,7 +627,6 @@ class ImageControlPanel(wx.Panel):
                 
         self.mouseChoice.SetSelection(
             self.imageViewerPanel.GetMouseMode())
-        
         
     def OnMaintainAspectRatioChecked(self, event):
         self.imageViewerPanel.SetMaintainAspectRatio(
@@ -685,7 +680,7 @@ class ImageControlPanel(wx.Panel):
     def OnCenterImageButton(self, event):
         self.imageViewerPanel.CenterImageAndReInitBuffer()
         
-    # Mouse event handlers
+    # Mouse event handlers needed to update UI upon zoom changes
     
     def OnLeftOrRightUp(self, event):
         if self.imageViewerPanel.GetMouseMode() == 2:
@@ -698,7 +693,6 @@ class ImageControlPanel(wx.Panel):
             self.imageViewerPanel.GetMouseMode() == 2):
             self.ReInitUIState()
         event.Skip() 
-
         
 
 class ControlledImageViewerPanel(wx.Panel):
