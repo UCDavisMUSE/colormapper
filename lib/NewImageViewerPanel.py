@@ -4,7 +4,8 @@ import math
 
 # To Do:
 #   - Create an eyedropper tool (simple crosshair first, then
-#       more complicated with a zoom loupe)
+#       more complicated with a zoom loupe). I'm not sure
+#       how to best implement this.
 #   - A mouse mode where one can adjust brightness
 #       and contrast by scrubbing along X and Y directions
 #   - What is the best way to ignore accidental right-click while
@@ -480,6 +481,171 @@ class ImageViewerPanel(wx.Panel):
         
     def GetMouseMode(self):
         return self.mouseMode
+        
+
+class ImageControlToolbar(wx.Panel):
+    """
+    This is a thin toolbar for the ImageViewerPanel.
+    """
+    
+    def __init__(self, parent, imageViewerPanel, id = -1):
+        wx.Panel.__init__(self, parent, id)
+        
+        # Default Settings
+        self.idleReInitUIState = False
+        self.reInitUIState = False
+        
+        # Set the Image Viewer Panel that this Image Control Panel controls
+        self.imageViewerPanel = imageViewerPanel
+
+        # Construct controls
+        # Values are correctly set when calling
+        # ReInitUIState within initial OnSize
+        self.mouseChoice = \
+            wx.Choice(self, -1,
+            (0, 2), (100, 20),
+            choices = self.imageViewerPanel.mouseModes)        
+        
+        self.zoomInButton = \
+            wx.Button(self, -1, "Zoom In",
+            (100, 0), (100, 20))
+            
+        self.actualSizeButton = \
+            wx.Button(self, -1, "Actual Size",
+            (200, 0), (100, 20))
+            
+        self.zoomOutButton = \
+            wx.Button(self, -1, "Zoom Out",
+            (300, 0), (100, 20))    
+            
+        zoomChoices = [100.0*x for x in self.imageViewerPanel.zoomValues]
+        zoomChoices = map(str, zoomChoices)
+        zoomChoices = [x + "%" for x in zoomChoices]
+        self.zoomComboBox = \
+            wx.ComboBox(self, -1,
+            ("%.1f" % (100.0*self.imageViewerPanel.GetZoomValue())) + "%",
+            (410, 2), (100, 26),
+            choices = zoomChoices,
+            style = wx.CB_DROPDOWN)
+        self.zoomComboBox.SetEditable(False)
+        
+        self.zoomToFitCheckBox = \
+            wx.CheckBox(self, -1, "Zoom to Fit",
+            (510, 4), (200, 20))
+            
+        # Initialie UI State
+        if self.idleReInitUIState:
+            self.InitUIState()
+            
+        # Bind event handlers
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind(wx.EVT_IDLE, self.OnIdle)        
+        # Controls
+        self.Bind(wx.EVT_CHOICE, self.OnMouseChoice,
+            self.mouseChoice)            
+        self.Bind(wx.EVT_BUTTON, self.OnZoomInButton, 
+            self.zoomInButton)
+        self.Bind(wx.EVT_BUTTON, self.OnActualSizeButton, 
+            self.actualSizeButton)
+        self.Bind(wx.EVT_BUTTON, self.OnZoomOutButton, 
+            self.zoomOutButton)
+        self.Bind(wx.EVT_COMBOBOX, self.OnZoomComboBoxChoice,
+            self.zoomComboBox)
+        self.Bind(wx.EVT_CHECKBOX, self.OnZoomToFitChecked,
+            self.zoomToFitCheckBox)            
+        # Mouse events
+        self.imageViewerPanel.Bind(wx.EVT_LEFT_UP, self.OnLeftOrRightUp)
+        self.imageViewerPanel.Bind(wx.EVT_RIGHT_UP, self.OnLeftOrRightUp)
+        self.imageViewerPanel.Bind(wx.EVT_MOUSEWHEEL, self.OnMouseWheel)
+
+    # Event Handlers
+    
+    def OnSize(self, event):
+        self.ReInitUIState()
+    
+    def OnIdle(self, event):
+        if self.idleReInitUIState and self.reInitUIState:
+            self.InitUIState()
+            self.Refresh()
+            self.reInitUIState = False
+
+    def ReInitUIState(self):
+        if self.idleReInitUIState:
+            self.reInitUIState = True
+        else:
+            self.InitUIState()
+            self.Refresh
+    
+    def InitUIState(self):
+        """
+        This sets the Control Panel UI State to reflect
+        that of the ImageViewerPanel        
+        """
+        self.zoomToFitCheckBox.SetValue(
+            self.imageViewerPanel.GetZoomToFit())
+        
+        if self.imageViewerPanel.GetZoomIndex() is None:
+            if self.imageViewerPanel.GetZoomValue() is None:
+                self.zoomComboBox.SetValue("")
+            else:
+                # Set explicitly to zoom level
+                self.zoomComboBox.SetValue(
+                    ("%.1f" % (100.0*self.imageViewerPanel.GetZoomValue())) +
+                    "%")
+        else:
+            self.zoomComboBox.SetSelection(
+                self.imageViewerPanel.GetZoomIndex())          
+                
+        self.mouseChoice.SetSelection(
+            self.imageViewerPanel.GetMouseMode())
+        
+    def OnMouseChoice(self, event):
+        self.imageViewerPanel.SetMouseMode(self.mouseChoice.GetSelection())
+
+    def OnZoomInButton(self, event):
+        self.imageViewerPanel.IncreaseZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)
+        
+    def OnActualSizeButton(self, event):
+        self.imageViewerPanel.ActualSizeZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)
+
+    def OnZoomOutButton(self, event):
+        self.imageViewerPanel.DecreaseZoomValue()
+        self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.zoomComboBox.Enable(True)        
+                
+    def OnZoomComboBoxChoice(self, event):
+        self.imageViewerPanel.SetZoomToFit(False)
+        self.imageViewerPanel.SetMaintainAspectRatio(True)
+        self.imageViewerPanel.SetZoomIndex(self.zoomComboBox.GetSelection())
+        self.zoomToFitCheckBox.SetValue(False)
+        self.maintainAspectRatioCheckBox.SetValue(True)
+        
+    def OnZoomToFitChecked(self, event):
+        self.imageViewerPanel.SetZoomToFit(
+            self.zoomToFitCheckBox.IsChecked())
+        self.ReInitUIState()
+        
+    # Mouse event handlers needed to update UI upon zoom changes
+    
+    def OnLeftOrRightUp(self, event):
+        if self.imageViewerPanel.GetMouseMode() == 2:
+            self.ReInitUIState()
+        event.Skip()
+
+    def OnMouseWheel(self, event):
+        # The zoom level may change upon mouse wheel
+        if (self.imageViewerPanel.GetMouseMode() == 1 or
+            self.imageViewerPanel.GetMouseMode() == 2):
+            self.ReInitUIState()
+        event.Skip()
+    
 
 
 class ImageControlPanel(wx.Panel):
@@ -704,7 +870,8 @@ class ControlledImageViewerPanel(wx.Panel):
     def __init__(self, parent, id = -1):
         wx.Panel.__init__(self, parent, id)
         self.imageViewerPanel = ImageViewerPanel(self)
-        self.imageControlPanel = ImageControlPanel(self, self.imageViewerPanel)
+        self.imageControlPanel = ImageControlToolbar(self,
+            self.imageViewerPanel)
         
         # Create vertical boxsizer
         boxSizer = wx.BoxSizer(wx.VERTICAL)
