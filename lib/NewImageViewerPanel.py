@@ -404,6 +404,10 @@ class ImageViewerPanel(wx.Panel):
         self.Refresh()
         return self.displayedBitmap
         
+    def GetDisplayedImage(self):
+        bitmap = self.GetDisplayedBitmap()
+        return bitmap.ConvertToImage()
+        
     def SetUserScale(self, scale = (1, 1)):
         self.oldUserScale = self.userScale
         self.userScale = scale
@@ -622,10 +626,8 @@ class ImageControlToolbar(wx.Panel):
                 
     def OnZoomComboBoxChoice(self, event):
         self.imageViewerPanel.SetZoomToFit(False)
-        self.imageViewerPanel.SetMaintainAspectRatio(True)
         self.imageViewerPanel.SetZoomIndex(self.zoomComboBox.GetSelection())
         self.zoomToFitCheckBox.SetValue(False)
-        self.maintainAspectRatioCheckBox.SetValue(True)
         
     def OnZoomToFitChecked(self, event):
         self.imageViewerPanel.SetZoomToFit(
