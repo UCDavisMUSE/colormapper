@@ -34,6 +34,7 @@ class ColormapperFrame(wx.Frame):
         
         # Other variables
         self.currentButtonClicked = None
+        self.oldMouseMode = None
 
         # Attributes 
         statusBar = self.createStatusBar()
@@ -91,7 +92,7 @@ class ColormapperFrame(wx.Frame):
         self.imageControlToolbar.Bind(wx.EVT_CHECKBOX, self.OnControlToolbarEvent,
             self.imageControlToolbar.zoomToFitCheckBox)   
         self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnControlToolbarEvent)
-        self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnControlToolbarEvent)
+        self.inputImagePanel.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
         self.inputImagePanel.Bind(wx.EVT_RIGHT_DOWN, self.OnControlToolbarEvent)
         self.inputImagePanel.Bind(wx.EVT_RIGHT_UP, self.OnControlToolbarEvent)
         self.inputImagePanel.Bind(wx.EVT_MOUSEWHEEL, self.OnControlToolbarEvent)
@@ -99,14 +100,15 @@ class ColormapperFrame(wx.Frame):
         
                  
         # Add code for crosshair button click in Unmix and Remix Panels
-        self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
+        self.Bind(wx.EVT_BUTTON, self.OnCrosshairButtons,
             self.unmixPanel.buttonBackgroundCrosshair)
-        self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
+        self.Bind(wx.EVT_BUTTON, self.OnCrosshairButtons,
             self.unmixPanel.buttonNucleiCrosshair)
-        self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
-            self.remixPanel.buttonBackgroundCrosshair)
-        self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
-            self.remixPanel.buttonNucleiCrosshair)                                    
+
+#         self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
+#             self.remixPanel.buttonBackgroundCrosshair)
+#         self.Bind(wx.EVT_BUTTON, self.OverrideCrosshairButtons,
+#             self.remixPanel.buttonNucleiCrosshair)                                    
             
 #        self.inputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
 #        self.outputImagePanel.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
@@ -162,71 +164,97 @@ class ColormapperFrame(wx.Frame):
             self.outputImagePanel.DrawCrosshair(event)           
         event.Skip()
         
-    def OverrideCrosshairButtons(self, event):
+    def OnCrosshairButtons(self, event):
         self.currentButtonClicked = event.GetEventObject()
-        if ((self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair) or 
-            (self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair)):
-            self.inputImagePanel.CaptureMouse()        
-        elif ((self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair) or
-            (self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair)):
-            self.outputImagePanel.CaptureMouse()        
+        self.oldMouseMode = self.inputImagePanel.GetMouseMode()
+        self.inputImagePanel.SetMouseMode(3)
+#        self.inputImagePanel.CaptureMouse()
+       
+#         if ((self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair) or 
+#             (self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair)):
+#             self.inputImagePanel.CaptureMouse()        
+#         elif ((self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair) or
+#             (self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair)):
+#             self.outputImagePanel.CaptureMouse()        
         
-    def OnLeftDown(self, event):
-        if self.inputImagePanel.HasCapture() or self.outputImagePanel.HasCapture():
-            self.currentPosition = event.GetPositionTuple()
-        event.Skip()
+#     def OnLeftDown(self, event):
+#         if self.inputImagePanel.HasCapture() or self.outputImagePanel.HasCapture():
+#             self.currentPosition = event.GetPositionTuple()
+#         event.Skip()
     
     def OnLeftUp(self, event):
-        if self.inputImagePanel.HasCapture():
-            if (self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair) and self.inputImagePanel.displayedImage.Ok():
-                currentColor = self.GetInputPanelClickedPixelColor()
-                if currentColor != None:
-                    self.settings.SetUnmixBackgroundColor(currentColor)
+        if self.inputImagePanel.HasCapture() and self.inputImagePanel.GetMouseMode() == 3:
+            color = self.inputImagePanel.GetEyedropperColor()
+            if color is None:
+                pass
+            else:
+                if self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair:
+                    self.settings.SetUnmixBackgroundColor(color)
                     self.unmixPanel.RefreshBackgroundColorButtons()
-                    self.unmixPanel.recomputeUnmix = True
-                self.currentButtonClicked = None
-                self.inputImagePanel.ReleaseMouse()                    
-                self.inputImagePanel.InitBuffer()
-                self.inputImagePanel.Refresh() 
-                   
-            elif self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair and self.inputImagePanel.displayedImage.Ok():
-                currentColor = self.GetInputPanelClickedPixelColor()
-                if currentColor != None:               
-                    self.settings.SetUnmixNucleiColor(currentColor)
-                    self.unmixPanel.RefreshNucleiColorButtons()
-                    self.unmixPanel.recomputeUnmix = True
-                self.currentButtonClicked = None                                         
-                self.inputImagePanel.ReleaseMouse()                    
-                self.inputImagePanel.InitBuffer()
-                self.inputImagePanel.Refresh() 
-
-            else:
-                self.unmixPanel.recomputeUnmix = True
-                event.Skip()
-        
-        elif self.outputImagePanel.HasCapture():
-            if self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair and self.outputImagePanel.displayedImage.Ok():
-                currentColor = self.GetOutputPanelClickedPixelColor()
-                if currentColor != None:               
-                    self.settings.SetRemixBackgroundColor(currentColor)
-                    self.remixPanel.RefreshBackgroundColorButtons()
-                    self.remixPanel.recomputeRemix = True
-                self.outputImagePanel.ReleaseMouse()                    
-                self.outputImagePanel.InitBuffer()                      
-                self.outputImagePanel.Refresh() 
-                    
-            elif self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair and self.outputImagePanel.displayedImage.Ok():
-                currentColor = self.GetOutputPanelClickedPixelColor()
-                if currentColor != None:               
-                    self.settings.SetRemixNucleiColor(currentColor)
-                    self.remixPanel.RefreshNucleiColorButtons()
-                    self.remixPanel.recomputeRemix = True                     
-                self.outputImagePanel.ReleaseMouse()                    
-                self.outputImagePanel.InitBuffer()                      
-                self.outputImagePanel.Refresh() 
                 
-            else:
-                event.Skip()
+                if self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair:
+                    self.settings.SetUnmixNucleiColor(color)
+                    self.unmixPanel.RefreshNucleiColorButtons()
+
+                self.inputImagePanel.SetMouseMode(self.oldMouseMode)
+            self.inputImagePanel.ReleaseMouse()
+        # Keep outside the loop (essentially copy of OnControlToolbarEvent                    
+        self.unmixPanel.recomputeUnmix = True 
+        event.Skip()
+                
+            
+
+        
+#         if self.inputImagePanel.HasCapture():
+#             if (self.currentButtonClicked == self.unmixPanel.buttonBackgroundCrosshair) and self.inputImagePanel.displayedImage.Ok():
+#                 currentColor = self.GetInputPanelClickedPixelColor()
+#                 if currentColor != None:
+#                     self.settings.SetUnmixBackgroundColor(currentColor)
+#                     self.unmixPanel.RefreshBackgroundColorButtons()
+#                     self.unmixPanel.recomputeUnmix = True
+#                 self.currentButtonClicked = None
+#                 self.inputImagePanel.ReleaseMouse()                    
+#                 self.inputImagePanel.InitBuffer()
+#                 self.inputImagePanel.Refresh() 
+#                    
+#             elif self.currentButtonClicked == self.unmixPanel.buttonNucleiCrosshair and self.inputImagePanel.displayedImage.Ok():
+#                 currentColor = self.GetInputPanelClickedPixelColor()
+#                 if currentColor != None:               
+#                     self.settings.SetUnmixNucleiColor(currentColor)
+#                     self.unmixPanel.RefreshNucleiColorButtons()
+#                     self.unmixPanel.recomputeUnmix = True
+#                 self.currentButtonClicked = None                                         
+#                 self.inputImagePanel.ReleaseMouse()                    
+#                 self.inputImagePanel.InitBuffer()
+#                 self.inputImagePanel.Refresh() 
+# 
+#             else:
+#                 self.unmixPanel.recomputeUnmix = True
+#                 event.Skip()
+#         
+#         elif self.outputImagePanel.HasCapture():
+#             if self.currentButtonClicked == self.remixPanel.buttonBackgroundCrosshair and self.outputImagePanel.displayedImage.Ok():
+#                 currentColor = self.GetOutputPanelClickedPixelColor()
+#                 if currentColor != None:               
+#                     self.settings.SetRemixBackgroundColor(currentColor)
+#                     self.remixPanel.RefreshBackgroundColorButtons()
+#                     self.remixPanel.recomputeRemix = True
+#                 self.outputImagePanel.ReleaseMouse()                    
+#                 self.outputImagePanel.InitBuffer()                      
+#                 self.outputImagePanel.Refresh() 
+#                     
+#             elif self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair and self.outputImagePanel.displayedImage.Ok():
+#                 currentColor = self.GetOutputPanelClickedPixelColor()
+#                 if currentColor != None:               
+#                     self.settings.SetRemixNucleiColor(currentColor)
+#                     self.remixPanel.RefreshNucleiColorButtons()
+#                     self.remixPanel.recomputeRemix = True                     
+#                 self.outputImagePanel.ReleaseMouse()                    
+#                 self.outputImagePanel.InitBuffer()                      
+#                 self.outputImagePanel.Refresh() 
+#                 
+#             else:
+#                 event.Skip()
 
     def OnMouseWheel(self, event):
         if self.inputImagePanel.viewMode == 0:
@@ -240,15 +268,16 @@ class ColormapperFrame(wx.Frame):
 
     def OnKey(self, event):
         if event.GetKeyCode() == wx.WXK_ESCAPE:
-            if self.inputImagePanel.HasCapture():
-                self.inputImagePanel.ReleaseMouse()
-                self.inputImagePanel.reInitBuffer = True
-                self.inputImagePanel.InitBuffer()
-            elif self.outputImagePanel.HasCapture():
-                self.outputImagePanel.ReleaseMouse()
-                self.outputImagePanel.reInitBuffer = True
-                self.outputImagePanel.InitBuffer()
-            self.Refresh()
+            if self.inputImagePanel.GetMouseMode() == 3:
+                self.inputImagePanel.SetMouseMode(self.oldMouseMode)
+#             if self.inputImagePanel.HasCapture():
+#                 self.inputImagePanel.SetMouseMode(self.oldMouseMode)            
+#                 self.inputImagePanel.ReleaseMouse()
+#             elif self.outputImagePanel.HasCapture():
+#                 self.outputImagePanel.ReleaseMouse()
+#                 self.outputImagePanel.reInitBuffer = True
+#                 self.outputImagePanel.InitBuffer()
+#             self.Refresh()
         event.Skip()
         
     def OnSize(self, event):
