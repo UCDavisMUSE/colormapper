@@ -1,6 +1,7 @@
 import wx
 import os
 import math
+import copy
 
 # To Do:
 #   - Create an eyedropper tool (simple crosshair first, then
@@ -81,10 +82,11 @@ class ImageViewerPanel(wx.Panel):
         self.buffer = None # This is the entire dc buffer
         self.image = wx.EmptyImage() # Initialize with an empty image
         self.bitmap = wx.EmptyBitmap(1, 1) # This is a bitmap of the resized
-        self.copyDisplayedBitmap = False
-        self.displayedBitmap = wx.EmptyBitmap(1, 1)
+        self.copyDisplayedImage = False
+        self.displayedImage = wx.EmptyImage()
         self.crosshairPosition = (0, 0)
         self.cursorInWindow = True
+        self.eyedropperColor = None
         
         # Initialize Buffer
         if self.idleBuffer:
@@ -165,6 +167,9 @@ class ImageViewerPanel(wx.Panel):
             self.oldTranslation = self.GetTranslation()
         if self.mouseMode == 2:
             self.clickPosition = event.GetPositionTuple()
+        if self.mouseMode == 3:
+            self.clickPosition = event.GetPositionTuple()
+            self.UpdateEyedropperColor(self.clickPosition)
         
     def OnLeftUp(self, event):
         if self.HasCapture():
@@ -235,9 +240,9 @@ class ImageViewerPanel(wx.Panel):
             1.0*self.translation[0]/self.userScale[0],
             1.0*self.translation[1]/self.userScale[1], True)
             
-        if self.copyDisplayedBitmap:
-            self.displayedBitmap = dc.GetAsBitmap()
-            self.copyDisplayedBitmap = False
+        if self.copyDisplayedImage:
+            self.displayedImage = dc.GetAsBitmap().ConvertToImage()
+            self.copyDisplayedImage = False
 
         # Draw all lines at user scale (1, 1)            
         dc.SetUserScale(1, 1)
@@ -254,7 +259,7 @@ class ImageViewerPanel(wx.Panel):
                 0,
                 self.crosshairPosition[0],
                 self.displayHeight)
-                
+
         if self.drawRectangle:
             # Draws a rectangle for zooming into an ROI
             dc.DrawLine(
@@ -347,6 +352,16 @@ class ImageViewerPanel(wx.Panel):
             self.clickPosition[1]
             - 1.0*self.userScale[1]*(self.clickPosition[1]
                 - self.translation[1])/self.oldUserScale[1]))
+                
+    def UpdateEyedropperColor(self, clickLocation = None):
+        if clickLocation is None:
+            self.eyedropperColor = None
+        else:
+            image = self.GetDisplayedImage()
+            self.eyedropperColor = (
+                image.GetRed(   clickLocation[0], clickLocation[1]),
+                image.GetGreen( clickLocation[0], clickLocation[1]),
+                image.GetBlue(  clickLocation[0], clickLocation[1]))
 
     def ZoomToRectangle(self):
         """
@@ -397,16 +412,12 @@ class ImageViewerPanel(wx.Panel):
         self.CenterImage()
         self.ReInitBuffer()        
         
-    def GetDisplayedBitmap(self):
-        self.copyDisplayedBitmap = True
+    def GetDisplayedImage(self):
+        self.copyDisplayedImage = True
         # Always force InitBuffer (versus calling ReInitBuffer())
         self.InitBuffer()
-        self.Refresh()
-        return self.displayedBitmap
-        
-    def GetDisplayedImage(self):
-        bitmap = self.GetDisplayedBitmap()
-        return bitmap.ConvertToImage()
+        self.Refresh()        
+        return self.displayedImage
         
     def SetUserScale(self, scale = (1, 1)):
         self.oldUserScale = self.userScale
@@ -482,9 +493,16 @@ class ImageViewerPanel(wx.Panel):
  
     def SetMouseMode(self, value):
         self.mouseMode = value
-        
+        if self.mouseMode == 3:
+            self.SetDrawCrosshair(True)
+        else:
+            self.SetDrawCrosshair(False)
+                    
     def GetMouseMode(self):
         return self.mouseMode
+        
+    def GetEyedropperColor(self):
+        return self.eyedropperColor
         
 
 class ImageControlToolbar(wx.Panel):
@@ -605,7 +623,7 @@ class ImageControlToolbar(wx.Panel):
         
     def OnMouseChoice(self, event):
         self.imageViewerPanel.SetMouseMode(self.mouseChoice.GetSelection())
-
+        
     def OnZoomInButton(self, event):
         self.imageViewerPanel.IncreaseZoomValue()
         self.zoomComboBox.SetSelection(self.imageViewerPanel.GetZoomIndex())
@@ -716,6 +734,14 @@ class ImageControlPanel(wx.Panel):
             wx.Button(self, -1, "Center Image",
             (0, 140), (100, 20))
             
+        self.eyedropperColorStaticText = \
+            wx.StaticText(self, -1, "Eyedropper Color:",
+            (120, 140), (100, 20))
+        self.eyedropperColorTextCtrl = \
+            wx.TextCtrl(self, -1, "",
+            (240, 140), (100, 20))
+
+            
         # Initialie UI State
         if self.idleReInitUIState:
             self.InitUIState()
@@ -796,6 +822,12 @@ class ImageControlPanel(wx.Panel):
         self.mouseChoice.SetSelection(
             self.imageViewerPanel.GetMouseMode())
         
+        if self.imageViewerPanel.GetEyedropperColor() is None:
+            self.eyedropperColorTextCtrl.SetValue("")
+        else:
+            color = self.imageViewerPanel.GetEyedropperColor()
+            self.eyedropperColorTextCtrl.SetValue(str(color))
+        
     def OnMaintainAspectRatioChecked(self, event):
         self.imageViewerPanel.SetMaintainAspectRatio(
             self.maintainAspectRatioCheckBox.IsChecked())
@@ -844,6 +876,7 @@ class ImageControlPanel(wx.Panel):
         
     def OnMouseChoice(self, event):
         self.imageViewerPanel.SetMouseMode(self.mouseChoice.GetSelection())
+        self.ReInitUIState()
         
     def OnCenterImageButton(self, event):
         self.imageViewerPanel.CenterImageAndReInitBuffer()
@@ -852,6 +885,10 @@ class ImageControlPanel(wx.Panel):
     
     def OnLeftOrRightUp(self, event):
         if self.imageViewerPanel.GetMouseMode() == 2:
+            # Zoom value may have changed
+            self.ReInitUIState()
+        if self.imageViewerPanel.GetMouseMode() == 3:
+            # Eyedropper color may have changed
             self.ReInitUIState()
         event.Skip()
 
@@ -872,7 +909,7 @@ class ControlledImageViewerPanel(wx.Panel):
     def __init__(self, parent, id = -1):
         wx.Panel.__init__(self, parent, id)
         self.imageViewerPanel = ImageViewerPanel(self)
-        self.imageControlPanel = ImageControlToolbar(self,
+        self.imageControlPanel = ImageControlPanel(self,
             self.imageViewerPanel)
         
         # Create vertical boxsizer
