@@ -85,7 +85,7 @@ class ImageViewerPanel(wx.Panel):
         self.copyDisplayedImage = False
         self.displayedImage = wx.EmptyImage()
         self.crosshairPosition = (0, 0)
-        self.cursorInWindow = True
+        self.cursorInWindow = False
         self.eyedropperColor = None
         
         # Initialize Buffer
