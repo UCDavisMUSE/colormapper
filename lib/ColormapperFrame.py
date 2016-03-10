@@ -165,6 +165,8 @@ class ColormapperFrame(wx.Frame):
         event.Skip()
         
     def OnCrosshairButtons(self, event):
+        # so far this is coded just for input image panel, perhaps
+        # it is best to eliminate the crosshair ability on output image panel
         self.currentButtonClicked = event.GetEventObject()
         self.oldMouseMode = self.inputImagePanel.GetMouseMode()
         self.inputImagePanel.SetMouseMode(3)
@@ -177,11 +179,6 @@ class ColormapperFrame(wx.Frame):
 #             (self.currentButtonClicked == self.remixPanel.buttonNucleiCrosshair)):
 #             self.outputImagePanel.CaptureMouse()        
         
-#     def OnLeftDown(self, event):
-#         if self.inputImagePanel.HasCapture() or self.outputImagePanel.HasCapture():
-#             self.currentPosition = event.GetPositionTuple()
-#         event.Skip()
-    
     def OnLeftUp(self, event):
         if self.inputImagePanel.HasCapture() and self.inputImagePanel.GetMouseMode() == 3:
             color = self.inputImagePanel.GetEyedropperColor()
@@ -202,7 +199,8 @@ class ColormapperFrame(wx.Frame):
         self.unmixPanel.recomputeUnmix = True 
         event.Skip()
                 
-            
+# Keep the below, it may be helpful if we decide to include crosshairs for the
+# output image panel            
 
         
 #         if self.inputImagePanel.HasCapture():
@@ -270,14 +268,10 @@ class ColormapperFrame(wx.Frame):
         if event.GetKeyCode() == wx.WXK_ESCAPE:
             if self.inputImagePanel.GetMouseMode() == 3:
                 self.inputImagePanel.SetMouseMode(self.oldMouseMode)
-#             if self.inputImagePanel.HasCapture():
-#                 self.inputImagePanel.SetMouseMode(self.oldMouseMode)            
-#                 self.inputImagePanel.ReleaseMouse()
-#             elif self.outputImagePanel.HasCapture():
-#                 self.outputImagePanel.ReleaseMouse()
-#                 self.outputImagePanel.reInitBuffer = True
-#                 self.outputImagePanel.InitBuffer()
-#             self.Refresh()
+            if self.outputImagePanel.GetMouseMode() == 3:
+                # No need to save oldMouseMode here since interaction
+                # is disabled
+                self.outputImagePanel.SetMouseMode(0)
         event.Skip()
         
     def OnSize(self, event):
@@ -291,33 +285,10 @@ class ColormapperFrame(wx.Frame):
             self.UnmixImage()
             self.remixPanel.recomputeRemix = True
             self.unmixPanel.recomputeUnmix = False 
-            
         if self.remixPanel.recomputeRemix:
             self.RemixImage()
             self.remixPanel.recomputeRemix = False       
         
-    def GetInputPanelClickedPixelColor(self):
-        currentPosition = (self.currentPosition[0] - self.inputImagePanel.translation[0],
-                           self.currentPosition[1] - self.inputImagePanel.translation[1])
-        width = self.inputImagePanel.displayedImage.GetWidth()
-        height = self.inputImagePanel.displayedImage.GetHeight()
-        if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
-            currentColor = (self.inputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
-                            self.inputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
-                            self.inputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))    
-            return currentColor
-            
-    def GetOutputPanelClickedPixelColor(self):
-        currentPosition = (self.currentPosition[0] - self.outputImagePanel.translation[0],
-                           self.currentPosition[1] - self.outputImagePanel.translation[1])
-        width = self.outputImagePanel.displayedImage.GetWidth()
-        height = self.outputImagePanel.displayedImage.GetHeight()
-        if (0 <= currentPosition[0] < width and 0 <= currentPosition[1] < height):
-            currentColor = (self.outputImagePanel.displayedImage.GetRed(currentPosition[0],currentPosition[1]),
-                            self.outputImagePanel.displayedImage.GetGreen(currentPosition[0],currentPosition[1]),
-                            self.outputImagePanel.displayedImage.GetBlue(currentPosition[0],currentPosition[1]))    
-            return currentColor            
-
     def createStatusBar(self):
         self.statusbar = self.CreateStatusBar()
         self.statusbar.SetFieldsCount(3)
