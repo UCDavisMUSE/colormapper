@@ -24,6 +24,10 @@ class ColormapperFrame(wx.Frame):
     colormapperWildcard = "Colormapper files (*.colormapper)|*.colormapper|All Files (*.*)|*.*"
         
 # ToDo:
+#   - Note that the the threshold parameter is relative and based on the
+#       image content, therefore it changes according to whatever is in the
+#       current view. I'll need to change this to have the results be more
+#       consistent upon panning and zooming.
 #   - Export converted image, with progress bar
 
     def __init__(self):
