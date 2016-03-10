@@ -27,7 +27,8 @@ class ColormapperFrame(wx.Frame):
 #   - Note that the the threshold parameter is relative and based on the
 #       image content, therefore it changes according to whatever is in the
 #       current view. I'll need to change this to have the results be more
-#       consistent upon panning and zooming.
+#       consistent upon panning and zooming. Perhaps using a 
+#       brightness/contrast control instead
 #   - Export converted image, with progress bar
 
     def __init__(self):
