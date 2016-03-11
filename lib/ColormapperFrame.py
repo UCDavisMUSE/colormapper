@@ -8,7 +8,7 @@ from NewImageViewerPanel import ImageViewerPanel, ImageControlToolbar
 from ColormapperSettings import ColormapperSettings
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
-from colormappingMethods import remixImage, unmixParallelTileGradProjNNLS
+from colormappingMethods import remixImageBrightnessContrast, unmixParallelTileGradProjNNLS
 from OpenCLGradProjNNLS import *
 
 # This is the class for the main window of the Colormapper App        
@@ -482,13 +482,17 @@ class ColormapperFrame(wx.Frame):
         B = np.zeros((3, 2), dtype = np.float64)
         B[:,0] = self.settings.GetRemixBackgroundColor()
         B[:,1] = self.settings.GetRemixNucleiColor()
-        thresh = [self.settings.GetRemixBackgroundThresh(), self.settings.GetRemixNucleiThresh()]
-        gain = [self.settings.GetRemixBackgroundGain(), self.settings.GetRemixNucleiGain()]
-        gamma = [self.settings.GetRemixBackgroundGamma(), self.settings.GetRemixNucleiGamma()]
+        brightness = [self.settings.GetRemixBackgroundBrightness(),
+            self.settings.GetRemixNucleiBrightness()]
+        contrast = [self.settings.GetRemixBackgroundContrast(),
+            self.settings.GetRemixNucleiContrast()]
+        gamma = [self.settings.GetRemixBackgroundGamma(), 
+            self.settings.GetRemixNucleiGamma()]
         method = self.settings.GetRemixRemixMode()
         
         # Do Remixing        
-        self.outputImageArray = remixImage(components, B, thresh, gain, gamma, method)
+        self.outputImageArray = remixImageBrightnessContrast(components, B, 
+            brightness, contrast, gamma, method)
         
         # Get/set dimensions of output image
         outputImageWidth = self.inputImageWidth

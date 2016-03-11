@@ -30,14 +30,14 @@ class ColormapperSettings:
         "nucleiBrightness": 0,
         "nucleiBrightnessSetting": 50,
         "nucleiContrast": 1.0,
-        "nucleiContrastSetting": 10,
+        "nucleiContrastSetting": 50,
         "nucleiGamma": 1.0,
         "nucleiGammaSetting": 50,
         "remixMode": 0,
         "brightnessValuesStart": -10,
         "brightnessValuesEnd": 10,
-        "contrastValuesStart": 0,
-        "contrastValuesEnd": 10,
+        "contrastValuesStart": -1,
+        "contrastValuesEnd": 1,
         "gammaValuesStart": -1,
         "gammaValuesEnd": 1,
         }
@@ -47,9 +47,14 @@ class ColormapperSettings:
     def __init__(self, unmix = unmix, remix = remix):
         self.unmix = unmix
         self.remix = remix
-        self.contrastValues = np.linspace(self.remix["contrastValuesStart"],
+        self.brightnessValues = np.linspace(
+            self.remix["brightnessValuesStart"],
+            self.remix["brightnessValuesEnd"], 101)
+        self.contrastValues = np.logspace(
+            self.remix["contrastValuesStart"],
             self.remix["contrastValuesEnd"], 101)
-        self.gammaValues = np.logspace(self.remix["gammaValuesStart"],
+        self.gammaValues = np.logspace(
+            self.remix["gammaValuesStart"],
             self.remix["gammaValuesEnd"], 101)
         
     # Get Methods
@@ -81,7 +86,7 @@ class ColormapperSettings:
         return self.remix["backgroundSpectrum"]
     def GetRemixBackgroundBrightness(self): 
         return self.remix["backgroundBrightness"]
-    def GetRemixBackgroundBrightnessSetting
+    def GetRemixBackgroundBrightnessSetting(self):
         return self.remix["backgroundBrightnessSetting"]
     def GetRemixBackgroundContrast(self):
         return self.remix["backgroundContrast"]

@@ -417,7 +417,102 @@ def remixImage(x, B, thresh, alpha, gamma, method = 0):
         outputImage8Bit = outputImage8Bit.astype(np.uint8)          
         return outputImage8Bit
         
+def remixImageBrightnessContrast(x, B, beta, alpha, gamma, method = 0):
+    x = np.float64(x)
+    B = np.float64(B) # Need to normalize
+    beta = np.float64(beta)
+    alpha = np.float64(alpha)
+    gamma = np.float64(gamma)
 
+    if method == 0:
+        # Brightfield (Beer-Lambert)
+        
+        # Compliment colors
+        B = 1 - B/255
+        # Normalize
+        for i in range(B.shape[1]):
+            B[:,i] = B[:,i]/np.sum(B[:,i])
+    
+        # Brightness and Contrast
+        for i in range(x.shape[2]):
+            x[:,:,i] = alpha[i]*(x[:,:,i] - beta[i])
+        x[x < 0] = 0    
+
+        outputImage = np.ones( 
+            (x.shape[0], x.shape[1], B.shape[0]),
+            dtype = np.float64)
+        for i in range(B.shape[1]):
+            if x[:,:,i].max() > 0.0:
+                for color in range(B.shape[0]):
+                    outputImage[:,:,color] *= \
+                        np.exp( - 
+                        B[color,i]*(x[:,:,i].max()* \
+                        (x[:,:,i]/x[:,:,i].max())**gamma[i]) )
+        
+        outputImage8Bit = 255*outputImage
+        outputImage8Bit = outputImage8Bit.astype(np.uint8)          
+        return outputImage8Bit
+        
+    elif method == 1:
+        # Brightfield (Invert-Multiply)
+        
+        # Compliment colors
+        B = 1 - B/255        
+        # Normalize
+        for i in range(B.shape[1]):
+            B[:,i] = B[:,i]/np.sum(B[:,i])
+    
+        # Brightness and Contrast
+        for i in range(x.shape[2]):
+            x[:,:,i] = alpha[i]*(x[:,:,i] - beta[i])
+        x[x < 0] = 0      
+        
+        # Gamma and alpha
+        for i in range(B.shape[1]):
+            if x[:,:,i].max() > 0:
+                x[:,:,i] = x[:,:,i].max()*(x[:,:,i]/x[:,:,i].max())**gamma[i]
+                
+        
+        outputImage = np.ones( 
+            (x.shape[0], x.shape[1], B.shape[0]),
+            dtype = np.float64)
+        for i in range(B.shape[1]):
+            for color in range(B.shape[0]):
+                    tmp = 1 - B[color,i]*x[:,:,i]
+                    tmp[tmp < 0] = 0
+                    outputImage[:,:,color] *= tmp
+        
+        outputImage8Bit = 255*outputImage
+        outputImage8Bit = outputImage8Bit.astype(np.uint8)          
+        return outputImage8Bit
+
+        
+    elif method == 2:
+        # Fluorescence
+
+        # Normalize
+        for i in range(B.shape[1]):
+            B[:,i] = B[:,i]/np.sum(B[:,i])
+    
+        # Brightness and Contrast
+        for i in range(x.shape[2]):
+            x[:,:,i] = alpha[i]*(x[:,:,i] + beta[i])
+        x[x < 0] = 0     
+
+        outputImage = np.zeros( 
+            (x.shape[0], x.shape[1], B.shape[0]),
+            dtype = np.float64)
+        for i in range(B.shape[1]):
+            if x[:,:,i].max() > 0.0:
+                for color in range(B.shape[0]):
+                    outputImage[:,:,color] += \
+                        B[color,i]*(x[:,:,i].max()* \
+                        (x[:,:,i]/x[:,:,i].max())**gamma[i]) 
+
+        outputImage8Bit = 255*outputImage
+        outputImage8Bit[outputImage8Bit > 255] = 255        
+        outputImage8Bit = outputImage8Bit.astype(np.uint8)          
+        return outputImage8Bit
 
     
     
