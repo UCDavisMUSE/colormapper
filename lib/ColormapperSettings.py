@@ -2,8 +2,8 @@ import numpy as np
 
 class ColormapperSettings:
     """
-    This class stores settings for the colormapper app, as well as Get and Set
-    methods to adjust the settings.
+    This class stores settings for the colormapper app, 
+    as well as Get and Set methods to adjust the settings.
     """
     # Defaults
     # For Unmixing:
@@ -20,7 +20,7 @@ class ColormapperSettings:
         "backgroundColor": (230, 160, 200),
         "backgroundSpectrum": (99, 69, 86),
         "backgroundBrightness": 0,
-        "backgroundBrightnessSetting": 50,
+        "backgroundBrightnessSetting": 0,
         "backgroundContrast": 1.0,
         "backgroundContrastSetting": 50,
         "backgroundGamma": 1.0,
@@ -28,16 +28,16 @@ class ColormapperSettings:
         "nucleiColor": ( 70,  30, 150),
         "nucleiSpectrum": (71, 31, 153),
         "nucleiBrightness": 0,
-        "nucleiBrightnessSetting": 50,
+        "nucleiBrightnessSetting": 0,
         "nucleiContrast": 1.0,
         "nucleiContrastSetting": 50,
         "nucleiGamma": 1.0,
         "nucleiGammaSetting": 50,
         "remixMode": 0,
-        "brightnessValuesStart": -10,
-        "brightnessValuesEnd": 10,
-        "contrastValuesStart": -1,
-        "contrastValuesEnd": 1,
+        "brightnessValuesStart": 0,
+        "brightnessValuesEnd": 2,
+        "contrastValuesStart": -0.5,
+        "contrastValuesEnd": 0.5,
         "gammaValuesStart": -1,
         "gammaValuesEnd": 1,
         }

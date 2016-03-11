@@ -464,7 +464,7 @@ def remixImageBrightnessContrast(x, B, beta, alpha, gamma, method = 0):
     
         # Brightness and Contrast
         for i in range(x.shape[2]):
-            x[:,:,i] = alpha[i]*(x[:,:,i] - beta[i])
+            x[:,:,i] = alpha[i]*x[:,:,i] - beta[i]
         x[x < 0] = 0      
         
         # Gamma and alpha
@@ -496,7 +496,7 @@ def remixImageBrightnessContrast(x, B, beta, alpha, gamma, method = 0):
     
         # Brightness and Contrast
         for i in range(x.shape[2]):
-            x[:,:,i] = alpha[i]*(x[:,:,i] + beta[i])
+            x[:,:,i] = alpha[i]*x[:,:,i] + beta[i]
         x[x < 0] = 0     
 
         outputImage = np.zeros( 
