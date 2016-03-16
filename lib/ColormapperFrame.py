@@ -29,6 +29,12 @@ class ColormapperFrame(wx.Frame):
 #       current view. I'll need to change this to have the results be more
 #       consistent upon panning and zooming. Perhaps using a 
 #       brightness/contrast control instead
+#   - Perhaps a better method would be to have the threshold be absolute,
+#       simply change the value between 0 and 3 (3 is the max, since
+#       smallest spectrum is (1/3, 1/3, 1/3).
+#   - Have a file called Defaults.colormapper that contains defaults,
+#       if it exists, load it, if not, use built-in settings.
+#   - Save as default menu item
 #   - Export converted image, with progress bar
 
     def __init__(self):
