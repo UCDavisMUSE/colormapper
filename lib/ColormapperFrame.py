@@ -9,7 +9,7 @@ from ColormapperSettings import ColormapperSettings
 from UnmixPanel import UnmixPanel
 from RemixPanel import RemixPanel
 from colormappingMethods import remixImage, unmixParallelTileGradProjNNLS
-from OpenCLGradProjNNLS import *
+#from OpenCLGradProjNNLS import *
 
 # This is the class for the main window of the Colormapper App        
 class ColormapperFrame(wx.Frame):
@@ -91,8 +91,8 @@ class ColormapperFrame(wx.Frame):
         self.SetSizer(self.verticalSizer)
 
         # Show RGB Values in Status Bar when hovering over image
-        self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
-        self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
+#        self.inputImagePanel.Bind(wx.EVT_MOTION, self.OnInputMotion)
+#        self.outputImagePanel.Bind(wx.EVT_MOTION, self.OnOutputMotion)
         self.inputImagePanel.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveImage)
         self.outputImagePanel.Bind(wx.EVT_LEAVE_WINDOW, self.OnLeaveImage)
         # Add code to recompute unmix upon control toolbar or viewer events
@@ -472,11 +472,11 @@ class ColormapperFrame(wx.Frame):
         A[:,1] = self.settings.GetUnmixNucleiSpectrum()
             
         # Faster (Open CL-based) Method:
-        self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
-            tolerance = 1e-1, maxiter = 100, context = 0, lsize = (8,8))
+#         self.unmixComponents = OpenCLGradProjNNLS(self.outputImageArray, A,
+#             tolerance = 1e-1, maxiter = 100, context = 0, lsize = (8,8))
         # Slower (Multithreaded) Method:
-        #  self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
-        #      tolerance = 1e-1, maxiter = 100)
+        self.unmixComponents = unmixParallelTileGradProjNNLS(self.outputImageArray, A,
+            tolerance = 1e-1, maxiter = 100)
             
         # May need to add code here if I want to display the unmixComponents
 

@@ -2,7 +2,7 @@ import numpy as np
 import math
 import scipy.optimize.nnls as nnls
 from nonnegativeLeastSquares import *
-from OpenCLGradProjNNLS import *
+#from OpenCLGradProjNNLS import *
 
 #import pysptools.abundance_maps.amaps as amaps
 # This file contains various color mapping methods.
