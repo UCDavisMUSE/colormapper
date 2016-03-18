@@ -417,10 +417,8 @@ class ColormapperFrame(wx.Frame):
             dlg.SetDirectory(self.currentDirectory)
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
-            print(filename)
             if not os.path.splitext(filename)[1]:
                 filename = filename + self.defaultImageType
-                print(filename)
         else:
             return
         # Convert Image
