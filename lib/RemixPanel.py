@@ -9,40 +9,6 @@ class RemixPanel(wx.Panel):
     # Other variables
     recomputeRemix = False
    
- 
-    # Data Defaults
-    backgroundColor = (230, 160, 200)
-    backgroundSpectrum = (99, 69, 86)
-    backgroundThresh = 0
-    backgroundThreshSetting = 0
-    backgroundGain = 1.0
-    backgroundGainSetting = 50
-    backgroundGamma = 1.0
-    backgroundGammaSetting = 50
-    nucleiColor = ( 70,  30, 150)
-    nucleiSpectrum = (71, 31, 153)
-    nucleiThresh = 0
-    nucleiThreshSetting = 0
-    nucleiGain = 1.0
-    nucleiGainSetting = 50
-    nucleiGamma = 1.0
-    nucleiGammaSetting = 50
-    remixMode = 0
-    threshValuesStart = 0
-    threshValuesEnd = 3
-    gainValuesStart = -0.5
-    gainValuesEnd = 0.5
-    gammaValuesStart = -1
-    gammaValuesEnd = 1
-    
-
-    threshValues = np.linspace(threshValuesStart, 
-        threshValuesEnd, 101)
-    gainValues = np.logspace(gainValuesStart, 
-        gainValuesEnd, 101)
-    gammaValues = np.logspace(gammaValuesStart, 
-        gammaValuesEnd, 101)
-
     def __init__(self, parent, settings = settings, id = -1):
         # Optional Settings
         self.settings = settings

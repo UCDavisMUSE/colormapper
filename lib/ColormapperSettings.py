@@ -22,7 +22,7 @@ class ColormapperSettings:
         "backgroundThresh": 0,
         "backgroundThreshSetting": 0,
         "backgroundGain": 1.0,
-        "backgroundGainSetting": 50,
+        "backgroundGainSetting": 10,
         "backgroundGamma": 1.0,
         "backgroundGammaSetting": 50,
         "nucleiColor": ( 70,  30, 150),
@@ -30,14 +30,14 @@ class ColormapperSettings:
         "nucleiThresh": 0,
         "nucleiThreshSetting": 0,
         "nucleiGain": 1.0,
-        "nucleiGainSetting": 50,
+        "nucleiGainSetting": 10,
         "nucleiGamma": 1.0,
         "nucleiGammaSetting": 50,
         "remixMode": 0,
         "threshValuesStart": 0,
         "threshValuesEnd": 3,
-        "gainValuesStart": -0.5,
-        "gainValuesEnd": 0.5,
+        "gainValuesStart": 0,
+        "gainValuesEnd": 10,
         "gammaValuesStart": -1,
         "gammaValuesEnd": 1,
         }
@@ -50,7 +50,7 @@ class ColormapperSettings:
         self.threshValues = np.linspace(
             self.remix["threshValuesStart"],
             self.remix["threshValuesEnd"], 101)
-        self.gainValues = np.logspace(
+        self.gainValues = np.linspace(
             self.remix["gainValuesStart"],
             self.remix["gainValuesEnd"], 101)
         self.gammaValues = np.logspace(
