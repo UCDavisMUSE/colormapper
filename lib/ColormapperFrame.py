@@ -300,8 +300,11 @@ class ColormapperFrame(wx.Frame):
                 ("&Import Image for Conversion...\tCtrl-I", 
                     "Import image for conversion",  
                     self.OnImport),
-                ("&Export Converted Image...\tCtrl-E",      
-                    "Export converted image",       
+                ("&Export Displayed Converted Image...\tCtrl-E",      
+                    "Export converted image as displayed",       
+                    self.OnExportDisplayed),
+                ("Explort Entire Converted Image...\tCtrl-Shift-E",
+                    "Export entire converted image",
                     self.OnExport),
                 ("&Quit\tCtrl-Q",                           
                     "Quit",                         
@@ -392,8 +395,8 @@ class ColormapperFrame(wx.Frame):
             self.ImportImage()
         dlg.Destroy()
 
-    def OnExport(self, event):
-        dlg = wx.FileDialog(self, "Export converted image...",
+    def OnExportDisplayed(self, event):
+        dlg = wx.FileDialog(self, "Export displayed converted image...",
                 os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
@@ -403,9 +406,112 @@ class ColormapperFrame(wx.Frame):
             if not os.path.splitext(filename)[1]:
                 filename = filename + self.defaultImageType
             self.exportFilename = filename
-            # Add code to convert image here
             self.ExportImage()
         dlg.Destroy()
+        
+    def OnExport(self, event):
+        dlg = wx.FileDialog(self, "Export entire converted image...",
+                os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
+                wildcard = self.imageWildcard)
+        if self.currentDirectory:
+            dlg.SetDirectory(self.currentDirectory)
+        if dlg.ShowModal() == wx.ID_OK:
+            filename = dlg.GetPath()
+            print(filename)
+            if not os.path.splitext(filename)[1]:
+                filename = filename + self.defaultImageType
+                print(filename)
+        else:
+            return
+        # Convert Image
+        if not self.inputImagePanel.image.Ok():
+            return
+    
+        # Convert wx.Image to numpy array
+        image = self.inputImagePanel.GetImage()
+        inputImageBuffer = image.GetDataBuffer()
+        inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
+            
+        # Reshape the input numpy array to a width X height X 3 RGB image
+        inputImageWidth = image.GetWidth()
+        inputImageHeight = image.GetHeight()
+        inputImageSize = inputImageArray.size     
+        inputImageArray = inputImageArray.reshape(
+            inputImageWidth, inputImageHeight, 3)
+        outputImageArray = copy.copy(inputImageArray)
+        # If we use OpenCV, the image is expected to be BGR
+        # inputImageArray = cv2.cvtColor(inputImageArray, cv2.COLOR_RGB2BGR)
+        
+        # Do Unmixing
+        A = np.zeros((3, 2), dtype = np.float64)
+        A[:,0] = self.settings.GetUnmixBackgroundSpectrum()
+        A[:,1] = self.settings.GetUnmixNucleiSpectrum()
+            
+        # Faster (Open CL-based) Method:
+        # Dies on images larger than buffer, fix for now is
+        # to fall back on slower method
+#         self.unmixComponents = OpenCLGradProjNNLS(
+#             self.outputImageArray, A,
+#             tolerance = 1e-1, maxiter = 100, context = 0, lsize = (8,8))
+        # Slower (Multithreaded) Method:
+        components = unmixParallelTileGradProjNNLS(
+            outputImageArray, A,
+            tolerance = 1e-1, maxiter = 100)
+
+        B = np.zeros((3, 2), dtype = np.float64)
+        B[:,0] = self.settings.GetRemixBackgroundColor()
+        B[:,1] = self.settings.GetRemixNucleiColor()
+        thresh = [self.settings.GetRemixBackgroundThresh(),
+            self.settings.GetRemixNucleiThresh()]
+        gain = [self.settings.GetRemixBackgroundGain(),
+            self.settings.GetRemixNucleiGain()]
+        gamma = [self.settings.GetRemixBackgroundGamma(), 
+            self.settings.GetRemixNucleiGamma()]
+        method = self.settings.GetRemixRemixMode()
+        
+        # Do Remixing        
+        outputImageArray = remixImage(components, B, 
+            thresh, gain, gamma, method)
+        
+        # Get/set dimensions of output image
+        outputImageWidth = inputImageWidth
+        outputImageHeight = inputImageHeight
+        outputImageSize = inputImageSize
+        
+        # Reshape the output numpy array to a vector
+        outputImageArray = outputImageArray.reshape(outputImageSize)
+
+        # Convert the output numpy array to a wx.Image
+        # First initialize with an empty image
+        image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+        image.SetData(outputImageArray.tostring())
+
+        # This code exports the image
+        if filename:
+            try:
+                fileExtension = os.path.splitext(filename)[1]
+                if fileExtension == ".png":
+                    image.SaveFile(
+                        filename, wx.BITMAP_TYPE_PNG)
+                elif fileExtension == ".jpg" or fileExtension == ".jpeg":
+                    image.SaveFile(
+                        filename, wx.BITMAP_TYPE_JPEG)
+                elif fileExtension == ".tif" or fileExtension == ".tiff":
+                    image.SaveFile(
+                        filename, wx.BITMAP_TYPE_TIF)
+                elif fileExtension == ".bmp":
+                    image.SaveFile(
+                        filename, wx.BITMAP_TYPE_BMP)
+                else:
+                    # nolog = wx.LogNull() # Uncommenting will not log errors 
+                    image.SaveFile(
+                        filename, wx.BITMAP_TYPE_ANY)
+                    #del nolog
+                self.currentDirectory = os.path.split(filename)[0]    
+            except:
+                wx.MessageBox("Error exporting %s." % filename, "oops!",
+                    stype = wx.OK | wx.ICON_EXCLAMATION)
+
             
     def OnCopy(self, event):
         if self.outputImagePanel.image.IsOk():
@@ -525,7 +631,8 @@ class ColormapperFrame(wx.Frame):
                     #del nolog
                 self.currentDirectory = os.path.split(self.exportFilename)[0]    
             except:
-                wx.MessageBox("Error exporting %s." % self.filename, "oops!",
+                wx.MessageBox("Error exporting %s." % self.exportFilename,
+                    "oops!",
                     stype = wx.OK | wx.ICON_EXCLAMATION)
                     
     def UnmixImage(self):
