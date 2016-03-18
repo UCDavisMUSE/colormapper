@@ -28,16 +28,6 @@ class ColormapperFrame(wx.Frame):
         "All Files (*.*)|*.*"
         
 # ToDo:
-#   - Note that the the threshold parameter is relative and based on the
-#       image content, therefore it changes according to whatever is in the
-#       current view. I'll need to change this to have the results be more
-#       consistent upon panning and zooming. Perhaps using a 
-#       brightness/contrast control instead
-#   - Perhaps a better method would be to have the threshold be absolute,
-#       simply change the value between 0 and 3 (3 is the max, since
-#       smallest spectrum is (1/3, 1/3, 1/3).
-#   - Have a file called Defaults.colormapper that contains defaults,
-#       if it exists, load it, if not, use built-in settings.
 #   - Save as default menu item
 #   - Export converted image, with progress bar
 
@@ -48,10 +38,12 @@ class ColormapperFrame(wx.Frame):
 
         # High-level application data
         self.imageFilename = ""
-        self.filename = ""
         self.exportFilename = ""
         self.currentDirectory = ""
         self.settings = ColormapperSettings()
+        self.filename = "defaults.colormapper"
+        self.ReadFile()
+        self.filename = ""
         
         # Other variables
         self.currentButtonClicked = None
@@ -291,23 +283,37 @@ class ColormapperFrame(wx.Frame):
     def menuData(self):
         return (("&File",
                 ("&Open Settings...\tCtrl-O",               
-                    "Open colormapper file",        self.OnOpen),
+                    "Open colormapper file",        
+                    self.OnOpen),
                 ("&Save Settings\tCtrl-S",                  
-                    "Save colormapper file",        self.OnSave),
+                    "Save colormapper file",        
+                    self.OnSave),
                 ("Save Settings &As...\tShift-Ctrl-S",      
-                    "Save colormapper file as",     self.OnSaveAs),
+                    "Save colormapper file as",     
+                    self.OnSaveAs),
+                ("Set Current Settings As Default",
+                    "Sets the current settings as defaults",
+                    self.OnSetDefaults),
+                ("Reset Default Settings",
+                    "Clears user-set default settings",
+                    self.OnResetDefaults),
                 ("&Import Image for Conversion...\tCtrl-I", 
-                    "Import image for conversion",  self.OnImport),
+                    "Import image for conversion",  
+                    self.OnImport),
                 ("&Export Converted Image...\tCtrl-E",      
-                    "Export converted image",       self.OnExport),
+                    "Export converted image",       
+                    self.OnExport),
                 ("&Quit\tCtrl-Q",                           
-                    "Quit",                         self.OnCloseWindow)),
+                    "Quit",                         
+                    self.OnCloseWindow)),
                 
                 ("&Edit",
                 ("&Copy\tCtrl-C",       
-                    "Copy converted image to clipboard",    self.OnCopy),
+                    "Copy converted image to clipboard",    
+                    self.OnCopy),
                 ("&Paste\tCtrl-V",      
-                    "Paste original image from clipboard",  self.OnPaste))
+                    "Paste original image from clipboard",  
+                    self.OnPaste))
                 )
           
     def createMenuBar(self):
@@ -362,6 +368,18 @@ class ColormapperFrame(wx.Frame):
             self.filename = filename
             self.SaveFile()
         dlg.Destroy()
+        
+    def OnSetDefaults(self, event):
+        currentFilename = self.filename
+        self.filename = "defaults.colormapper"
+        self.SaveFile()
+        self.filename = currentFilename
+        
+    def OnResetDefaults(self, event):
+        try:
+            os.remove("defaults.colormapper")
+        except:
+            pass # Settings already deleted
 
     def OnImport(self, event):
         dlg = wx.FileDialog(self, "Import image for conversion...",
@@ -436,6 +454,8 @@ class ColormapperFrame(wx.Frame):
             except cPickle.UnpicklingError:
                 wx.MessageBox("%s is not a colormapper file." % self.filename,
                     "oops!", stype = wx.OK | wx.ICON_EXCLAMATION)
+            except:
+                pass # Don't change settings
 
     def SaveFile(self):
         # This code saves a colormapper file
