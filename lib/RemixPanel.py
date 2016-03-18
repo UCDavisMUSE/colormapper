@@ -13,33 +13,33 @@ class RemixPanel(wx.Panel):
     # Data Defaults
     backgroundColor = (230, 160, 200)
     backgroundSpectrum = (99, 69, 86)
-    backgroundBrightness = 0
-    backgroundBrightnessSetting = 0
-    backgroundContrast = 1.0
-    backgroundContrastSetting = 50
+    backgroundThresh = 0
+    backgroundThreshSetting = 0
+    backgroundGain = 1.0
+    backgroundGainSetting = 50
     backgroundGamma = 1.0
     backgroundGammaSetting = 50
     nucleiColor = ( 70,  30, 150)
     nucleiSpectrum = (71, 31, 153)
-    nucleiBrightness = 0
-    nucleiBrightnessSetting = 0
-    nucleiContrast = 1.0
-    nucleiContrastSetting = 50
+    nucleiThresh = 0
+    nucleiThreshSetting = 0
+    nucleiGain = 1.0
+    nucleiGainSetting = 50
     nucleiGamma = 1.0
     nucleiGammaSetting = 50
     remixMode = 0
-    brightnessValuesStart = 0
-    brightnessValuesEnd = 2
-    contrastValuesStart = -0.5
-    contrastValuesEnd = 0.5
+    threshValuesStart = 0
+    threshValuesEnd = 3
+    gainValuesStart = -0.5
+    gainValuesEnd = 0.5
     gammaValuesStart = -1
     gammaValuesEnd = 1
     
 
-    brightnessValues = np.linspace(brightnessValuesStart, 
-        brightnessValuesEnd, 101)
-    contrastValues = np.logspace(contrastValuesStart, 
-        contrastValuesEnd, 101)
+    threshValues = np.linspace(threshValuesStart, 
+        threshValuesEnd, 101)
+    gainValues = np.logspace(gainValuesStart, 
+        gainValuesEnd, 101)
     gammaValues = np.logspace(gammaValuesStart, 
         gammaValuesEnd, 101)
 
@@ -67,29 +67,29 @@ class RemixPanel(wx.Panel):
             color = self.settings.GetRemixBackgroundSpectrum(), 
             pos = (250, 25), size = (20, 20))
 
-        wx.StaticText(self, -1, "Brightness:", 
+        wx.StaticText(self, -1, "Threshold:", 
             pos = (0, 50))
-        self.sliderBackgroundBrightness = wx.Slider(self, -1, 
-            self.settings.GetRemixBackgroundBrightnessSetting(), 0, 100, 
+        self.sliderBackgroundThresh = wx.Slider(self, -1, 
+            self.settings.GetRemixBackgroundThreshSetting(), 0, 100, 
             pos = (70, 50), size = (220, -1),
             style=wx.SL_HORIZONTAL)
-        self.textCtrlBackgroundBrightness = wx.TextCtrl(self, -1,
-            value = "%.2f" % settings.GetRemixBackgroundBrightness(),
+        self.textCtrlBackgroundThresh = wx.TextCtrl(self, -1,
+            value = "%.2f" % settings.GetRemixBackgroundThresh(),
             pos = (290, 50), size = (83, -1))
-        self.spinButtonBackgroundBrightness = wx.SpinButton(self, -1,
+        self.spinButtonBackgroundThresh = wx.SpinButton(self, -1,
             pos = (374, 50), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
 
-        wx.StaticText(self, -1, "Contrast:", 
+        wx.StaticText(self, -1, "Gain:", 
             pos = (0, 75))
-        self.sliderBackgroundContrast = wx.Slider(self, -1,
-            self.settings.GetRemixBackgroundContrastSetting(), 0, 100, 
+        self.sliderBackgroundGain = wx.Slider(self, -1,
+            self.settings.GetRemixBackgroundGainSetting(), 0, 100, 
             pos = (70, 75), size = (220, -1),
             style = wx.SL_HORIZONTAL)
-        self.textCtrlBackgroundContrast = wx.TextCtrl(self, -1,
-            value = "%.2f" % settings.GetRemixBackgroundContrast(),
+        self.textCtrlBackgroundGain = wx.TextCtrl(self, -1,
+            value = "%.2f" % settings.GetRemixBackgroundGain(),
             pos = (290, 75), size = (83, -1))
-        self.spinButtonBackgroundContrast = wx.SpinButton(self, -1, 
+        self.spinButtonBackgroundGain = wx.SpinButton(self, -1, 
             pos = (374, 75), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
 
@@ -122,29 +122,29 @@ class RemixPanel(wx.Panel):
             color = self.settings.GetRemixNucleiSpectrum(), 
             pos = (250, 135), size = (20, 20))
 
-        wx.StaticText(self, -1, "Brightness:", 
+        wx.StaticText(self, -1, "Threshold:", 
             pos = (0, 160))
-        self.sliderNucleiBrightness = wx.Slider(self, -1,
-            self.settings.GetRemixNucleiBrightnessSetting(), 0, 100, 
+        self.sliderNucleiThresh = wx.Slider(self, -1,
+            self.settings.GetRemixNucleiThreshSetting(), 0, 100, 
             pos = (70, 160), size = (220, -1),
             style=wx.SL_HORIZONTAL)
-        self.textCtrlNucleiBrightness = wx.TextCtrl(self, -1,
-            value = "%.2f" % settings.GetRemixNucleiBrightness(),
+        self.textCtrlNucleiThresh = wx.TextCtrl(self, -1,
+            value = "%.2f" % settings.GetRemixNucleiThresh(),
             pos = (290, 160), size = (83, -1))
-        self.spinButtonNucleiBrightness = wx.SpinButton(self, -1,
+        self.spinButtonNucleiThresh = wx.SpinButton(self, -1,
             pos = (374, 160), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
 
-        wx.StaticText(self, -1, "Contrast:",
+        wx.StaticText(self, -1, "Gain:",
             pos = (0, 185))
-        self.sliderNucleiContrast = wx.Slider(self, -1,
-            self.settings.GetRemixNucleiContrastSetting(), 0, 100, 
+        self.sliderNucleiGain = wx.Slider(self, -1,
+            self.settings.GetRemixNucleiGainSetting(), 0, 100, 
             pos = (70, 185), size = (220, -1),
             style = wx.SL_HORIZONTAL)
-        self.textCtrlNucleiContrast = wx.TextCtrl(self, -1,
-            value = "%.2f" % self.settings.GetRemixNucleiContrast(),
+        self.textCtrlNucleiGain = wx.TextCtrl(self, -1,
+            value = "%.2f" % self.settings.GetRemixNucleiGain(),
             pos = (290, 185), size = (83, -1))
-        self.spinButtonNucleiContrast = wx.SpinButton(self, -1, 
+        self.spinButtonNucleiGain = wx.SpinButton(self, -1, 
             pos = (374, 185), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
             
@@ -179,32 +179,32 @@ class RemixPanel(wx.Panel):
             self.colorButtonBackgroundColor)
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonBackgroundSpectrumClick,
             self.colorButtonBackgroundSpectrum)
-        ### Brightness
+        ### Thresh
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
-            self.OnSliderBackgroundBrightnessScrollThumbtrack,
-            self.sliderBackgroundBrightness)
+            self.OnSliderBackgroundThreshScrollThumbtrack,
+            self.sliderBackgroundThresh)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE,
-            self.OnSliderBackgroundBrightnessScrollThumbrelease,
-            self.sliderBackgroundBrightness)
+            self.OnSliderBackgroundThreshScrollThumbrelease,
+            self.sliderBackgroundThresh)
         self.Bind(wx.EVT_SPIN_UP,
-            self.OnSpinButtonBackgroundBrightnessSpinUp,
-            self.spinButtonBackgroundBrightness)
+            self.OnSpinButtonBackgroundThreshSpinUp,
+            self.spinButtonBackgroundThresh)
         self.Bind(wx.EVT_SPIN_DOWN,
-            self.OnSpinButtonBackgroundBrightnessSpinDown,
-            self.spinButtonBackgroundBrightness)        
-        ### Contrast            
+            self.OnSpinButtonBackgroundThreshSpinDown,
+            self.spinButtonBackgroundThresh)        
+        ### Gain            
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
-            self.OnSliderBackgroundContrastScrollThumbtrack,
-            self.sliderBackgroundContrast)
+            self.OnSliderBackgroundGainScrollThumbtrack,
+            self.sliderBackgroundGain)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE,
-            self.OnSliderBackgroundContrastScrollThumbrelease,
-            self.sliderBackgroundContrast)
+            self.OnSliderBackgroundGainScrollThumbrelease,
+            self.sliderBackgroundGain)
         self.Bind(wx.EVT_SPIN_UP,
-            self.OnSpinButtonBackgroundContrastSpinUp,
-            self.spinButtonBackgroundContrast)
+            self.OnSpinButtonBackgroundGainSpinUp,
+            self.spinButtonBackgroundGain)
         self.Bind(wx.EVT_SPIN_DOWN,
-            self.OnSpinButtonBackgroundContrastSpinDown,
-            self.spinButtonBackgroundContrast)
+            self.OnSpinButtonBackgroundGainSpinDown,
+            self.spinButtonBackgroundGain)
         ### Gamma            
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderBackgroundGammaScrollThumbtrack,
@@ -224,32 +224,32 @@ class RemixPanel(wx.Panel):
             self.colorButtonNucleiColor)
         self.Bind(wx.EVT_BUTTON, self.OnColorButtonNucleiSpectrumClick,
             self.colorButtonNucleiSpectrum)      
-        ### Brightness
+        ### Thresh
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
-            self.OnSliderNucleiBrightnessScrollThumbtrack,
-            self.sliderNucleiBrightness)
+            self.OnSliderNucleiThreshScrollThumbtrack,
+            self.sliderNucleiThresh)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE,
-            self.OnSliderNucleiBrightnessScrollThumbrelease,
-            self.sliderNucleiBrightness)
+            self.OnSliderNucleiThreshScrollThumbrelease,
+            self.sliderNucleiThresh)
         self.Bind(wx.EVT_SPIN_UP,
-            self.OnSpinButtonNucleiBrightnessSpinUp,
-            self.spinButtonNucleiBrightness)
+            self.OnSpinButtonNucleiThreshSpinUp,
+            self.spinButtonNucleiThresh)
         self.Bind(wx.EVT_SPIN_DOWN,
-            self.OnSpinButtonNucleiBrightnessSpinDown,
-            self.spinButtonNucleiBrightness)            
-        ### Contrast
+            self.OnSpinButtonNucleiThreshSpinDown,
+            self.spinButtonNucleiThresh)            
+        ### Gain
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
-            self.OnSliderNucleiContrastScrollThumbtrack,
-            self.sliderNucleiContrast)
+            self.OnSliderNucleiGainScrollThumbtrack,
+            self.sliderNucleiGain)
         self.Bind(wx.EVT_SCROLL_THUMBRELEASE,
-            self.OnSliderNucleiContrastScrollThumbrelease,
-            self.sliderNucleiContrast)
+            self.OnSliderNucleiGainScrollThumbrelease,
+            self.sliderNucleiGain)
         self.Bind(wx.EVT_SPIN_UP,
-            self.OnSpinButtonNucleiContrastSpinUp,
-            self.spinButtonNucleiContrast)
+            self.OnSpinButtonNucleiGainSpinUp,
+            self.spinButtonNucleiGain)
         self.Bind(wx.EVT_SPIN_DOWN,
-            self.OnSpinButtonNucleiContrastSpinDown,
-            self.spinButtonNucleiContrast)
+            self.OnSpinButtonNucleiGainSpinDown,
+            self.spinButtonNucleiGain)
         ### Gamma
         self.Bind(wx.EVT_SCROLL_THUMBTRACK,
             self.OnSliderNucleiGammaScrollThumbtrack,
@@ -281,68 +281,68 @@ class RemixPanel(wx.Panel):
         self.colorButtonBackgroundSpectrum.SetBackgroundColour(
             self.settings.GetRemixBackgroundSpectrum())
             
-    ### Brightness
-    def OnSliderBackgroundBrightnessScrollThumbtrack(self, event):
+    ### Thresh
+    def OnSliderBackgroundThreshScrollThumbtrack(self, event):
         # Update Text Control
-        self.settings.SetRemixBackgroundBrightnessSetting(
-            self.sliderBackgroundBrightness.GetValue())
-        self.textCtrlBackgroundBrightness.SetValue(
-            "%.2f" % self.settings.GetRemixBackgroundBrightness())
+        self.settings.SetRemixBackgroundThreshSetting(
+            self.sliderBackgroundThresh.GetValue())
+        self.textCtrlBackgroundThresh.SetValue(
+            "%.2f" % self.settings.GetRemixBackgroundThresh())
         
-    def OnSliderBackgroundBrightnessScrollThumbrelease(self, event):
+    def OnSliderBackgroundThreshScrollThumbrelease(self, event):
         # Update Remix
         self.recomputeRemix = True                    
         
-    def OnSpinButtonBackgroundBrightnessSpinUp(self, event):
-        if self.settings.GetRemixBackgroundBrightnessSetting() < 100:
-            self.settings.SetRemixBackgroundBrightnessSetting(
-                self.settings.GetRemixBackgroundBrightnessSetting() + 1)
-            self.sliderBackgroundBrightness.SetValue(
-                self.settings.GetRemixBackgroundBrightnessSetting())
-            self.textCtrlBackgroundBrightness.SetValue(
-                "%.2f" % self.settings.GetRemixBackgroundBrightness())
+    def OnSpinButtonBackgroundThreshSpinUp(self, event):
+        if self.settings.GetRemixBackgroundThreshSetting() < 100:
+            self.settings.SetRemixBackgroundThreshSetting(
+                self.settings.GetRemixBackgroundThreshSetting() + 1)
+            self.sliderBackgroundThresh.SetValue(
+                self.settings.GetRemixBackgroundThreshSetting())
+            self.textCtrlBackgroundThresh.SetValue(
+                "%.2f" % self.settings.GetRemixBackgroundThresh())
             self.recomputeRemix = True
     
-    def OnSpinButtonBackgroundBrightnessSpinDown(self, event):
-        if self.backgroundBrightnessSetting > 0:
-            self.settings.SetRemixBackgroundBrightnessSetting(
-                self.settings.GetRemixBackgroundBrightnessSetting() - 1)
-            self.sliderBackgroundBrightness.SetValue(
-                self.settings.GetRemixBackgroundBrightnessSetting())
-            self.textCtrlBackgroundBrightness.SetValue(
-                "%.2f" % self.settings.GetRemixBackgroundBrightness())
+    def OnSpinButtonBackgroundThreshSpinDown(self, event):
+        if self.settings.GetRemixBackgroundThreshSetting() > 0:
+            self.settings.SetRemixBackgroundThreshSetting(
+                self.settings.GetRemixBackgroundThreshSetting() - 1)
+            self.sliderBackgroundThresh.SetValue(
+                self.settings.GetRemixBackgroundThreshSetting())
+            self.textCtrlBackgroundThresh.SetValue(
+                "%.2f" % self.settings.GetRemixBackgroundThresh())
             self.recomputeRemix = True 
 
-    ### Contrast
-    def OnSliderBackgroundContrastScrollThumbtrack(self, event):
+    ### Gain
+    def OnSliderBackgroundGainScrollThumbtrack(self, event):
         # Update Text Control
-        self.settings.SetRemixBackgroundContrastSetting(
-            self.sliderBackgroundContrast.GetValue())
-        self.textCtrlBackgroundContrast.SetValue(
-            "%.2f" % self.settings.GetRemixBackgroundContrast())
+        self.settings.SetRemixBackgroundGainSetting(
+            self.sliderBackgroundGain.GetValue())
+        self.textCtrlBackgroundGain.SetValue(
+            "%.2f" % self.settings.GetRemixBackgroundGain())
         
-    def OnSliderBackgroundContrastScrollThumbrelease(self, event):
+    def OnSliderBackgroundGainScrollThumbrelease(self, event):
         # Update Remix
         self.recomputeRemix = True                    
         
-    def OnSpinButtonBackgroundContrastSpinUp(self, event):
-        if self.settings.GetRemixBackgroundContrastSetting() < 100:
-            self.settings.SetRemixBackgroundContrastSetting(
-                self.settings.GetRemixBackgroundContrastSetting() + 1)
-            self.sliderBackgroundContrast.SetValue(
-                self.settings.GetRemixBackgroundContrastSetting())
-            self.textCtrlBackgroundContrast.SetValue(
-                "%.2f" % self.settings.GetRemixBackgroundContrast())
+    def OnSpinButtonBackgroundGainSpinUp(self, event):
+        if self.settings.GetRemixBackgroundGainSetting() < 100:
+            self.settings.SetRemixBackgroundGainSetting(
+                self.settings.GetRemixBackgroundGainSetting() + 1)
+            self.sliderBackgroundGain.SetValue(
+                self.settings.GetRemixBackgroundGainSetting())
+            self.textCtrlBackgroundGain.SetValue(
+                "%.2f" % self.settings.GetRemixBackgroundGain())
             self.recomputeRemix = True
     
-    def OnSpinButtonBackgroundContrastSpinDown(self, event):
-        if self.backgroundContrastSetting > 0:
-            self.settings.SetRemixBackgroundContrastSetting(
-                self.settings.GetRemixBackgroundContrastSetting() - 1)
-            self.sliderBackgroundContrast.SetValue(
-                self.settings.GetRemixBackgroundContrastSetting())
-            self.textCtrlBackgroundContrast.SetValue(
-                "%.2f" % self.settings.GetRemixBackgroundContrast())
+    def OnSpinButtonBackgroundGainSpinDown(self, event):
+        if self.settings.GetRemixBackgroundGainSetting() > 0:
+            self.settings.SetRemixBackgroundGainSetting(
+                self.settings.GetRemixBackgroundGainSetting() - 1)
+            self.sliderBackgroundGain.SetValue(
+                self.settings.GetRemixBackgroundGainSetting())
+            self.textCtrlBackgroundGain.SetValue(
+                "%.2f" % self.settings.GetRemixBackgroundGain())
             self.recomputeRemix = True            
 
     ### Gamma
@@ -368,7 +368,7 @@ class RemixPanel(wx.Panel):
             self.recomputeRemix = True            
     
     def OnSpinButtonBackgroundGammaSpinDown(self, event):
-        if self.backgroundGammaSetting > 0:
+        if self.settings.GetRemixBackgroundGammaSetting() > 0:
             self.settings.SetRemixBackgroundGammaSetting(
                 self.settings.GetRemixBackgroundGammaSetting() - 1)
             self.sliderBackgroundGamma.SetValue(
@@ -390,68 +390,68 @@ class RemixPanel(wx.Panel):
         self.colorButtonNucleiSpectrum.SetBackgroundColour(
             self.settings.GetRemixNucleiSpectrum())
 
-    ### Brightness        
-    def OnSliderNucleiBrightnessScrollThumbtrack(self, event):
+    ### Thresh        
+    def OnSliderNucleiThreshScrollThumbtrack(self, event):
         # Update Text Control
-        self.settings.SetRemixNucleiBrightnessSetting(
-            self.sliderNucleiBrightness.GetValue())
-        self.textCtrlNucleiBrightness.SetValue(
-            "%.2f" % self.settings.GetRemixNucleiBrightness())
+        self.settings.SetRemixNucleiThreshSetting(
+            self.sliderNucleiThresh.GetValue())
+        self.textCtrlNucleiThresh.SetValue(
+            "%.2f" % self.settings.GetRemixNucleiThresh())
         
-    def OnSliderNucleiBrightnessScrollThumbrelease(self, event):
+    def OnSliderNucleiThreshScrollThumbrelease(self, event):
         # Update Remix
         self.recomputeRemix = True                    
         
-    def OnSpinButtonNucleiBrightnessSpinUp(self, event):
-        if self.settings.GetRemixNucleiBrightnessSetting() < 100:
-            self.settings.SetRemixNucleiBrightnessSetting(
-                self.settings.GetRemixNucleiBrightnessSetting() + 1)
-            self.sliderNucleiBrightness.SetValue(
-                self.settings.GetRemixNucleiBrightnessSetting())
-            self.textCtrlNucleiBrightness.SetValue(
-                "%.2f" % self.settings.GetRemixNucleiBrightness())
+    def OnSpinButtonNucleiThreshSpinUp(self, event):
+        if self.settings.GetRemixNucleiThreshSetting() < 100:
+            self.settings.SetRemixNucleiThreshSetting(
+                self.settings.GetRemixNucleiThreshSetting() + 1)
+            self.sliderNucleiThresh.SetValue(
+                self.settings.GetRemixNucleiThreshSetting())
+            self.textCtrlNucleiThresh.SetValue(
+                "%.2f" % self.settings.GetRemixNucleiThresh())
             self.recomputeRemix = True
     
-    def OnSpinButtonNucleiBrightnessSpinDown(self, event):
-        if self.backgroundBrightnessSetting > 0:
-            self.settings.SetRemixNucleiBrightnessSetting(
-                self.settings.GetRemixNucleiBrightnessSetting() - 1)
-            self.sliderNucleiBrightness.SetValue(
-                self.settings.GetRemixNucleiBrightnessSetting())
-            self.textCtrlNucleiBrightness.SetValue(
-                "%.2f" % self.settings.GetRemixNucleiBrightness())
+    def OnSpinButtonNucleiThreshSpinDown(self, event):
+        if self.settings.GetRemixBackgroundThreshSetting() > 0:
+            self.settings.SetRemixNucleiThreshSetting(
+                self.settings.GetRemixNucleiThreshSetting() - 1)
+            self.sliderNucleiThresh.SetValue(
+                self.settings.GetRemixNucleiThreshSetting())
+            self.textCtrlNucleiThresh.SetValue(
+                "%.2f" % self.settings.GetRemixNucleiThresh())
             self.recomputeRemix = True            
 
-    ### Contrast
-    def OnSliderNucleiContrastScrollThumbtrack(self, event):
+    ### Gain
+    def OnSliderNucleiGainScrollThumbtrack(self, event):
         # Update Text Control
-        self.settings.SetRemixNucleiContrastSetting(
-            self.sliderNucleiContrast.GetValue())
-        self.textCtrlNucleiContrast.SetValue(
-            "%.2f" % self.settings.GetRemixNucleiContrast())
+        self.settings.SetRemixNucleiGainSetting(
+            self.sliderNucleiGain.GetValue())
+        self.textCtrlNucleiGain.SetValue(
+            "%.2f" % self.settings.GetRemixNucleiGain())
         
-    def OnSliderNucleiContrastScrollThumbrelease(self, event):
+    def OnSliderNucleiGainScrollThumbrelease(self, event):
         # Update Remix
         self.recomputeRemix = True                    
         
-    def OnSpinButtonNucleiContrastSpinUp(self, event):
-        if self.settings.GetRemixNucleiContrastSetting() < 100:
-            self.settings.SetRemixNucleiContrastSetting(
-                self.settings.GetRemixNucleiContrastSetting() + 1)
-            self.sliderNucleiContrast.SetValue(
-                self.settings.GetRemixNucleiContrastSetting())
-            self.textCtrlNucleiContrast.SetValue(
-                "%.2f" % self.settings.GetRemixNucleiContrast())
+    def OnSpinButtonNucleiGainSpinUp(self, event):
+        if self.settings.GetRemixNucleiGainSetting() < 100:
+            self.settings.SetRemixNucleiGainSetting(
+                self.settings.GetRemixNucleiGainSetting() + 1)
+            self.sliderNucleiGain.SetValue(
+                self.settings.GetRemixNucleiGainSetting())
+            self.textCtrlNucleiGain.SetValue(
+                "%.2f" % self.settings.GetRemixNucleiGain())
             self.recomputeRemix = True
     
-    def OnSpinButtonNucleiContrastSpinDown(self, event):
-        if self.backgroundContrastSetting > 0:
-            self.settings.SetRemixNucleiContrastSetting(
-                self.settings.GetRemixNucleiContrastSetting() - 1)
-            self.sliderNucleiContrast.SetValue(
-                self.settings.GetRemixNucleiContrastSetting())
-            self.textCtrlNucleiContrast.SetValue(
-                "%.2f" % self.settings.GetRemixNucleiContrast())
+    def OnSpinButtonNucleiGainSpinDown(self, event):
+        if self.settings.GetRemixBackgroundGainSetting() > 0:
+            self.settings.SetRemixNucleiGainSetting(
+                self.settings.GetRemixNucleiGainSetting() - 1)
+            self.sliderNucleiGain.SetValue(
+                self.settings.GetRemixNucleiGainSetting())
+            self.textCtrlNucleiGain.SetValue(
+                "%.2f" % self.settings.GetRemixNucleiGain())
             self.recomputeRemix = True            
 
     ### Gamma
@@ -477,7 +477,7 @@ class RemixPanel(wx.Panel):
             self.recomputeRemix = True            
     
     def OnSpinButtonNucleiGammaSpinDown(self, event):
-        if self.backgroundGammaSetting > 0:
+        if self.settings.GetRemixBackgroundGammaSetting() > 0:
             self.settings.SetRemixNucleiGammaSetting(
                 self.settings.GetRemixNucleiGammaSetting() - 1)
             self.sliderNucleiGamma.SetValue(

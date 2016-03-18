@@ -335,8 +335,7 @@ def remixImage(x, B, thresh, alpha, gamma, method = 0):
     
         # Threshold low intensities
         for i in range(x.shape[2]):
-            cutoff = thresh[i]*x[:,:,i].max()/100
-            x[:,:,i] = x[:,:,i] - cutoff
+            x[:,:,i] = x[:,:,i] - thresh[i]
         x[x < 0] = 0    
 
         outputImage = np.ones( 
@@ -365,8 +364,7 @@ def remixImage(x, B, thresh, alpha, gamma, method = 0):
     
         # Threshold low intensities
         for i in range(x.shape[2]):
-            cutoff = thresh[i]*x[:,:,i].max()/100
-            x[:,:,i] = x[:,:,i] - cutoff
+            x[:,:,i] = x[:,:,i] - thresh[i]
         x[x < 0] = 0    
         
         # Gamma and alpha
@@ -398,8 +396,7 @@ def remixImage(x, B, thresh, alpha, gamma, method = 0):
     
         # Threshold low intensities
         for i in range(x.shape[2]):
-            cutoff = thresh[i]*x[:,:,i].max()/100
-            x[:,:,i] = x[:,:,i] - cutoff
+            x[:,:,i] = x[:,:,i] - thresh[i]
         x[x < 0] = 0    
 
         outputImage = np.zeros( 
