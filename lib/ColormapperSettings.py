@@ -2,8 +2,8 @@ import numpy as np
 
 class ColormapperSettings:
     """
-    This class stores settings for the colormapper app, as well as Get and Set
-    methods to adjust the settings.
+    This class stores settings for the colormapper app, 
+    as well as Get and Set methods to adjust the settings.
     """
     # Defaults
     # For Unmixing:
@@ -20,20 +20,24 @@ class ColormapperSettings:
         "backgroundColor": (230, 160, 200),
         "backgroundSpectrum": (99, 69, 86),
         "backgroundThresh": 0,
+        "backgroundThreshSetting": 0,
         "backgroundGain": 1.0,
-        "backgroundGainSetting": 10,
+        "backgroundGainSetting": 50,
         "backgroundGamma": 1.0,
         "backgroundGammaSetting": 50,
         "nucleiColor": ( 70,  30, 150),
         "nucleiSpectrum": (71, 31, 153),
         "nucleiThresh": 0,
+        "nucleiThreshSetting": 0,
         "nucleiGain": 1.0,
-        "nucleiGainSetting": 10,
+        "nucleiGainSetting": 50,
         "nucleiGamma": 1.0,
         "nucleiGammaSetting": 50,
         "remixMode": 0,
-        "gainValuesStart": 0,
-        "gainValuesEnd": 10,
+        "threshValuesStart": 0,
+        "threshValuesEnd": 3,
+        "gainValuesStart": -0.5,
+        "gainValuesEnd": 0.5,
         "gammaValuesStart": -1,
         "gammaValuesEnd": 1,
         }
@@ -43,44 +47,85 @@ class ColormapperSettings:
     def __init__(self, unmix = unmix, remix = remix):
         self.unmix = unmix
         self.remix = remix
-        self.gainValues = np.linspace(self.remix["gainValuesStart"],
+        self.threshValues = np.linspace(
+            self.remix["threshValuesStart"],
+            self.remix["threshValuesEnd"], 101)
+        self.gainValues = np.logspace(
+            self.remix["gainValuesStart"],
             self.remix["gainValuesEnd"], 101)
-        self.gammaValues = np.logspace(self.remix["gammaValuesStart"],
+        self.gammaValues = np.logspace(
+            self.remix["gammaValuesStart"],
             self.remix["gammaValuesEnd"], 101)
         
     # Get Methods
-    def GetUnmixSettings(self): return self.unmix
-    def GetRemixSettings(self): return self.remix
-    def GetSettings(self): return (self.GetUnmixSettings(), self.GetRemixSettings())
+    def GetUnmixSettings(self):
+        return self.unmix
+    def GetRemixSettings(self): 
+        return self.remix
+    def GetSettings(self): 
+        return (self.GetUnmixSettings(), self.GetRemixSettings())
 
     ## Unmix
-    def GetUnmixBackgroundColor(self): return self.unmix["backgroundColor"]
-    def GetUnmixBackgroundSpectrum(self): return self.unmix["backgroundSpectrum"]
-    def GetUnmixNucleiColor(self): return self.unmix["nucleiColor"]
-    def GetUnmixNucleiSpectrum(self): return self.unmix["nucleiSpectrum"]
-    def GetUnmixSubtractBackground(self): return self.unmix["subtractBackground"]
-    def GetUnmixSubtractBackgroundAmount(self): return self.unmix["subtractBackgroundAmount"]
+    def GetUnmixBackgroundColor(self): 
+        return self.unmix["backgroundColor"]
+    def GetUnmixBackgroundSpectrum(self): 
+        return self.unmix["backgroundSpectrum"]
+    def GetUnmixNucleiColor(self): 
+        return self.unmix["nucleiColor"]
+    def GetUnmixNucleiSpectrum(self): 
+        return self.unmix["nucleiSpectrum"]
+    def GetUnmixSubtractBackground(self): 
+        return self.unmix["subtractBackground"]
+    def GetUnmixSubtractBackgroundAmount(self): 
+        return self.unmix["subtractBackgroundAmount"]
 
     ## Remix
-    def GetRemixBackgroundColor(self): return self.remix["backgroundColor"]
-    def GetRemixBackgroundSpectrum(self): return self.remix["backgroundSpectrum"]
-    def GetRemixBackgroundThresh(self): return self.remix["backgroundThresh"]
-    def GetRemixBackgroundGain(self): return self.remix["backgroundGain"]
-    def GetRemixBackgroundGainSetting(self): return self.remix["backgroundGainSetting"]
-    def GetRemixBackgroundGamma(self): return self.remix["backgroundGamma"]
-    def GetRemixBackgroundGammaSetting(self): return self.remix["backgroundGammaSetting"]
-    def GetRemixNucleiColor(self): return self.remix["nucleiColor"]
-    def GetRemixNucleiSpectrum(self): return self.remix["nucleiSpectrum"]
-    def GetRemixNucleiThresh(self): return self.remix["nucleiThresh"]
-    def GetRemixNucleiGain(self): return self.remix["nucleiGain"]
-    def GetRemixNucleiGainSetting(self): return self.remix["nucleiGainSetting"]
-    def GetRemixNucleiGamma(self): return self.remix["nucleiGamma"]
-    def GetRemixNucleiGammaSetting(self): return self.remix["nucleiGammaSetting"]
-    def GetRemixRemixMode(self): return self.remix["remixMode"]
-    def GetRemixGainValuesStart(self): return self.remix["gainValuesStart"]
-    def GetRemixGainValuesEnd(self): return self.remix["gainValuesEnd"]
-    def GetRemixGammaValuesStart(self): return self.remix["gammaValuesStart"]
-    def GetRemixGammaValuesEnd(self): return self.remix["gammaValuesEnd"]
+    def GetRemixBackgroundColor(self): 
+        return self.remix["backgroundColor"]
+    def GetRemixBackgroundSpectrum(self): 
+        return self.remix["backgroundSpectrum"]
+    def GetRemixBackgroundThresh(self): 
+        return self.remix["backgroundThresh"]
+    def GetRemixBackgroundThreshSetting(self):
+        return self.remix["backgroundThreshSetting"]
+    def GetRemixBackgroundGain(self):
+        return self.remix["backgroundGain"]
+    def GetRemixBackgroundGainSetting(self): 
+        return self.remix["backgroundGainSetting"]
+    def GetRemixBackgroundGamma(self): 
+        return self.remix["backgroundGamma"]
+    def GetRemixBackgroundGammaSetting(self): 
+        return self.remix["backgroundGammaSetting"]
+    def GetRemixNucleiColor(self): 
+        return self.remix["nucleiColor"]
+    def GetRemixNucleiSpectrum(self): 
+        return self.remix["nucleiSpectrum"]
+    def GetRemixNucleiThresh(self): 
+        return self.remix["nucleiThresh"]
+    def GetRemixNucleiThreshSetting(self):
+        return self.remix["nucleiThreshSetting"]
+    def GetRemixNucleiGain(self): 
+        return self.remix["nucleiGain"]
+    def GetRemixNucleiGainSetting(self): 
+        return self.remix["nucleiGainSetting"]
+    def GetRemixNucleiGamma(self): 
+        return self.remix["nucleiGamma"]
+    def GetRemixNucleiGammaSetting(self): 
+        return self.remix["nucleiGammaSetting"]
+    def GetRemixRemixMode(self): 
+        return self.remix["remixMode"]
+    def GetRemixThreshValuesStart(self):
+        return self.remix["threshValuesStart"]
+    def GetRemixThreshValuesEnd(self):
+        return self.remix["threshValuesStart"]
+    def GetRemixGainValuesStart(self): 
+        return self.remix["gainValuesStart"]
+    def GetRemixGainValuesEnd(self): 
+        return self.remix["gainValuesEnd"]
+    def GetRemixGammaValuesStart(self): 
+        return self.remix["gammaValuesStart"]
+    def GetRemixGammaValuesEnd(self): 
+        return self.remix["gammaValuesEnd"]
   
     # Set Methods
     # Note: I have only written methods for variables that should be set
@@ -121,16 +166,20 @@ class ColormapperSettings:
         self.remix["backgroundColor"] = color
         self.remix["backgroundSpectrum"] = self.__NormalizeSpectrum(color)
         
-    def SetRemixBackgroundThresh(self, thresh):
-        self.remix["backgroundThresh"] = thresh
+    def SetRemixBackgroundThreshSetting(self, threshSetting):
+        self.remix["backgroundThreshSetting"] = threshSetting
+        self.remix["backgroundThresh"] = \
+            self.threshValues[threshSetting]
         
     def SetRemixBackgroundGainSetting(self, gainSetting):
         self.remix["backgroundGainSetting"] = gainSetting
-        self.remix["backgroundGain"] = self.gainValues[gainSetting]
+        self.remix["backgroundGain"] = \
+            self.gainValues[gainSetting]
         
     def SetRemixBackgroundGammaSetting(self, gammaSetting):
         self.remix["backgroundGammaSetting"] = gammaSetting
-        self.remix["backgroundGamma"] = self.gammaValues[gammaSetting]
+        self.remix["backgroundGamma"] = \
+            self.gammaValues[gammaSetting]
         
     def SetRemixNucleiColor(self, color):
         self.remix["nucleiColor"] = color
@@ -140,16 +189,20 @@ class ColormapperSettings:
         self.remix["nucleiColor"] = color
         self.remix["nucleiSpectrum"] = self.__NormalizeSpectrum(color)
         
-    def SetRemixNucleiThresh(self, thresh):
-        self.remix["nucleiThresh"] = thresh
+    def SetRemixNucleiThreshSetting(self, threshSetting):
+        self.remix["nucleiThreshSetting"] = threshSetting
+        self.remix["nucleiThresh"] = \
+            self.threshValues[threshSetting]
         
     def SetRemixNucleiGainSetting(self, gainSetting):
         self.remix["nucleiGainSetting"] = gainSetting
-        self.remix["nucleiGain"] = self.gainValues[gainSetting]
+        self.remix["nucleiGain"] = \
+            self.gainValues[gainSetting]
         
     def SetRemixNucleiGammaSetting(self, gammaSetting):
         self.remix["nucleiGammaSetting"] = gammaSetting
-        self.remix["nucleiGamma"] = self.gammaValues[gammaSetting]
+        self.remix["nucleiGamma"] = \
+            self.gammaValues[gammaSetting]
     
     def SetRemixRemixMode(self, remixMode):
         self.remix["remixMode"] = remixMode
@@ -181,8 +234,12 @@ class ColormapperSettings:
         maxAmount = 255
         for i in range(3):
             if backgroundColor[i] != 0:
-                maxAmount = min(maxAmount, 1.0*foregroundColor[i]/backgroundColor[i])
+                maxAmount = min(maxAmount,
+                    1.0*foregroundColor[i]/backgroundColor[i])
         return (
-            int(round(foregroundColor[0] - 1.0*(amount/100.0)*maxAmount*backgroundColor[0])),
-            int(round(foregroundColor[1] - 1.0*(amount/100.0)*maxAmount*backgroundColor[1])),
-            int(round(foregroundColor[2] - 1.0*(amount/100.0)*maxAmount*backgroundColor[2])))
+            int(round(foregroundColor[0] 
+                - 1.0*(amount/100.0)*maxAmount*backgroundColor[0])),
+            int(round(foregroundColor[1] 
+                - 1.0*(amount/100.0)*maxAmount*backgroundColor[1])),
+            int(round(foregroundColor[2] 
+                - 1.0*(amount/100.0)*maxAmount*backgroundColor[2])))

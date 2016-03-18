@@ -16,7 +16,7 @@ class UnmixPanel(wx.Panel):
         wx.Panel.__init__(self, parent, id)
         wx.StaticText(self, -1, "Unmix Controls:")
 
-        wx.StaticText(self, -1, "Bulk Tissue:", pos = (0, 25))
+        wx.StaticText(self, -1, "Background:", pos = (0, 25))
         self.colorButtonBackgroundColor = ColorButton(self, -1, 
             color = self.settings.GetUnmixBackgroundColor(), pos = (100, 25),
             size = (20, 20))
