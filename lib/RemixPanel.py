@@ -134,7 +134,8 @@ class RemixPanel(wx.Panel):
             choices = (
                 "Brightfield (Beer-Lambert)",
                 "Brightfield (Invert-Multiply)",
-                "Fluorescence"))
+                "Fluorescence",
+                "Experimental"))
         self.choiceRemixMode.SetSelection(self.settings.GetRemixRemixMode())
         
 
@@ -324,7 +325,7 @@ class RemixPanel(wx.Panel):
         self.recomputeRemix = True                    
         
     def OnSpinButtonBackgroundGammaSpinUp(self, event):
-        if self.backgroundGammaSetting < 100:
+        if self.settings.GetRemixBackgroundGammaSetting() < 100:
             self.settings.SetRemixBackgroundGammaSetting(
                 self.settings.GetRemixBackgroundGammaSetting() + 1)
             self.sliderBackgroundGamma.SetValue(
@@ -433,7 +434,7 @@ class RemixPanel(wx.Panel):
         self.recomputeRemix = True                    
         
     def OnSpinButtonNucleiGammaSpinUp(self, event):
-        if self.backgroundGammaSetting < 100:
+        if self.settings.GetRemixBackgroundGammaSetting() < 100:
             self.settings.SetRemixNucleiGammaSetting(
                 self.settings.GetRemixNucleiGammaSetting() + 1)
             self.sliderNucleiGamma.SetValue(
