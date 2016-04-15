@@ -303,7 +303,7 @@ class ColormapperFrame(wx.Frame):
                 ("&Export Displayed Converted Image...\tCtrl-E",      
                     "Export converted image as displayed",       
                     self.OnExportDisplayed),
-                ("Explort Entire Converted Image...\tCtrl-Shift-E",
+                ("Export Entire Converted Image...\tCtrl-Shift-E",
                     "Export entire converted image",
                     self.OnExport),
                 ("&Quit\tCtrl-Q",                           
