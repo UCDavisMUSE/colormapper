@@ -18,7 +18,7 @@ class RemixPanel(wx.Panel):
         wx.StaticText(self, -1, "Remix Controls:")
         
         # Background
-        wx.StaticText(self, -1, "Background:", 
+        wx.StaticText(self, -1, "Cytoplasm:", 
             pos = (0, 25))
         self.colorButtonBackgroundColor = ColorButton(self, -1,
             color = self.settings.GetRemixBackgroundColor(), 
@@ -72,65 +72,68 @@ class RemixPanel(wx.Panel):
             pos = (374, 100), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         
+        wx.StaticLine(self, -1, 
+            pos = (0, 130), size = (390, -1))
+        
         # Nuclei
         wx.StaticText(self, -1, "Nuclei:", 
-            pos = (0, 135))
+            pos = (0, 140))
         self.colorButtonNucleiColor = ColorButton(self, -1,
             color = self.settings.GetRemixNucleiColor(), 
-            pos = (100, 135), size = (20, 20))
+            pos = (100, 140), size = (20, 20))
         self.buttonNucleiCrosshair = wx.Button(self, -1, 
             label = "+", 
-            pos = (125, 129), size = (25, 25))
+            pos = (125, 134), size = (25, 25))
             
         wx.StaticText(self, -1, "Spectrum:", 
-            pos = (170, 135))
+            pos = (170, 140))
         self.colorButtonNucleiSpectrum = ColorButton(self, -1,
             color = self.settings.GetRemixNucleiSpectrum(), 
-            pos = (250, 135), size = (20, 20))
+            pos = (250, 140), size = (20, 20))
 
         wx.StaticText(self, -1, "Threshold:", 
-            pos = (0, 160))
+            pos = (0, 165))
         self.sliderNucleiThresh = wx.Slider(self, -1,
             self.settings.GetRemixNucleiThreshSetting(), 0, 100, 
-            pos = (70, 160), size = (220, -1),
+            pos = (70, 165), size = (220, -1),
             style=wx.SL_HORIZONTAL)
         self.textCtrlNucleiThresh = wx.TextCtrl(self, -1,
             value = "%.2f" % settings.GetRemixNucleiThresh(),
-            pos = (290, 160), size = (83, -1))
+            pos = (290, 165), size = (83, -1))
         self.spinButtonNucleiThresh = wx.SpinButton(self, -1,
-            pos = (374, 160), size = (-1, -1),
+            pos = (374, 165), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
 
         wx.StaticText(self, -1, "Gain:",
-            pos = (0, 185))
+            pos = (0, 190))
         self.sliderNucleiGain = wx.Slider(self, -1,
             self.settings.GetRemixNucleiGainSetting(), 0, 100, 
-            pos = (70, 185), size = (220, -1),
+            pos = (70, 190), size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGain = wx.TextCtrl(self, -1,
             value = "%.2f" % self.settings.GetRemixNucleiGain(),
-            pos = (290, 185), size = (83, -1))
+            pos = (290, 190), size = (83, -1))
         self.spinButtonNucleiGain = wx.SpinButton(self, -1, 
-            pos = (374, 185), size = (-1, -1), 
+            pos = (374, 190), size = (-1, -1), 
             style = wx.SB_VERTICAL | wx.SP_WRAP)
             
         wx.StaticText(self, -1, "Gamma:",
-            pos = (0, 210))
+            pos = (0, 215))
         self.sliderNucleiGamma = wx.Slider(self, -1, 
             self.settings.GetRemixNucleiGammaSetting(), 0, 100, 
-            pos = (70, 210), size = (220, -1),
+            pos = (70, 215), size = (220, -1),
             style = wx.SL_HORIZONTAL)
         self.textCtrlNucleiGamma = wx.TextCtrl(self, -1,
             value = "%.2f" % self.settings.GetRemixNucleiGamma(),
-            pos = (290, 210), size = (83, -1))
+            pos = (290, 215), size = (83, -1))
         self.spinButtonNucleiGamma = wx.SpinButton(self, -1,
-            pos = (374, 210), size = (-1, -1),
+            pos = (374, 215), size = (-1, -1),
             style = wx.SB_VERTICAL | wx.SP_WRAP)
         
         wx.StaticText(self, -1, "Remix Mode:", 
-            pos = (0, 235))
+            pos = (0, 240))
         self.choiceRemixMode = wx.Choice(self, -1, 
-            pos = (85, 233), 
+            pos = (85, 238), 
             choices = (
                 "Brightfield (Beer-Lambert)",
                 "Brightfield (Invert-Multiply)",
