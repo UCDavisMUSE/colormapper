@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as lin
 import scipy.optimize.nnls as nnls
 import scipy.optimize as opt
-import cv2
+# import cv2
 import time
 from joblib import Parallel, delayed
 from itertools import product

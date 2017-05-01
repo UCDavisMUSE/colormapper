@@ -658,13 +658,13 @@ class ColormapperFrame(wx.Frame):
         A[:,1] = self.settings.GetUnmixNucleiSpectrum()
             
         # Faster (Open CL-based) Method:
-        self.unmixComponents = OpenCLGradProjNNLS(
-            self.outputImageArray, A,
-            tolerance = 1e-1, maxiter = 100, context = 0, lsize = (8,8))
+#        self.unmixComponents = OpenCLGradProjNNLS(
+#            self.outputImageArray, A,
+#            tolerance = 1e-1, maxiter = 100, context = 0, lsize = (8,8))
         # Slower (Multithreaded) Method:
-#         self.unmixComponents = unmixParallelTileGradProjNNLS(
-#             self.outputImageArray, A,
-#             tolerance = 1e-1, maxiter = 100)
+        self.unmixComponents = unmixParallelTileGradProjNNLS(
+             self.outputImageArray, A,
+             tolerance = 1e-1, maxiter = 100)
             
         # May need to add code here if I want to display the unmixComponents
 
