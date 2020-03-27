@@ -80,10 +80,10 @@ class ImageViewerPanel(wx.Panel):
         self.translation = (0, 0) # Prior to userScale (screen coordinates)
         self.oldTranslation = (0, 0)
         self.buffer = None # This is the entire dc buffer
-        self.image = wx.EmptyImage() # Initialize with an empty image
-        self.bitmap = wx.EmptyBitmap(1, 1) # This is a bitmap of the resized
+        self.image = wx.Image() # Initialize with an empty image
+        self.bitmap = wx.Bitmap(1, 1) # This is a bitmap of the resized
         self.copyDisplayedImage = False
-        self.displayedImage = wx.EmptyImage()
+        self.displayedImage = wx.Image()
         self.crosshairPosition = (0, 0)
         self.cursorInWindow = False
         self.eyedropperColor = None
@@ -128,11 +128,11 @@ class ImageViewerPanel(wx.Panel):
         
     def OnMotion(self, event):
         if self.drawCrosshair:
-            self.crosshairPosition = event.GetPositionTuple()
+            self.crosshairPosition = event.GetPosition()
             self.ReInitBuffer() # Redraw with crosshair
         if self.mouseMode == 1:
             if self.HasCapture() and event.Dragging() and event.LeftIsDown():
-                newPos = event.GetPositionTuple()
+                newPos = event.GetPosition()
                 delta = (
                     newPos[0] - self.clickPosition[0],
                     newPos[1] - self.clickPosition[1])
@@ -143,7 +143,7 @@ class ImageViewerPanel(wx.Panel):
         if self.mouseMode == 2:
             if self.HasCapture and event.Dragging() and event.LeftIsDown():
                 self.drawRectangle = True
-                self.dragPosition = event.GetPositionTuple()
+                self.dragPosition = event.GetPosition()
                 self.ReInitBuffer()
                 
     def OnLeaveWindow(self, event):
@@ -163,12 +163,12 @@ class ImageViewerPanel(wx.Panel):
     def OnLeftDown(self, event):
         self.CaptureMouse()    
         if self.mouseMode == 1:
-            self.clickPosition = event.GetPositionTuple()
+            self.clickPosition = event.GetPosition()
             self.oldTranslation = self.GetTranslation()
         if self.mouseMode == 2:
-            self.clickPosition = event.GetPositionTuple()
+            self.clickPosition = event.GetPosition()
         if self.mouseMode == 3:
-            self.clickPosition = event.GetPositionTuple()
+            self.clickPosition = event.GetPosition()
             self.UpdateEyedropperColor(self.clickPosition)
         
     def OnLeftUp(self, event):
@@ -187,7 +187,7 @@ class ImageViewerPanel(wx.Panel):
     def OnRightDown(self, event):
         self.CaptureMouse()    
         if self.mouseMode == 2:
-            self.clickPosition = event.GetPositionTuple()
+            self.clickPosition = event.GetPosition()
         
     def OnRightUp(self, event):
         if self.HasCapture():
@@ -199,9 +199,9 @@ class ImageViewerPanel(wx.Panel):
         if self.mouseMode == 1 or self.mouseMode == 2:
             x = event.GetWheelRotation()
             if x > 0:
-                self.DecreaseZoomValue(event.GetPositionTuple())
+                self.DecreaseZoomValue(event.GetPosition())
             elif x < 0:
-                self.IncreaseZoomValue(event.GetPositionTuple())
+                self.IncreaseZoomValue(event.GetPosition())
                 
     ## Helper Methods           
         
@@ -210,10 +210,10 @@ class ImageViewerPanel(wx.Panel):
         This is where all drawing should occur.
         """
         (self.displayWidth, self.displayHeight) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(self.displayWidth, self.displayHeight)
+        self.buffer = wx.Bitmap(self.displayWidth, self.displayHeight)
         dc = wx.MemoryDC(self.buffer)
         
-        if not self.image.Ok():
+        if not self.image.IsOk():
             return
             
         if self.zoomToFit:
@@ -941,7 +941,7 @@ class ImageViewerFrame(wx.Frame):
         # High-level application data
         self.filename = ""
         self.currentDirectory = ""
-        self.image = wx.EmptyImage()
+        self.image = wx.Image()
 
         # Attributes 
         self.statusBar = self.createStatusBar()
@@ -956,7 +956,7 @@ class ImageViewerFrame(wx.Frame):
 
     def OnOpen(self, event):
         dlg = wx.FileDialog(self, "Open image...",
-                os.getcwd(), style=wx.OPEN,
+                os.getcwd(), style=wx.FD_OPEN,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)                
@@ -1065,7 +1065,7 @@ class MyFileDropTarget(wx.FileDropTarget):
         if len(filenames) > 1:
             dlg = wx.MessageBox( 
                 "This application only supports opening a single image.",
-                "Multiple images detected", wx.OK | wx.ICON_EXCLAMATION)
+                "Multiple images detected", wx.IsOk | wx.ICON_EXCLAMATION)
             return
         self.window.filename = filenames[0]
         self.window.OpenImage()

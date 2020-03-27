@@ -74,13 +74,13 @@ class ControlPanel(wx.Panel):
 
         
     def OnComputeButtonClick(self, event):
-        if self.inputImagePanel.image.Ok():
+        if self.inputImagePanel.image.IsOk():
             # Note: This is on the main thread, is there a way to put this
             # on a new thread as to not lock the GUI during computation?
         
             # Convert wx.Image to numpy array
             inputImageBuffer = self.inputImagePanel.image.GetDataBuffer()
-            inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
+            inputImageArray = np.asarray(inputImageBuffer, dtype='uint8')
             
             # Reshape the input numpy array to a width X height X 3 RGB image
             inputImageWidth = self.inputImagePanel.image.GetWidth()
@@ -139,7 +139,7 @@ class ControlPanel(wx.Panel):
             
             # Convert the output numpy array to a wx.Image
             # First initialize with an empty image
-            self.outputImagePanel.image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+            self.outputImagePanel.image = wx.Image(outputImageWidth, outputImageHeight)
             self.outputImagePanel.image.SetData(outputImageArray.tostring())
 
             # Tell the outputImagePanel to refresh the display    

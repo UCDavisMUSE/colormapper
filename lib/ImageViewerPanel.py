@@ -35,9 +35,9 @@ class ImageViewerPanel(wx.Panel):
             'Pan']
         self.viewMode = 3
         self.SetBackgroundColour("Black")
-        self.image = wx.EmptyImage() # Initialize with an empty image
-        self.displayedImage = wx.EmptyImage()
-        self.bmp = wx.EmptyBitmap(1,1)
+        self.image = wx.Image() # Initialize with an empty image
+        self.displayedImage = wx.Image()
+        self.bmp = wx.Bitmap(1,1)
         self.newImageData = False
         self.drawCrosshair = False
         
@@ -64,7 +64,7 @@ class ImageViewerPanel(wx.Panel):
 
     def OnLeftDown(self, event):
         if self.viewMode == 3:
-            self.pos = event.GetPositionTuple()
+            self.pos = event.GetPosition()
             self.oldTranslation = self.translation
         self.CaptureMouse()     
         
@@ -102,7 +102,7 @@ class ImageViewerPanel(wx.Panel):
     def OnMotion(self, event):
         if self.viewMode == 3:
             if event.Dragging() and event.LeftIsDown():
-                newPos = event.GetPositionTuple()
+                newPos = event.GetPosition()
                 delta = (newPos[0] - self.pos[0], newPos[1] - self.pos[1])
                 self.translation = (self.oldTranslation[0] + delta[0], self.oldTranslation[1] + delta[1])
                 (view_width, view_height) = self.GetClientSize()
@@ -153,11 +153,11 @@ class ImageViewerPanel(wx.Panel):
             
     def DrawCrosshair(self, event):
         (view_width, view_height) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(view_width,view_height)
+        self.buffer = wx.Bitmap(view_width,view_height)
         dc = wx.BufferedDC(wx.ClientDC(self), self.buffer)
 
         # Draw translated bitmap if it contains data
-        if self.image.Ok():
+        if self.image.IsOk():
             oldWidth = self.display_width
             oldHeight = self.display_height
             (self.display_width, self.display_height) = self.GetImageDisplaySize()
@@ -176,7 +176,7 @@ class ImageViewerPanel(wx.Panel):
             
             
             
-        position = event.GetPositionTuple()            
+        position = event.GetPosition()            
         #dc.CrossHair(*position)        
         dc.DrawLine(0, position[1], view_width, position[1])
         dc.DrawLine(position[0], 0, position[0], view_height)
@@ -191,11 +191,11 @@ class ImageViewerPanel(wx.Panel):
     def InitBuffer(self):
         # Setup Display Context equal to size of area to be painted
         (view_width, view_height) = self.GetClientSize()
-        self.buffer = wx.EmptyBitmap(view_width,view_height)
+        self.buffer = wx.Bitmap(view_width,view_height)
         dc = wx.BufferedDC(None, self.buffer)
         
         # Draw translated bitmap if it contains data
-        if self.image.Ok():
+        if self.image.IsOk():
             oldWidth = self.display_width
             oldHeight = self.display_height
             (self.display_width, self.display_height) = self.GetImageDisplaySize()
@@ -237,7 +237,7 @@ class ImageViewerPanel(wx.Panel):
 
     def GetImageDisplaySize(self):
         # Should really clean this up!
-        if not self.image.Ok():
+        if not self.image.IsOk():
             return (1,1)
     
         if self.viewMode == 0:
@@ -347,7 +347,7 @@ class ImageViewerFrame(wx.Frame):
         
     def OnOpen(self, event):
         dlg = wx.FileDialog(self, "Open image...",
-                os.getcwd(), style=wx.OPEN,
+                os.getcwd(), style=wx.FD_OPEN,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)                
@@ -379,7 +379,7 @@ class ImageViewerFrame(wx.Frame):
                 self.controlledImageViewerPanel.imageViewerPanel.newImageData = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
-                    stype=wx.OK|wx.ICON_EXCLAMATION)          
+                    stype=wx.IsOk|wx.ICON_EXCLAMATION)          
         
     def OnCloseWindow(self, event):
         pass
@@ -434,7 +434,7 @@ class MyFileDropTarget(wx.FileDropTarget):
         if len(filenames) > 1:
             dlg = wx.MessageBox( 
                 "This application only supports opening a single image.",
-                "Multiple images detected", wx.OK | wx.ICON_EXCLAMATION)
+                "Multiple images detected", wx.IsOk | wx.ICON_EXCLAMATION)
             return
 #         if os.path.splitext(filenames[0])[1].lower() == ".jpg":
 #             self.window.filename = filenames[0]
