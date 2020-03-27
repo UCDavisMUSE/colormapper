@@ -150,7 +150,7 @@ class ColormapperFrame(wx.Frame):
     def OnInputMotion(self, event):
         image = self.inputImagePanel.GetDisplayedImage()    
         if image.IsOk():
-            currentPosition = event.GetPositionTuple()
+            currentPosition = event.GetPosition()
             # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
             width = image.GetWidth()
             height = image.GetHeight()
@@ -167,7 +167,7 @@ class ColormapperFrame(wx.Frame):
     def OnOutputMotion(self, event):
         image = self.outputImagePanel.GetDisplayedImage()
         if image.IsOk():
-            currentPosition = event.GetPositionTuple()
+            currentPosition = event.GetPosition()
             # self.statusbar.SetStatusText("Pos: %s" % str(currentPosition), 0)
             width = image.GetWidth()
             height = image.GetHeight()
@@ -343,7 +343,7 @@ class ColormapperFrame(wx.Frame):
 
     def OnOpen(self, event):
         dlg = wx.FileDialog(self, "Open colormapper file...",
-                os.getcwd(), style=wx.OPEN,
+                os.getcwd(), style=wx.FD_OPEN,
                 wildcard = self.colormapperWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)
@@ -360,7 +360,7 @@ class ColormapperFrame(wx.Frame):
 
     def OnSaveAs(self, event):
         dlg = wx.FileDialog(self, "Save colormapper file...",
-                os.getcwd(), style = wx.SAVE | wx.OVERWRITE_PROMPT,
+                os.getcwd(), style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                 wildcard = self.colormapperWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)
@@ -386,7 +386,7 @@ class ColormapperFrame(wx.Frame):
 
     def OnImport(self, event):
         dlg = wx.FileDialog(self, "Import image for conversion...",
-                os.getcwd(), style=wx.OPEN,
+                os.getcwd(), style=wx.FD_OPEN,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)                
@@ -397,7 +397,7 @@ class ColormapperFrame(wx.Frame):
 
     def OnExportDisplayed(self, event):
         dlg = wx.FileDialog(self, "Export displayed converted image...",
-                os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
+                os.getcwd(), style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)                
@@ -411,7 +411,7 @@ class ColormapperFrame(wx.Frame):
         
     def OnExport(self, event):
         dlg = wx.FileDialog(self, "Export entire converted image...",
-                os.getcwd(), style=wx.SAVE | wx.OVERWRITE_PROMPT,
+                os.getcwd(), style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                 wildcard = self.imageWildcard)
         if self.currentDirectory:
             dlg.SetDirectory(self.currentDirectory)
@@ -422,13 +422,13 @@ class ColormapperFrame(wx.Frame):
         else:
             return
         # Convert Image
-        if not self.inputImagePanel.image.Ok():
+        if not self.inputImagePanel.image.IsOk():
             return
     
         # Convert wx.Image to numpy array
         image = self.inputImagePanel.GetImage()
         inputImageBuffer = image.GetDataBuffer()
-        inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
+        inputImageArray = np.asarray(inputImageBuffer, dtype='uint8')
             
         # Reshape the input numpy array to a width X height X 3 RGB image
         inputImageWidth = image.GetWidth()
@@ -481,7 +481,7 @@ class ColormapperFrame(wx.Frame):
 
         # Convert the output numpy array to a wx.Image
         # First initialize with an empty image
-        image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+        image = wx.Image(outputImageWidth, outputImageHeight)
         image.SetData(outputImageArray.tostring())
 
         # This code exports the image
@@ -508,7 +508,7 @@ class ColormapperFrame(wx.Frame):
                 self.currentDirectory = os.path.split(filename)[0]    
             except:
                 wx.MessageBox("Error exporting %s." % filename, "oops!",
-                    stype = wx.OK | wx.ICON_EXCLAMATION)
+                    stype = wx.IsOk | wx.ICON_EXCLAMATION)
 
             
     def OnCopy(self, event):
@@ -557,7 +557,7 @@ class ColormapperFrame(wx.Frame):
                 self.currentDirectory = os.path.split(self.filename)[0]
             except cPickle.UnpicklingError:
                 wx.MessageBox("%s is not a colormapper file." % self.filename,
-                    "oops!", stype = wx.OK | wx.ICON_EXCLAMATION)
+                    "oops!", stype = wx.IsOk | wx.ICON_EXCLAMATION)
             except:
                 pass # Don't change settings
 
@@ -603,7 +603,7 @@ class ColormapperFrame(wx.Frame):
                 self.unmixPanel.recomputeUnmix = True
             except:
                 wx.MessageBox("Error importing %s." % self.filename, "oops!",
-                    stype = wx.OK | wx.ICON_EXCLAMATION)
+                    stype = wx.IsOk | wx.ICON_EXCLAMATION)
 
     def ExportImage(self):
         # This code exports the image
@@ -631,16 +631,16 @@ class ColormapperFrame(wx.Frame):
             except:
                 wx.MessageBox("Error exporting %s." % self.exportFilename,
                     "oops!",
-                    stype = wx.OK | wx.ICON_EXCLAMATION)
+                    stype = wx.IsOk | wx.ICON_EXCLAMATION)
                     
     def UnmixImage(self):
-        if not self.inputImagePanel.image.Ok():
+        if not self.inputImagePanel.image.IsOk():
             return
     
         # Convert wx.Image to numpy array
         image = self.inputImagePanel.GetDisplayedImage()
         inputImageBuffer = image.GetDataBuffer()
-        inputImageArray = np.frombuffer(inputImageBuffer, dtype='uint8')
+        inputImageArray = np.asarray(inputImageBuffer, dtype='uint8')
             
         # Reshape the input numpy array to a width X height X 3 RGB image
         self.inputImageWidth = image.GetWidth()
@@ -669,7 +669,7 @@ class ColormapperFrame(wx.Frame):
         # May need to add code here if I want to display the unmixComponents
 
     def RemixImage(self):
-        if not self.inputImagePanel.image.Ok():
+        if not self.inputImagePanel.image.IsOk():
             return
         
         components = copy.copy(self.unmixComponents)
@@ -698,7 +698,7 @@ class ColormapperFrame(wx.Frame):
 
         # Convert the output numpy array to a wx.Image
         # First initialize with an empty image
-        image = wx.EmptyImage(outputImageWidth, outputImageHeight)
+        image = wx.Image(outputImageWidth, outputImageHeight)
         image.SetData(self.outputImageArray.tostring())
         self.outputImagePanel.SetImage(image)
             
@@ -717,7 +717,7 @@ class MyFileDropTarget(wx.FileDropTarget):
             dlg = wx.MessageBox( 
                 "This application only supports "\
                 "dragging a single file at a time.",
-                "Multiple files detected", wx.OK | wx.ICON_EXCLAMATION)
+                "Multiple files detected", wx.IsOk | wx.ICON_EXCLAMATION)
             return
         if os.path.splitext(filenames[0])[1].lower() == ".colormapper":
             self.window.filename = filenames[0]

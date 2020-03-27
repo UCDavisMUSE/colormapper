@@ -1,5 +1,20 @@
 # Colormapper
 
+# Installation
+
+```
+git clone git@github.com:bearpelican/colormapper.git
+pip install wxPython
+pip install joblib
+pip install pybind11
+pip install pyopencl
+pip install numpy
+
+cd colormapper
+pythonw colormapper.py
+```
+
+
 ## About
 
 This program is a tool for converting fluorescent microscopy images into images that mimic brightfield microscopy. This allows images taken with fluorescent dyes and staines to be converted into images resembling standard histological slides that use, for example, the H&E (hematoxylin and eosin) stain combination. 
